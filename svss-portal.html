@@ -917,15 +917,15 @@ function doLogout(){
 
 function openApp(){
   const s = SESSION;
+  showView('app');
   document.getElementById('nav-username').textContent = s.display;
   document.getElementById('dash-sub').textContent = 'Willkommen zur\u00fcck, ' + s.display + '.';
   if(s.role === 'admin') document.getElementById('sb-admin-section').classList.remove('hidden');
+  showPanel('dashboard');
   loadProfil();
   loadInhalt();
   loadBilder();
   updateDashStats();
-  showPanel('dashboard');
-  showView('app');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2069,18 +2069,16 @@ async function seedDefaults(){
   }
 }
 
-document.addEventListener('DOMContentLoaded', async function(){
+// Single clean init - no double execution
+(async function init(){
   await seedDefaults();
   SESSION = getSession();
-  if(SESSION){ openApp(); } else { showView('login'); }
-});
-if(document.readyState === 'complete' || document.readyState === 'interactive'){
-  (async function(){
-    await seedDefaults();
-    SESSION = getSession();
-    if(SESSION){ openApp(); } else { showView('login'); }
-  })();
-}
+  if(SESSION){
+    openApp();
+  } else {
+    showView('login');
+  }
+})();
 
 </script>
 </body>
