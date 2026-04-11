@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SVSS – Mitgliederportal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gd:#1a3a2a;--gm:#2d6a4a;--gs:#4a9068;--gp:#d4ead8;--gl:#f0f7f1;
+  --sand:#f5f1e8;--sd:#e8e2d4;--cream:#faf8f3;
+  --tx:#1a1a18;--ts:#4a4a44;--tm:#8a8a80;--wh:#fff;
+  --acc:#c8522a;--r:6px;--rl:12px;
+  --info-bg:#e8f0fb;--info-tx:#1a3a7a;
+  --ok-bg:#e8f5ee;--ok-tx:#1a5a30;
+  --err-bg:#fbeaea;--err-tx:#7a1a1a;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--tx);-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* ── UTILITIES ── */
+.hidden{display:none!important}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:var(--r);font-size:13.5px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif}
+.btn-dark{background:var(--gd);color:#fff}.btn-dark:hover{background:var(--gm)}
+.btn-mid{background:var(--gm);color:#fff}.btn-mid:hover{background:var(--gs)}
+.btn-ghost{background:transparent;color:var(--gd);border:1px solid var(--gm)}.btn-ghost:hover{background:var(--gl)}
+.btn-danger{background:#c0392b;color:#fff}.btn-danger:hover{background:#a93226}
+.btn-sm{padding:7px 14px;font-size:12.5px}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:500}
+.badge-green{background:var(--ok-bg);color:var(--ok-tx)}
+.badge-blue{background:var(--info-bg);color:var(--info-tx)}
+.badge-gray{background:var(--sd);color:var(--ts);border:1px solid #ddd}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:var(--rl);font-size:13.5px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:var(--ok-bg);color:var(--ok-tx);border:1px solid #a3d9b8}
+.toast.err{background:var(--err-bg);color:var(--err-tx);border:1px solid #f5a3a3}
+input,select,textarea{width:100%;padding:10px 14px;border:1px solid var(--sd);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:14px;background:#fff;color:var(--tx);outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--gm)}
+textarea{resize:vertical;min-height:100px}
+label{font-size:12px;font-weight:500;color:var(--ts);display:block;margin-bottom:4px}
+.fg{margin-bottom:14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
+
+/* ── VIEWS ── */
+.view{display:none!important;min-height:100vh}
+.view.active{display:block!important}
+#view-login.active{display:flex!important;align-items:center;justify-content:center;background:var(--gd)}
+
+/* ── LOGIN ── */
+/* view-login display controlled by JS via .view.active */
+.login-card{background:#fff;border-radius:var(--rl);padding:2.5rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:2rem}
+.login-logo img{height:36px;width:auto;object-fit:contain}
+.login-logo-fb{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--gd)}
+.login-logo-sub{font-size:11px;color:var(--tm);display:block}
+.login-title{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--gd);margin-bottom:0.3rem}
+.login-sub{font-size:13px;color:var(--tm);margin-bottom:1.75rem}
+.login-err{background:var(--err-bg);color:var(--err-tx);border:1px solid #f5a3a3;border-radius:var(--r);padding:10px 14px;font-size:13px;margin-bottom:1rem}
+
+/* ── APP SHELL ── */
+.app-nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(26,58,42,.97);backdrop-filter:blur(14px);
+  height:60px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;border-bottom:1px solid rgba(255,255,255,.08)
+}
+.app-nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}
+.app-nav-logo img{height:34px;filter:brightness(0) invert(1)}
+.app-nav-logo-fb{font-family:'DM Serif Display',serif;font-size:15px;color:#fff}
+.app-nav-user{display:flex;align-items:center;gap:12px}
+.app-nav-user span{font-size:13px;color:rgba(255,255,255,.7)}
+.app-nav-user strong{color:#fff}
+.app-sidebar{
+  position:fixed;top:60px;left:0;bottom:0;width:220px;
+  background:var(--sand);border-right:1px solid var(--sd);
+  padding:1.25rem 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto;z-index:80
+}
+.sidebar-section{padding:.6rem 1rem .2rem;font-size:10.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--tm)}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 1rem;font-size:13.5px;color:var(--ts);cursor:pointer;border-left:2px solid transparent;transition:all .12s}
+.sidebar-item:hover{background:#fff;color:var(--tx)}
+.sidebar-item.active{background:#fff;color:var(--gd);border-left-color:var(--gm);font-weight:500}
+.sidebar-item svg{width:15px;height:15px;flex-shrink:0}
+.app-main{margin-left:220px;padding-top:60px;min-height:100vh;background:var(--cream)}
+.main-inner{padding:2rem 2.5rem;max-width:960px}
+.page-title{font-family:'DM Serif Display',serif;font-size:1.7rem;font-weight:400;color:var(--gd);margin-bottom:.3rem}
+.page-sub{font-size:13.5px;color:var(--tm);margin-bottom:2rem}
+.card{background:#fff;border:1px solid var(--sd);border-radius:var(--rl);padding:1.5rem;margin-bottom:1.25rem}
+.card-title{font-size:14px;font-weight:500;color:var(--tx);margin-bottom:1.25rem;display:flex;align-items:center;gap:8px}
+.card-title svg{width:16px;height:16px;color:var(--gm)}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem}
+.stat-box{background:var(--gl);border-radius:var(--rl);padding:1.125rem;text-align:center}
+.stat-box-num{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--gd);line-height:1}
+.stat-box-label{font-size:11px;color:var(--tm);margin-top:4px}
+
+/* ── EDITOR ── */
+.editor-toolbar{display:flex;gap:6px;flex-wrap:wrap;padding:8px;background:var(--sand);border:1px solid var(--sd);border-radius:var(--r) var(--r) 0 0;margin-bottom:0}
+.editor-btn{padding:5px 10px;background:#fff;border:1px solid var(--sd);border-radius:4px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--ts);transition:all .12s}
+.editor-btn:hover{background:var(--gl);border-color:var(--gm);color:var(--gd)}
+.editor-area{border:1px solid var(--sd);border-top:none;border-radius:0 0 var(--r) var(--r);padding:12px;min-height:200px;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.7;background:#fff;color:var(--tx)}
+.editor-area:focus{border-color:var(--gm)}
+.editor-area h2{font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:400;margin:.75rem 0 .4rem}
+.editor-area h3{font-size:1.1rem;font-weight:500;margin:.6rem 0 .3rem}
+.editor-area p{margin:.4rem 0}
+.editor-area ul,.editor-area ol{margin:.4rem 0 .4rem 1.4rem}
+.editor-area a{color:var(--gm)}
+.editor-area strong{font-weight:500}
+
+/* ── IMAGE UPLOAD ── */
+.img-upload-zone{border:2px dashed var(--sd);border-radius:var(--rl);padding:2rem;text-align:center;cursor:pointer;transition:border-color .15s;background:var(--gl)}
+.img-upload-zone:hover,.img-upload-zone.drag{border-color:var(--gm);background:#fff}
+.img-upload-zone p{font-size:13px;color:var(--tm);margin-top:.5rem}
+.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:1rem}
+.img-thumb{position:relative;border-radius:var(--r);overflow:hidden;aspect-ratio:4/3;background:var(--sd)}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb-del{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer;opacity:0;transition:opacity .15s}
+.img-thumb:hover .img-thumb-del{opacity:1}
+
+/* ── PUBLIC PROFILE ── */
+.profile-hero{background:var(--gd);padding:3rem 6vw 2.5rem;position:relative}
+.profile-logo-wrap{width:100px;height:100px;border-radius:var(--rl);background:#fff;padding:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.profile-logo-wrap img{max-width:100%;max-height:80px;object-fit:contain}
+.profile-name{font-family:'DM Serif Display',serif;font-size:2rem;color:#fff;font-weight:400;margin-bottom:.5rem}
+.profile-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.profile-tag{font-size:11px;padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.2)}
+.profile-contact{font-size:13.5px;color:rgba(255,255,255,.65);font-weight:300}
+.profile-body{padding:2.5rem 6vw;max-width:900px}
+.profile-section{margin-bottom:2.5rem}
+.profile-section h2{font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:400;color:var(--gd);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--sd)}
+.profile-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.profile-gallery img{width:100%;border-radius:var(--r);aspect-ratio:4/3;object-fit:cover}
+.profile-back{position:absolute;top:1.25rem;left:2rem;font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;gap:6px;transition:color .15s}
+.profile-back:hover{color:#fff}
+.profile-content-render{font-size:15px;line-height:1.75;color:var(--ts)}
+.profile-content-render h2{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--gd);margin:1.25rem 0 .5rem}
+.profile-content-render h3{font-size:1.05rem;font-weight:500;color:var(--tx);margin:1rem 0 .3rem}
+.profile-content-render p{margin:.4rem 0}
+.profile-content-render ul,.profile-content-render ol{margin:.4rem 0 .4rem 1.4rem}
+.profile-content-render strong{font-weight:500}
+
+/* ── ADMIN ── */
+.member-table{width:100%;border-collapse:collapse}
+.member-table th{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--tm);padding:8px 12px;text-align:left;border-bottom:1px solid var(--sd);background:var(--sand)}
+.member-table td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--sd);vertical-align:middle}
+.member-table tr:last-child td{border-bottom:none}
+.member-table tr:hover td{background:var(--gl)}
+.member-table .actions{display:flex;gap:6px;justify-content:flex-end}
+
+/* ── TAG SELECTOR ── */
+.tag-selector{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tag-opt{padding:5px 12px;border-radius:99px;font-size:12px;border:1px solid var(--sd);background:#fff;color:var(--ts);cursor:pointer;transition:all .12s}
+.tag-opt.sel{background:var(--gd);color:#fff;border-color:var(--gd)}
+.tag-opt:hover:not(.sel){border-color:var(--gm);color:var(--gd)}
+
+@media(max-width:768px){
+  .app-sidebar{display:none}
+  .app-main{margin-left:0}
+  .main-inner{padding:1.25rem}
+  .stat-row,.form-row{grid-template-columns:1fr}
+}
+
+/* ── SEITEN-EDITOR ── */
+.se-tab{padding:8px 16px;font-size:13px;font-family:'DM Sans',sans-serif;border:none;background:transparent;color:var(--ts);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.se-tab:hover{color:var(--gd)}
+.se-tab.active{color:var(--gd);border-bottom-color:var(--gm);font-weight:500}
+.se-panel{display:none}.se-panel.active{display:block}
+.se-item-card{background:var(--sand);border:1px solid var(--sd);border-radius:var(--r);padding:1rem;position:relative}
+.se-remove{position:absolute;top:.75rem;right:.75rem;background:none;border:none;color:var(--tm);cursor:pointer;font-size:16px;line-height:1}
+.se-remove:hover{color:#c0392b}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ══ TOAST ══ -->
+<div id="toast" class="toast"></div>
+
+<!-- ══════════════════════════════════════
+     VIEW: LOGIN
+══════════════════════════════════════ -->
+<div id="view-login" class="view">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="https://shop3.webschmied.ch/mt-content/uploads/2026/01/svss_logo.png" alt="SVSS" onerror="this.style.display='none';document.getElementById('login-logo-fb').style.display='block'">
+      <div id="login-logo-fb" style="display:none">
+        <span class="login-logo-fb">SVSS</span>
+      </div>
+      <span class="login-logo-sub">Mitgliederportal</span>
+    </div>
+    <p class="login-title">Willkommen</p>
+    <p class="login-sub">Melden Sie sich mit Ihren Zugangsdaten an.</p>
+    <div id="login-err" class="login-err hidden"></div>
+    <div class="fg"><label>Benutzername</label><input id="login-user" type="text" placeholder="z.B. psp" autocomplete="username"></div>
+    <div class="fg"><label>Passwort</label><input id="login-pw" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn btn-dark" style="width:100%;justify-content:center;margin-top:.5rem" onclick="doLogin()">Anmelden →</button>
+    <p style="font-size:12px;color:var(--tm);margin-top:1.25rem;text-align:center">Noch kein Konto? <a href="/cdn-cgi/l/email-protection#9eede8ededdeedeef7fbf2eef2ffeae4edf7fdf6fbecf6fbf7eab3edfdf6e9fbf7e4b0fdf6" style="color:var(--gm)"><span class="__cf_email__" data-cfemail="6b181d18182b181b020e071b070a1f11180208030e19030e021f461808031c0e0211450803">[email&#160;protected]</span></a></p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VIEW: APP (member + admin)
+══════════════════════════════════════ -->
+<div id="view-app" class="view">
+
+  <!-- NAV -->
+  <nav class="app-nav">
+    <div class="app-nav-logo" onclick="showPanel('dashboard')">
+      <img src="https://shop3.webschmied.ch/mt-content/uploads/2026/01/svss_logo.png" alt="SVSS" onerror="this.style.display='none'">
+      <span class="app-nav-logo-fb">SVSS Mitgliederportal</span>
+    </div>
+    <div class="app-nav-user">
+      <span>Angemeldet als <strong id="nav-username"></strong></span>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Abmelden</button>
+    </div>
+  </nav>
+
+  <!-- SIDEBAR -->
+  <aside class="app-sidebar" id="sidebar">
+    <div class="sidebar-section">Mein Bereich</div>
+    <div class="sidebar-item active" id="sb-dashboard" onclick="showPanel('dashboard')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="sidebar-item" id="sb-profil" onclick="showPanel('profil')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Mein Profil
+    </div>
+    <div class="sidebar-item" id="sb-inhalt" onclick="showPanel('inhalt')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h10v12H3z"/><path d="M5 5h6M5 8h6M5 11h4"/></svg>
+      Inhalte bearbeiten
+    </div>
+    <div class="sidebar-item" id="sb-bilder" onclick="showPanel('bilder')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="12" rx="2"/><circle cx="5.5" cy="6.5" r="1.5"/><path d="M1 11l4-4 3 3 2-2 5 5"/></svg>
+      Bilder &amp; Medien
+    </div>
+    <div class="sidebar-item" id="sb-bildpool" onclick="showPanel('bildpool')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M5 8h6"/></svg>
+      Bildpool &amp; KI
+    </div>
+    <div class="sidebar-item" id="sb-vorschau" onclick="showPanel('vorschau')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+      Vorschau
+    </div>
+    <!-- Admin only -->
+    <div id="sb-admin-section" class="hidden">
+      <div class="sidebar-section">Administration</div>
+      <div class="sidebar-item" id="sb-admin" onclick="showPanel('admin')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+        Mitglieder verwalten
+      </div>
+      <div class="sidebar-item" id="sb-seiteneditor" onclick="showPanel('seiteneditor')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 5h6M5 8h6M5 11h3"/><path d="M10 10l1.5-1.5 1 1L11 11z"/></svg>
+        Seiten-Editor
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="app-main">
+    <div class="main-inner">
+
+      <!-- DASHBOARD -->
+      <div id="panel-dashboard" class="panel active" style="display:block">
+        <p class="page-title">Dashboard</p>
+        <p class="page-sub" id="dash-sub">Herzlich willkommen im SVSS-Mitgliederportal.</p>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-box-num" id="stat-status">✓</div><div class="stat-box-label">Profil aktiv</div></div>
+          <div class="stat-box"><div class="stat-box-num" id="stat-images">0</div><div class="stat-box-label">Bilder hochgeladen</div></div>
+          <div class="stat-box"><div class="stat-box-num" id="stat-words">0</div><div class="stat-box-label">Wörter im Profil</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v4M8 11v.5"/></svg>
+            Schnellstart
+          </div>
+          <p style="font-size:13.5px;color:var(--ts);line-height:1.75;margin-bottom:1rem">Füllen Sie Ihr Profil aus, damit Kunden Sie im Mitgliederverzeichnis finden können. Folgende Schritte empfehlen wir:</p>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--ts)" id="step1"><span style="width:22px;height:22px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;color:var(--gm)">1</span> Firmenprofil ausfüllen <span class="badge badge-gray step-badge" id="b1">Ausstehend</span></div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--ts)" id="step2"><span style="width:22px;height:22px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;color:var(--gm)">2</span> Beschreibung schreiben <span class="badge badge-gray step-badge" id="b2">Ausstehend</span></div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--ts)" id="step3"><span style="width:22px;height:22px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;color:var(--gm)">3</span> Bilder hochladen <span class="badge badge-gray step-badge" id="b3">Ausstehend</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v6m0 0l-2-2m2 2l2-2"/><path d="M3 9v4a1 1 0 001 1h8a1 1 0 001-1V9"/></svg>
+            Dokumente
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <a href="https://shop3.webschmied.ch/mt-content/uploads/2026/01/statuten_svss.pdf" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--sd);text-decoration:none">
+              <span style="font-size:13.5px;color:var(--tx)">Statuten SVSS</span>
+              <span style="font-size:12px;color:var(--gm)">PDF ↓</span>
+            </a>
+            <a href="https://shop3.webschmied.ch/mt-content/uploads/2026/01/handelsregisterauszug_svss.pdf" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;text-decoration:none">
+              <span style="font-size:13.5px;color:var(--tx)">Handelsregisterauszug</span>
+              <span style="font-size:12px;color:var(--gm)">PDF ↓</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFIL EDITOR -->
+      <div id="panel-profil" class="panel" style="display:none">
+        <p class="page-title">Mein Profil</p>
+        <p class="page-sub">Diese Angaben erscheinen öffentlich im Mitgliederverzeichnis.</p>
+        <div class="card">
+          <div class="card-title">Firmendaten</div>
+          <div class="form-row">
+            <div class="fg"><label>Firmenname*</label><input id="p-name" type="text" placeholder="Muster AG"></div>
+            <div class="fg"><label>Kontaktperson</label><input id="p-contact" type="text" placeholder="Max Mustermann"></div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label>E-Mail</label><input id="p-email" type="email" placeholder="info@firma.ch"></div>
+            <div class="fg"><label>Telefon</label><input id="p-phone" type="text" placeholder="+41 44 000 00 00"></div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label>Strasse &amp; Nr.</label><input id="p-address" type="text" placeholder="Musterstrasse 1"></div>
+            <div class="fg"><label>Website</label><input id="p-web" type="text" placeholder="www.ihre-firma.ch"></div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label>PLZ</label><input id="p-plz" type="text" placeholder="8000" style="max-width:120px"></div>
+            <div class="fg"><label>Ort</label><input id="p-ort" type="text" placeholder="Z&#252;rich"></div>
+          </div>
+          <div class="fg"><label>Kurzbeschreibung (erscheint in der Übersicht)</label><input id="p-short" type="text" maxlength="120" placeholder="Spezialisiert auf... (max. 120 Zeichen)"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Tätigkeitsbereiche</div>
+          <p style="font-size:13px;color:var(--tm);margin-bottom:.75rem">Wählen Sie alle zutreffenden Bereiche aus — diese werden als Filter im Verzeichnis angezeigt.</p>
+          <div class="tag-selector" id="tag-selector"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Logo</div>
+          <p style="font-size:13px;color:var(--tm);margin-bottom:1rem">Logo-URL (von Ihrer Firmenwebsite oder einem Bildhosting):</p>
+          <div class="form-row">
+            <div class="fg"><label>Logo-URL</label><input id="p-logo" type="text" placeholder="https://..."></div>
+            <div style="display:flex;align-items:flex-end;padding-bottom:14px">
+              <div id="logo-preview" style="width:80px;height:60px;border:1px solid var(--sd);border-radius:var(--r);display:flex;align-items:center;justify-content:center;background:var(--sand);overflow:hidden">
+                <span style="font-size:11px;color:var(--tm)">Vorschau</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-dark" onclick="saveProfil()">Profil speichern</button>
+      </div>
+
+      <!-- INHALT EDITOR -->
+      <div id="panel-inhalt" class="panel" style="display:none">
+        <p class="page-title">Inhalte bearbeiten</p>
+        <p class="page-sub">Schreiben Sie hier Ihre ausführliche Firmenbeschreibung für Ihre Profilseite.</p>
+        <div class="card">
+          <div class="card-title">Rich-Text-Editor</div>
+          <div class="editor-toolbar">
+            <button class="editor-btn" onclick="fmt('bold')"><b>B</b></button>
+            <button class="editor-btn" onclick="fmt('italic')"><i>I</i></button>
+            <button class="editor-btn" onclick="fmt('underline')"><u>U</u></button>
+            <button class="editor-btn" onclick="fmtBlock('h2')">H2</button>
+            <button class="editor-btn" onclick="fmtBlock('h3')">H3</button>
+            <button class="editor-btn" onclick="fmt('insertUnorderedList')">• Liste</button>
+            <button class="editor-btn" onclick="fmt('insertOrderedList')">1. Liste</button>
+            <button class="editor-btn" onclick="fmtLink()">Link</button>
+            <button class="editor-btn" onclick="fmt('removeFormat')">✕ Format</button>
+          </div>
+          <div class="editor-area" id="editor" contenteditable="true" spellcheck="true"></div>
+        </div>
+        <button class="btn btn-dark" onclick="saveInhalt()">Inhalt speichern</button>
+      </div>
+
+      <!-- BILDER -->
+      <div id="panel-bilder" class="panel" style="display:none">
+        <p class="page-title">Bilder &amp; Medien</p>
+        <p class="page-sub">Laden Sie Bilder für Ihre Profilseite hoch (max. 5 MB pro Bild, JPG/PNG/WebP).</p>
+        <div class="card">
+          <div class="card-title">Bilder hochladen</div>
+          <div class="img-upload-zone" id="drop-zone"
+            onclick="document.getElementById('file-input').click()"
+            ondragover="event.preventDefault();this.classList.add('drag')"
+            ondragleave="this.classList.remove('drag')"
+            ondrop="handleDrop(event)">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke="var(--gm)" stroke-width="1.5"><rect x="3" y="3" width="30" height="30" rx="6"/><circle cx="12" cy="13" r="3"/><path d="M3 25l8-8 5 5 4-4 13 13"/></svg>
+            <p>Klicken oder Dateien hier hineinziehen</p>
+            <p style="font-size:11px;color:var(--tm);margin-top:4px">JPG, PNG, WebP &mdash; max. 5 MB pro Bild</p>
+          </div>
+          <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+
+          <!-- Fortschrittsanzeige -->
+          <div id="upload-progress-wrap" style="display:none;margin-top:1rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <span id="upload-label" style="font-size:13px;color:var(--ts)">Wird hochgeladen&hellip;</span>
+              <span id="upload-pct" style="font-size:13px;font-weight:500;color:var(--gm)">0%</span>
+            </div>
+            <div style="height:6px;background:var(--sd);border-radius:99px;overflow:hidden">
+              <div id="upload-bar" style="height:100%;background:var(--gm);border-radius:99px;width:0%;transition:width 0.2s ease"></div>
+            </div>
+            <div id="upload-files" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
+          </div>
+
+          <div class="img-grid" id="img-grid"></div>
+        </div>
+      </div>
+
+      <!-- VORSCHAU -->
+      <div id="panel-vorschau" class="panel" style="display:none">
+        <p class="page-title">Vorschau</p>
+        <p class="page-sub">So sieht Ihre öffentliche Profilseite für Besucher aus.</p>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div id="preview-container"></div>
+        </div>
+      </div>
+
+
+      <!-- SEITEN-EDITOR (Admin only) -->
+      <div id="panel-seiteneditor" class="panel" style="display:none">
+        <p class="page-title">Seiten-Editor</p>
+        <p class="page-sub">Bearbeiten Sie Texte und Bilder der öffentlichen Verbandswebseite.</p>
+
+        <!-- TABS -->
+        <div style="display:flex;gap:6px;margin-bottom:1.5rem;border-bottom:1px solid var(--sd);padding-bottom:0">
+          <button class="se-tab active" onclick="seTab('hero')">Hero</button>
+          <button class="se-tab" onclick="seTab('stats')">Statistiken</button>
+          <button class="se-tab" onclick="seTab('fotos')">Fotos</button>
+          <button class="se-tab" onclick="seTab('ziele')">Ziele</button>
+          <button class="se-tab" onclick="seTab('vorstand')">Vorstand</button>
+          <button class="se-tab" onclick="seTab('news')">News</button>
+        </div>
+
+        <!-- HERO TAB -->
+        <div class="se-panel active" id="se-hero">
+          <div class="card">
+            <div class="card-title">Hero-Bereich</div>
+            <div class="fg"><label>Haupttitel (Zeile 1)</label><input id="se-hero-title1" type="text" placeholder="Sichere Spielplätze."></div>
+            <div class="fg"><label>Haupttitel (Zeile 2, kursiv)</label><input id="se-hero-title2" type="text" placeholder="Für alle Kinder."></div>
+            <div class="fg"><label>Lead-Text</label><textarea id="se-hero-lead" rows="3"></textarea></div>
+            <div class="fg"><label>Button-Text</label><input id="se-hero-btn" type="text" placeholder="Fachperson finden →"></div>
+            <button class="btn btn-dark btn-sm" onclick="seSaveHero()">Speichern</button>
+          </div>
+        </div>
+
+        <!-- STATS TAB -->
+        <div class="se-panel" id="se-stats" style="display:none">
+          <div class="card">
+            <div class="card-title">Hero-Statistiken</div>
+            <p style="font-size:13px;color:var(--tm);margin-bottom:1rem">4 Statistik-Kacheln im Hero-Bereich</p>
+            <div id="se-stats-list" style="display:flex;flex-direction:column;gap:12px"></div>
+            <button class="btn btn-dark btn-sm" style="margin-top:1rem" onclick="seSaveStats()">Speichern</button>
+          </div>
+        </div>
+
+        <!-- FOTOS TAB -->
+        <div class="se-panel" id="se-fotos" style="display:none">
+          <div class="card">
+            <div class="card-title">Foto-Strip — 4 Bilder</div>
+            <p style="font-size:13px;color:var(--tm);margin-bottom:1.25rem">Laden Sie Bilder hoch (Klick oder Drag &amp; Drop) und ordnen Sie sie per Drag &amp; Drop in der Reihenfolge an.</p>
+
+            <!-- Upload Zone -->
+            <div class="img-upload-zone" id="se-fotos-dropzone"
+              ondragover="event.preventDefault();this.classList.add('drag')"
+              ondragleave="this.classList.remove('drag')"
+              ondrop="seFotosDrop(event)"
+              onclick="document.getElementById('se-fotos-input').click()"
+              style="margin-bottom:1rem">
+              <svg width="32" height="32" viewBox="0 0 36 36" fill="none" stroke="var(--gm)" stroke-width="1.5"><rect x="3" y="3" width="30" height="30" rx="6"/><circle cx="12" cy="13" r="3"/><path d="M3 25l8-8 5 5 4-4 13 13"/></svg>
+              <p>Klicken oder Bilder hierher ziehen</p>
+              <p style="font-size:11px;color:var(--tm);margin-top:4px">JPG, PNG, WebP — max. 5 MB pro Bild</p>
+            </div>
+            <input type="file" id="se-fotos-input" accept="image/*" multiple style="display:none" onchange="seFotosHandleFiles(this.files)">
+
+            <!-- Upload Progress -->
+            <div id="se-fotos-progress" style="display:none;margin-bottom:1rem">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span id="se-fotos-prog-label" style="font-size:13px;color:var(--ts)">Lädt hoch…</span>
+                <span id="se-fotos-prog-pct" style="font-size:13px;font-weight:500;color:var(--gm)">0%</span>
+              </div>
+              <div style="height:6px;background:var(--sd);border-radius:99px;overflow:hidden">
+                <div id="se-fotos-prog-bar" style="height:100%;background:var(--gm);border-radius:99px;width:0%;transition:width .2s"></div>
+              </div>
+            </div>
+
+            <!-- Photo Grid (drag & drop to reorder) -->
+            <div id="se-fotos-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;min-height:80px;margin-bottom:1rem"></div>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-dark btn-sm" onclick="seSaveFotos()">Speichern</button>
+              <span style="font-size:12px;color:var(--tm)">Maximal 4 Bilder werden im Foto-Strip angezeigt</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ZIELE TAB -->
+        <div class="se-panel" id="se-ziele" style="display:none">
+          <div class="card">
+            <div class="card-title">Abschnitt «Über uns / Ziele»</div>
+            <div class="fg"><label>Abschnitts-Titel</label><input id="se-ziele-title" type="text"></div>
+            <div class="fg"><label>Lead-Text</label><textarea id="se-ziele-lead" rows="3"></textarea></div>
+            <div id="se-ziele-list" style="display:flex;flex-direction:column;gap:16px;margin-top:.5rem"></div>
+            <button class="btn btn-dark btn-sm" style="margin-top:1rem" onclick="seSaveZiele()">Speichern</button>
+          </div>
+        </div>
+
+        <!-- VORSTAND TAB -->
+        <div class="se-panel" id="se-vorstand" style="display:none">
+          <div class="card">
+            <div class="card-title">Vorstandsmitglieder</div>
+            <div id="se-vorstand-list" style="display:flex;flex-direction:column;gap:16px"></div>
+            <button class="btn btn-ghost btn-sm" style="margin-top:1rem" onclick="seAddVorstand()">+ Mitglied hinzufügen</button>
+            <button class="btn btn-dark btn-sm" style="margin-top:.5rem" onclick="seSaveVorstand()">Speichern</button>
+          </div>
+        </div>
+
+        <!-- NEWS TAB -->
+        <div class="se-panel" id="se-news" style="display:none">
+          <div class="card">
+            <div class="card-title">News-Einträge</div>
+            <div id="se-news-list" style="display:flex;flex-direction:column;gap:16px"></div>
+            <button class="btn btn-ghost btn-sm" style="margin-top:1rem" onclick="seAddNews()">+ News hinzufügen</button>
+            <button class="btn btn-dark btn-sm" style="margin-top:.5rem" onclick="seSaveNews()">Speichern</button>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- BILDPOOL + KI (alle Mitglieder) -->
+      <div id="panel-bildpool" class="panel" style="display:none">
+        <p class="page-title">Bildpool &amp; KI-Bildgenerierung</p>
+        <p class="page-sub">Bilder hochladen, verwalten und mit KI neue Bilder generieren.</p>
+
+        <!-- TABS -->
+        <div style="display:flex;gap:6px;margin-bottom:1.5rem;border-bottom:1px solid var(--sd);padding-bottom:0">
+          <button class="se-tab active" id="bp-tab-upload" onclick="bpTab('upload')">Hochladen</button>
+          <button class="se-tab" id="bp-tab-ki" onclick="bpTab('ki')">KI-Generator</button>
+          <button class="se-tab" id="bp-tab-pool" onclick="bpTab('pool')">Meine Bilder</button>
+        </div>
+
+        <!-- UPLOAD TAB -->
+        <div id="bp-upload" style="display:block">
+          <div class="card">
+            <div class="card-title">Bilder hochladen</div>
+            <div class="img-upload-zone" id="bp-drop-zone"
+              onclick="document.getElementById('bp-file-input').click()"
+              ondragover="event.preventDefault();this.classList.add('drag')"
+              ondragleave="this.classList.remove('drag')"
+              ondrop="bpHandleDrop(event)" style="padding:2rem">
+              <svg width="40" height="40" viewBox="0 0 36 36" fill="none" stroke="var(--gm)" stroke-width="1.5"><rect x="3" y="3" width="30" height="30" rx="6"/><circle cx="12" cy="13" r="3"/><path d="M3 25l8-8 5 5 4-4 13 13"/></svg>
+              <p style="margin-top:.5rem">Klicken oder Dateien hierher ziehen</p>
+              <p style="font-size:11px;color:var(--tm);margin-top:4px">JPG, PNG, WebP, GIF &mdash; max. 5 MB</p>
+            </div>
+            <input type="file" id="bp-file-input" accept="image/*" multiple style="display:none" onchange="bpHandleFiles(this.files)">
+            <div id="bp-upload-progress" style="display:none;margin-top:1rem">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span id="bp-up-label" style="font-size:13px;color:var(--ts)">Lädt hoch…</span><span id="bp-up-pct" style="font-size:13px;font-weight:500;color:var(--gm)">0%</span></div>
+              <div style="height:6px;background:var(--sd);border-radius:99px"><div id="bp-up-bar" style="height:100%;background:var(--gm);border-radius:99px;width:0%;transition:width .2s"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KI TAB -->
+        <div id="bp-ki" style="display:none">
+          <div class="card">
+            <div class="card-title">KI-Bildgenerierung</div>
+            <p style="font-size:13px;color:var(--tm);margin-bottom:1rem">Beschreiben Sie das gewünschte Bild auf Deutsch. Die KI generiert ein passendes Bild für Ihre Profilseite.</p>
+            <div class="fg">
+              <label>Bildbeschreibung</label>
+              <textarea id="bp-ki-prompt" rows="3" placeholder="z.B. Kinder spielen sicher auf einem modernen Spielplatz in der Schweiz, Sonnenschein, Weitwinkel"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="fg">
+                <label>Stil</label>
+                <select id="bp-ki-style">
+                  <option value="">Standard</option>
+                  <option value="photorealistic">Fotorealistisch</option>
+                  <option value="professional corporate photo">Professionell/Corporate</option>
+                  <option value="watercolor illustration">Aquarell-Illustration</option>
+                  <option value="minimal flat design">Minimal/Flach</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>Format</label>
+                <select id="bp-ki-ratio">
+                  <option value="16:9 landscape">Querformat (16:9)</option>
+                  <option value="1:1 square">Quadrat (1:1)</option>
+                  <option value="4:3 landscape">4:3 Querformat</option>
+                  <option value="portrait">Hochformat</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-dark" onclick="bpGenerate()" id="bp-ki-btn">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5z"/></svg>
+              Bild generieren
+            </button>
+            <div id="bp-ki-result" style="display:none;margin-top:1.25rem">
+              <div id="bp-ki-loading" style="display:none;padding:2rem;text-align:center;color:var(--tm);font-size:13px">
+                <div style="width:32px;height:32px;border:3px solid var(--sd);border-top-color:var(--gm);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem"></div>
+                KI generiert Ihr Bild…
+              </div>
+              <div id="bp-ki-img-wrap" style="display:none">
+                <img id="bp-ki-img" style="max-width:100%;border-radius:var(--rl);box-shadow:0 4px 20px rgba(0,0,0,.1)">
+                <div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
+                  <button class="btn btn-dark btn-sm" onclick="bpSaveKiImg()">In Bildpool speichern</button>
+                  <button class="btn btn-ghost btn-sm" onclick="bpDownloadKiImg()">Herunterladen</button>
+                </div>
+              </div>
+              <div id="bp-ki-error" style="display:none;background:var(--err-bg);color:var(--err-tx);padding:12px;border-radius:var(--r);font-size:13px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- POOL TAB -->
+        <div id="bp-pool" style="display:none">
+          <div class="card">
+            <div class="card-title">Meine Bilder <span id="bp-pool-count" style="font-size:12px;font-weight:400;color:var(--tm)"></span></div>
+            <p style="font-size:13px;color:var(--tm);margin-bottom:1rem">Klicken Sie auf ein Bild um die URL zu kopieren — zum Einfügen in Vorstand, News oder Fotos.</p>
+            <div id="bp-pool-grid" class="img-grid"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ADMIN -->
+      <div id="panel-admin" class="panel" style="display:none">
+        <p class="page-title">Mitglieder verwalten</p>
+        <p class="page-sub">Übersicht aller Mitglieder-Zugänge. Nur für Administratoren.</p>
+        <div class="card" style="margin-bottom:1.25rem">
+          <div class="card-title">Neues Mitglied anlegen</div>
+          <div class="form-row">
+            <div class="fg"><label>Benutzername</label><input id="new-user" type="text" placeholder="firmenname-kuerzel"></div>
+            <div class="fg"><label>Passwort</label><input id="new-pw" type="text" placeholder="Sicheres Passwort"></div>
+          </div>
+          <div class="fg"><label>Anzeigename (Firma)</label><input id="new-display" type="text" placeholder="Muster AG"></div>
+          <button class="btn btn-dark btn-sm" onclick="addMember()">Mitglied anlegen</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Alle Mitglieder (<span id="member-count">0</span>)</div>
+          <div style="overflow-x:auto">
+            <table class="member-table">
+              <thead><tr><th>Benutzername</th><th>Anzeigename</th><th>Rolle</th><th>Profil</th><th style="text-align:right">Aktionen</th></tr></thead>
+              <tbody id="member-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ══ VIEW: PUBLIC PROFILE ══ -->
+<div id="view-profile" class="view">
+  <div id="profile-content"></div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+
+// ═══════════════════════════════════════════════════════
+//  SUPABASE CLIENT (inline, kein NPM nötig)
+// ═══════════════════════════════════════════════════════
+const SUPA_URL = 'https://tcxpydpeqlymtwqwoxnc.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjeHB5ZHBlcWx5bXR3cXdveG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjcyOTIsImV4cCI6MjA5MTUwMzI5Mn0.XIjwKNxNhuP6e_uvxs_qFv0hhwtbEDqM0uXDfZ8yBTo';
+
+function supaHeaders(extra) {
+  return Object.assign({
+    'apikey': SUPA_KEY,
+    'Authorization': 'Bearer ' + SUPA_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  }, extra || {});
+}
+
+// Generic REST helpers
+async function supaSelect(table, query) {
+  const params = new URLSearchParams(query || {});
+  const r = await fetch(SUPA_URL + '/rest/v1/' + table + '?' + params, {
+    headers: supaHeaders({'Accept': 'application/json'})
+  });
+  if(!r.ok) throw new Error('supaSelect ' + table + ': ' + r.status);
+  return r.json();
+}
+
+async function supaUpsert(table, data) {
+  const r = await fetch(SUPA_URL + '/rest/v1/' + table, {
+    method: 'POST',
+    headers: supaHeaders({'Prefer': 'resolution=merge-duplicates,return=representation'}),
+    body: JSON.stringify(data)
+  });
+  if(!r.ok) {
+    const err = await r.text();
+    throw new Error('supaUpsert ' + table + ': ' + err);
+  }
+  return r.json();
+}
+
+async function supaDelete(table, uid) {
+  const r = await fetch(SUPA_URL + '/rest/v1/' + table + '?uid=eq.' + encodeURIComponent(uid), {
+    method: 'DELETE',
+    headers: supaHeaders()
+  });
+  if(!r.ok) throw new Error('supaDelete ' + table + ': ' + r.status);
+}
+
+// Storage upload
+async function supaUploadImage(path, base64Data, contentType) {
+  // base64Data = data:image/jpeg;base64,XXXX
+  const base64 = base64Data.split(',')[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+  const blob = new Blob([bytes], {type: contentType || 'image/jpeg'});
+
+  const r = await fetch(SUPA_URL + '/storage/v1/object/svss-images/' + path, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': contentType || 'image/jpeg',
+      'x-upsert': 'true'
+    },
+    body: blob
+  });
+  if(!r.ok) throw new Error('supaUpload: ' + r.status + ' ' + await r.text());
+  return SUPA_URL + '/storage/v1/object/public/svss-images/' + path;
+}
+
+// Upload any base64 image and get public URL
+async function supaUploadBase64(uid, filename, base64Data) {
+  const ext = base64Data.match(/data:image\/([^;]+)/)?.[1] || 'jpg';
+  const path = uid + '/' + Date.now() + '-' + filename.replace(/[^a-z0-9.-]/gi,'_') + '.' + ext;
+  const contentType = 'image/' + ext;
+  return supaUploadImage(path, base64Data, contentType);
+}
+
+// ─ MEMBERS ─
+async function supaGetMembers() {
+  const rows = await supaSelect('members', {});
+  const m = {};
+  rows.forEach(r => m[r.uid] = {pw: r.pw, display: r.display, role: r.role});
+  return m;
+}
+
+async function supaSaveMembers(members) {
+  const rows = Object.entries(members).map(([uid, m]) => ({uid, pw: m.pw, display: m.display, role: m.role}));
+  return supaUpsert('members', rows);
+}
+
+// ─ PROFILES ─
+async function supaGetProfile(uid) {
+  const rows = await supaSelect('profiles', {'uid': 'eq.' + uid});
+  return rows[0] || {};
+}
+
+async function supaGetProfiles() {
+  const rows = await supaSelect('profiles', {});
+  const p = {};
+  rows.forEach(r => { const {uid, updated_at, ...rest} = r; p[uid] = rest; });
+  return p;
+}
+
+async function supaSaveProfile(uid, data) {
+  // Upload any base64 images to Storage first
+  const toSave = Object.assign({}, data);
+
+  // Handle logo (may be base64 or URL)
+  if(toSave.logo && toSave.logo.startsWith('data:')) {
+    try { toSave.logo = await supaUploadBase64(uid, 'logo', toSave.logo); } catch(e) {}
+  }
+
+  return supaUpsert('profiles', Object.assign({uid}, toSave));
+}
+
+// ─ SITE CONTENT ─
+async function supaGetSiteContent() {
+  const rows = await supaSelect('site_content', {});
+  const c = {};
+  rows.forEach(r => c[r.key] = r.value);
+  return c;
+}
+
+async function supaGetSiteKey(key) {
+  const rows = await supaSelect('site_content', {'key': 'eq.' + key});
+  return rows[0] ? rows[0].value : null;
+}
+
+async function supaSaveSiteContent(updates) {
+  // updates = { hero: {...}, fotos: [...], ... }
+  // Upload any base64 images first
+  const processed = {};
+
+  for(const [key, val] of Object.entries(updates)) {
+    if(key === 'fotos' && Array.isArray(val)) {
+      const uploaded = [];
+      for(const item of val) {
+        if(item && item.src && item.src.startsWith('data:')) {
+          try {
+            const url = await supaUploadBase64('site', 'foto-' + uploaded.length, item.src);
+            uploaded.push({src: url, name: item.name || 'foto'});
+          } catch(e) { uploaded.push(item); }
+        } else { uploaded.push(item); }
+      }
+      processed[key] = uploaded;
+    } else if(key === 'vorstand' && Array.isArray(val)) {
+      const uploaded = [];
+      for(const [i, v] of val.entries()) {
+        if(v.photo && v.photo.startsWith('data:')) {
+          try {
+            const url = await supaUploadBase64('site', 'vorstand-' + i, v.photo);
+            uploaded.push(Object.assign({}, v, {photo: url}));
+          } catch(e) { uploaded.push(v); }
+        } else { uploaded.push(v); }
+      }
+      processed[key] = uploaded;
+    } else if(key === 'news' && Array.isArray(val)) {
+      const uploaded = [];
+      for(const [i, n] of val.entries()) {
+        if(n.img && n.img.startsWith('data:')) {
+          try {
+            const url = await supaUploadBase64('site', 'news-' + i, n.img);
+            uploaded.push(Object.assign({}, n, {img: url}));
+          } catch(e) { uploaded.push(n); }
+        } else { uploaded.push(n); }
+      }
+      processed[key] = uploaded;
+    } else {
+      processed[key] = val;
+    }
+  }
+
+  const rows = Object.entries(processed).map(([key, value]) => ({key, value}));
+  return supaUpsert('site_content', rows);
+}
+
+// ─ IMAGE POOL ─
+async function supaGetImagePool(uid) {
+  const rows = await supaSelect('image_pool', {'uid': 'eq.' + uid, 'order': 'created_at.desc'});
+  // Return with full public URLs
+  return rows.map(r => ({
+    src: r.storage_path.startsWith('http') ? r.storage_path : SUPA_URL + '/storage/v1/object/public/svss-images/' + r.storage_path,
+    name: r.name,
+    source: r.source,
+    id: r.id
+  }));
+}
+
+async function supaAddToImagePool(uid, base64Data, filename, source) {
+  const url = await supaUploadBase64(uid, filename, base64Data);
+  await supaUpsert('image_pool', [{uid, name: filename, source: source||'upload', storage_path: url, scope: 'profile'}]);
+  return url;
+}
+
+async function supaDeleteFromImagePool(id, storagePath) {
+  await fetch(SUPA_URL + '/rest/v1/image_pool?id=eq.' + id, {
+    method: 'DELETE', headers: supaHeaders()
+  });
+}
+
+// ─ SESSION (bleibt sessionStorage — ist ok) ─
+const SESSION_KEY = 'svss_session';
+function getSession(){ try{ return JSON.parse(sessionStorage.getItem(SESSION_KEY)); }catch{return null;} }
+function setSession(uid,display,role){ sessionStorage.setItem(SESSION_KEY, JSON.stringify({uid,display,role})); }
+function clearSession(){ sessionStorage.removeItem(SESSION_KEY); }
+
+// ─ LOCAL FALLBACK (wenn Supabase nicht erreichbar) ─
+function getLocalMembers()  { try { return JSON.parse(localStorage.getItem('svss_members'))  || {}; } catch { return {}; } }
+function getLocalProfile(uid){ try { const p=JSON.parse(localStorage.getItem('svss_profiles'))||{}; return p[uid]||{}; } catch { return {}; } }
+
+// ═══════════════════════════════════════════════════════
+//  LOGIN / LOGOUT (Supabase)
+// ═══════════════════════════════════════════════════════
+async function doLogin(){
+  const uid    = document.getElementById('login-user').value.trim().toLowerCase();
+  const pw     = document.getElementById('login-pw').value;
+  const errEl  = document.getElementById('login-err');
+  const btnEl  = document.getElementById('login-submit-btn');
+  if(btnEl){ btnEl.textContent='Prüfe…'; btnEl.disabled=true; }
+  try {
+    const members = await supaGetMembers();
+    const member  = members[uid];
+    if(!member || member.pw !== pw){
+      errEl.textContent = 'Benutzername oder Passwort falsch.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    setSession(uid, member.display, member.role);
+    openApp();
+  } catch(e) {
+    // Fallback to localStorage if offline
+    const lsMembers = getLocalMembers();
+    const member = lsMembers[uid];
+    if(!member || member.pw !== pw){
+      errEl.textContent = 'Benutzername oder Passwort falsch.';
+      errEl.classList.remove('hidden');
+    } else {
+      setSession(uid, member.display, member.role);
+      openApp();
+    }
+  } finally {
+    if(btnEl){ btnEl.textContent='Anmelden →'; btnEl.disabled=false; }
+  }
+}
+document.getElementById('login-pw').addEventListener('keydown',  e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('login-user').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('login-pw').focus(); });
+
+function doLogout(){
+  clearSession();
+  showView('login');
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pw').value='';
+  document.getElementById('login-err').classList.add('hidden');
+}
+
+function openApp(){
+  const s = SESSION;
+  document.getElementById('nav-username').textContent = s.display;
+  document.getElementById('dash-sub').textContent = 'Willkommen zur\u00fcck, ' + s.display + '.';
+  if(s.role === 'admin') document.getElementById('sb-admin-section').classList.remove('hidden');
+  loadProfil();
+  loadInhalt();
+  loadBilder();
+  updateDashStats();
+  showPanel('dashboard');
+  showView('app');
+}
+
+// ═══════════════════════════════════════════════════════
+//  VIEWS & PANELS
+// ═══════════════════════════════════════════════════════
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+}
+function showPanel(name){
+  document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
+  document.getElementById('panel-'+name).style.display='block';
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  const sb=document.getElementById('sb-'+name);
+  if(sb) sb.classList.add('active');
+  if(name==='vorschau')     renderPreview();
+  if(name==='admin')        renderAdminTable();
+  if(name==='seiteneditor') seLoadTab('hero');
+  if(name==='bildpool') { bpTab('upload'); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROFIL
+// ═══════════════════════════════════════════════════════
+const PROFILE_FIELDS = ['name','contact','email','phone','address','plz','ort','web','short','logo'];
+async function loadProfil(){
+  let p = {};
+  try {
+    p = await supaGetProfile(SESSION.uid);
+  } catch(e) {
+    p = getLocalProfile(SESSION.uid);
+  }
+  PROFILE_FIELDS.forEach(f=>{ const el=document.getElementById('p-'+f); if(el) el.value=p[f]||''; });
+  renderTagSelector(p.tags||[]);
+  updateLogoPreview();
+  document.getElementById('p-logo').addEventListener('input', updateLogoPreview);
+}
+function updateLogoPreview(){
+  const url  = document.getElementById('p-logo').value.trim();
+  const wrap = document.getElementById('logo-preview');
+  if(url){
+    wrap.innerHTML = '<img src="'+url+'" style="max-width:100%;max-height:56px;object-fit:contain" onerror="this.parentElement.innerHTML=\'<span style=font-size:11px;color:var(--tm)>Fehler</span>\'">';
+  } else {
+    wrap.innerHTML = '<span style="font-size:11px;color:var(--tm)">Vorschau</span>';
+  }
+}
+function renderTagSelector(selected){
+  const wrap=document.getElementById('tag-selector');
+  wrap.innerHTML='';
+  TAGS_ALL.forEach(t=>{
+    const el=document.createElement('span');
+    el.className='tag-opt'+(selected.includes(t)?' sel':'');
+    el.textContent=t;
+    el.onclick=()=>el.classList.toggle('sel');
+    wrap.appendChild(el);
+  });
+}
+function getSelectedTags(){ return [...document.querySelectorAll('.tag-opt.sel')].map(e=>e.textContent); }
+async function saveProfil(){
+  const data={};
+  PROFILE_FIELDS.forEach(f=>{ data[f]=document.getElementById('p-'+f)?.value?.trim()||''; });
+  data.tags=getSelectedTags();
+  toast('Speichert…','ok');
+  try {
+    await supaSaveProfile(SESSION.uid, data);
+    toast('Profil gespeichert \u2713','ok');
+  } catch(e) {
+    toast('Offline — lokal gespeichert','ok');
+  }
+  updateDashStats();
+}
+
+// ═══════════════════════════════════════════════════════
+//  INHALT (Rich Text)
+// ═══════════════════════════════════════════════════════
+function loadInhalt(){
+  const p=getProfile(SESSION.uid);
+  document.getElementById('editor').innerHTML=p.content||'';
+}
+function fmt(cmd){ document.getElementById('editor').focus(); document.execCommand(cmd,false,null); }
+function fmtBlock(tag){ document.getElementById('editor').focus(); document.execCommand('formatBlock',false,tag); }
+function fmtLink(){ const url=prompt('URL eingeben:'); if(url){ document.getElementById('editor').focus(); document.execCommand('createLink',false,url); } }
+async function saveInhalt(){
+  const html=document.getElementById('editor').innerHTML;
+  try {
+    await supaSaveProfile(SESSION.uid,{content:html});
+    toast('Inhalt gespeichert \u2713','ok');
+  } catch(e) {
+    toast('Offline — lokal gespeichert','ok');
+  }
+  updateDashStats();
+}
+
+// ═══════════════════════════════════════════════════════
+//  BILDER — mit Fortschrittsanzeige
+// ═══════════════════════════════════════════════════════
+function loadBilder(){ renderImageGrid(); }
+
+async function bpAddToPool_compat(file, base64Data) {
+  // Upload to Supabase Storage and add to pool
+  try {
+    const url = await supaAddToImagePool(SESSION.uid, base64Data, file.name, 'upload');
+    return { src: url, name: file.name };
+  } catch(e) {
+    // Fallback: store base64 locally
+    return { src: base64Data, name: file.name };
+  }
+}
+
+function handleFiles(files){
+  const fileArr=[...files].filter(f=>{
+    if(f.size>5*1024*1024){ toast(f.name+': max. 5 MB','err'); return false; }
+    if(!f.type.startsWith('image/')){ toast(f.name+': Nur Bilder erlaubt','err'); return false; }
+    return true;
+  });
+  if(fileArr.length===0) return;
+
+  const wrap  = document.getElementById('upload-progress-wrap');
+  const bar   = document.getElementById('upload-bar');
+  const pct   = document.getElementById('upload-pct');
+  const label = document.getElementById('upload-label');
+  const flist = document.getElementById('upload-files');
+  wrap.style.display='block';
+  flist.innerHTML='';
+  fileArr.forEach(function(f){
+    const row=document.createElement('div');
+    row.id='fp-'+f.name.replace(/[^a-z0-9]/gi,'_');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--tm);padding:3px 0';
+    row.innerHTML='<span>'+f.name+'</span><span class="fp-status">● Warten</span>';
+    flist.appendChild(row);
+  });
+
+  dbGetImages(SESSION.uid).then(function(images){
+    let done=0;
+    const total=fileArr.length;
+
+    function updateProgress(){
+      const p=Math.round((done/total)*100);
+      bar.style.width=p+'%';
+      pct.textContent=p+'%';
+      label.textContent=done<total
+        ? done+' von '+total+' Bild'+(total>1?'ern':'')+' verarbeitet...'
+        : total+' Bild'+(total>1?'er':'')+' hochgeladen';
+    }
+
+    fileArr.forEach(function(file){
+      const rowId='fp-'+file.name.replace(/[^a-z0-9]/gi,'_');
+      const row=document.getElementById(rowId);
+      if(row) row.querySelector('.fp-status').textContent='⟳ Liest...';
+      const reader=new FileReader();
+      reader.onprogress=function(ev){
+        if(ev.lengthComputable && row){
+          const fp=Math.round((ev.loaded/ev.total)*100);
+          row.querySelector('.fp-status').textContent=fp+'%';
+        }
+      };
+      reader.onload=function(e){
+        images.push({src:e.target.result, name:file.name, date:new Date().toLocaleDateString('de-CH')});
+        if(row){
+          row.querySelector('.fp-status').style.color='var(--ok-tx)';
+          row.querySelector('.fp-status').textContent='✓ Fertig';
+        }
+        done++;
+        updateProgress();
+        if(done===total){
+          dbSaveImages(SESSION.uid, images).then(function(){
+            renderImageGrid();
+            updateDashStats();
+            toast(total+' Bild'+(total>1?'er':'')+' gespeichert ✓','ok');
+            setTimeout(function(){
+              wrap.style.display='none';
+              flist.innerHTML='';
+              bar.style.width='0%';
+              pct.textContent='0%';
+            },2500);
+            const inp=document.getElementById('file-input');
+            if(inp) inp.value='';
+          }).catch(function(err){
+            toast('Speicherfehler: '+(err.message||err),'err');
+          });
+        }
+      };
+      reader.onerror=function(){
+        if(row){
+          row.querySelector('.fp-status').style.color='var(--err-tx)';
+          row.querySelector('.fp-status').textContent='✕ Fehler';
+        }
+        done++;
+        updateProgress();
+      };
+      reader.readAsDataURL(file);
+    });
+  }).catch(function(err){
+    toast('Fehler beim Laden der Bilder: '+(err.message||err),'err');
+    wrap.style.display='none';
+  });
+}
+
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+}
+
+function deleteImage(idx){
+  if(!confirm('Bild wirklich löschen?')) return;
+  dbDeleteImage(SESSION.uid, idx).then(function(){
+    renderImageGrid();
+    updateDashStats();
+    toast('Bild gelöscht','ok');
+  });
+}
+
+function renderImageGrid(){
+  const grid=document.getElementById('img-grid');
+  if(!grid) return;
+  grid.innerHTML='<p style="font-size:13px;color:var(--tm);padding:.75rem 0">⧗ Bilder werden geladen...</p>';
+  dbGetImages(SESSION.uid).then(function(images){
+    grid.innerHTML='';
+    if(images.length===0){
+      grid.innerHTML='<p style="font-size:13px;color:var(--tm);padding:.75rem 0">Noch keine Bilder hochgeladen.</p>';
+      return;
+    }
+    images.forEach(function(img,i){
+      const div=document.createElement('div');
+      div.className='img-thumb';
+      div.innerHTML='<img src="'+img.src+'" alt="'+img.name+'"><button class="img-thumb-del" onclick="deleteImage('+i+')">✕</button>';
+      grid.appendChild(div);
+    });
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  DASHBOARD STATS
+// ═══════════════════════════════════════════════════════
+async function updateDashStats(){
+  let p = {};
+  try { p = await supaGetProfile(SESSION.uid); } catch(e) { p = getLocalProfile(SESSION.uid); }
+  const contentHtml=p.content||'';
+  const wordCount=contentHtml.replace(/<[^>]+>/g,'').trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('stat-words').textContent=wordCount;
+  const hasProfile=!!(p.name&&p.name.length>0);
+  const hasContent=wordCount>10;
+  function setStep(id,done){
+    const b=document.getElementById(id);
+    if(!b) return;
+    b.className='badge '+(done?'badge-green':'badge-gray');
+    b.textContent=done?'Erledigt \u2713':'Ausstehend';
+  }
+  setStep('b1',hasProfile);
+  setStep('b2',hasContent);
+  // Image count from Supabase pool
+  try {
+    const imgs = await supaGetImagePool(SESSION.uid);
+    document.getElementById('stat-images').textContent=imgs.length;
+    setStep('b3',imgs.length>0);
+  } catch(e) {
+    document.getElementById('stat-images').textContent='?';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PREVIEW / PUBLIC PROFILE
+// ═══════════════════════════════════════════════════════
+function renderPreview(){
+  const p=getProfile(SESSION.uid);
+  const container=document.getElementById('preview-container');
+  container.innerHTML='<p style="padding:2rem;color:var(--tm);font-size:14px">Vorschau wird geladen...</p>';
+  dbGetImages(SESSION.uid).then(function(images){
+    p.images=images;
+    container.innerHTML=buildProfileHTML(SESSION.uid,p,true);
+  });
+}
+function buildProfileHTML(uid,p,isPreview){
+  const tags=(p.tags||[]).map(t=>'<span class="profile-tag">'+t+'</span>').join('');
+  const imgs=(p.images||[]).map(i=>'<img src="'+i.src+'" alt="'+i.name+'">').join('');
+  const backBtn=isPreview
+    ? '<div class="profile-back" onclick="showPanel(\'vorschau\')">\u2190 Zur\u00fcck zum Editor</div>'
+    : '<div class="profile-back" onclick="showView(\'login\')">\u2190 Zur\u00fcck</div>';
+  const logo=p.logo
+    ? '<div class="profile-logo-wrap"><img src="'+p.logo+'" alt="'+(p.name||uid)+'"></div>'
+    : '<div class="profile-logo-wrap" style="font-family:\'DM Serif Display\',serif;font-size:1.5rem;color:var(--gm)">'+(p.name||uid).substring(0,2).toUpperCase()+'</div>';
+  const contact=[p.contact,p.phone,p.email,p.web,p.address].filter(Boolean).join(' \u00b7 ');
+  const gallery=imgs?'<div class="profile-section"><h2>Bildergalerie</h2><div class="profile-gallery">'+imgs+'</div></div>':'';
+  const contentHtml=p.content?'<div class="profile-section"><h2>\u00dcber uns</h2><div class="profile-content-render">'+p.content+'</div></div>':'';
+  return '<style>.profile-hero{background:var(--gd);padding:3rem 6vw 2.5rem;position:relative}.profile-logo-wrap{width:90px;height:90px;border-radius:var(--rl);background:#fff;padding:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;box-shadow:0 4px 16px rgba(0,0,0,.15)}.profile-logo-wrap img{max-width:100%;max-height:70px;object-fit:contain}.profile-name{font-family:\'DM Serif Display\',serif;font-size:2rem;color:#fff;font-weight:400;margin-bottom:.5rem}.profile-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}.profile-tag{font-size:11px;padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.2)}.profile-contact{font-size:13.5px;color:rgba(255,255,255,.65);font-weight:300;line-height:1.75}.profile-back{position:absolute;top:1.25rem;left:2rem;font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;gap:6px}.profile-back:hover{color:#fff}.profile-body{padding:2.5rem 6vw;max-width:900px}.profile-section{margin-bottom:2.5rem}.profile-section h2{font-family:\'DM Serif Display\',serif;font-size:1.4rem;font-weight:400;color:var(--gd);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--sd)}.profile-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.profile-gallery img{width:100%;border-radius:var(--r);aspect-ratio:4/3;object-fit:cover}.profile-content-render{font-size:15px;line-height:1.75;color:var(--ts)}.profile-content-render h2{font-family:\'DM Serif Display\',serif;font-size:1.4rem;color:var(--gd);margin:1.25rem 0 .5rem}.profile-content-render h3{font-size:1.05rem;font-weight:500;margin:1rem 0 .3rem}.profile-content-render p{margin:.4rem 0}.profile-content-render ul,.profile-content-render ol{margin:.4rem 0 .4rem 1.4rem}</style>'
+    +'<div class="profile-hero">'+backBtn+logo+'<div class="profile-name">'+(p.name||uid)+'</div><div class="profile-tags">'+tags+'</div><div class="profile-contact">'+contact+'</div></div>'
+    +'<div class="profile-body">'+(p.short?'<div class="profile-section"><p style="font-size:1.05rem;color:var(--ts);line-height:1.75;font-weight:300">'+p.short+'</p></div>':'')+contentHtml+gallery
+    +(!contentHtml&&!gallery&&!p.short?'<div class="profile-section"><p style="color:var(--tm);font-size:14px">Dieses Mitglied hat noch keine Profilbeschreibung erfasst.</p></div>':'')
+    +'</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN
+// ═══════════════════════════════════════════════════════
+function renderAdminTable(){
+  const members=getMembers();
+  const tbody=document.getElementById('member-tbody');
+  document.getElementById('member-count').textContent=Object.keys(members).length;
+  tbody.innerHTML='';
+  Object.entries(members).forEach(function([uid,m]){
+    const p=getProfile(uid);
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td><code style="font-size:12px;background:var(--gl);padding:2px 6px;border-radius:4px">'+uid+'</code></td>'
+      +'<td>'+(m.display||'\u2014')+'</td>'
+      +'<td><span class="badge '+(m.role==='admin'?'badge-blue':'badge-gray')+'">'+m.role+'</span></td>'
+      +'<td style="text-align:center">'+(p.name?'\u2713':'\u2014')+'</td>'
+      +'<td><div class="actions"><button class="btn btn-ghost btn-sm" onclick="resetPw(\''+uid+'\')">Passwort \u00e4ndern</button>'
+      +(uid!=='admin'?'<button class="btn btn-danger btn-sm" onclick="deleteMember(\''+uid+'\')">L\u00f6schen</button>':'')
+      +'</div></td>';
+    tbody.appendChild(tr);
+  });
+}
+function addMember(){
+  const uid=document.getElementById('new-user').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'');
+  const pw=document.getElementById('new-pw').value.trim();
+  const display=document.getElementById('new-display').value.trim();
+  if(!uid||!pw||!display){ toast('Alle Felder ausf\u00fcllen','err'); return; }
+  const members=getMembers();
+  if(members[uid]){ toast('Benutzername bereits vergeben','err'); return; }
+  members[uid]={pw,display,role:'member'};
+  saveMembers(members);
+  document.getElementById('new-user').value='';
+  document.getElementById('new-pw').value='';
+  document.getElementById('new-display').value='';
+  renderAdminTable();
+  toast('Mitglied \u00ab'+uid+'\u00bb angelegt \u2713','ok');
+}
+function deleteMember(uid){
+  if(!confirm('Mitglied \u00ab'+uid+'\u00bb wirklich l\u00f6schen? Alle Profildaten gehen verloren.')) return;
+  const members=getMembers(); delete members[uid]; saveMembers(members);
+  const profiles=getProfiles(); delete profiles[uid]; saveProfiles(profiles);
+  renderAdminTable();
+  toast('Mitglied \u00ab'+uid+'\u00bb gel\u00f6scht','ok');
+}
+function resetPw(uid){
+  const newPw=prompt('Neues Passwort f\u00fcr \u00ab'+uid+'\u00bb:');
+  if(!newPw) return;
+  const members=getMembers(); members[uid].pw=newPw; saveMembers(members);
+  toast('Passwort ge\u00e4ndert \u2713','ok');
+}
+
+// ═══════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════
+let toastTimer;
+function toast(msg,type){
+  type=type||'ok';
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='toast '+type+' show';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},3000);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SEITEN-EDITOR
+// ═══════════════════════════════════════════════════════
+const SE_KEY        = 'svss_site_content';
+const SE_IMG_DB     = 'svss_site_images_db';
+const SE_IMG_STORE  = 'site_images';
+let _seDb = null;
+
+// ── IndexedDB for large image data ──
+function seOpenDB(){
+  return new Promise(function(res, rej){
+    if(_seDb){ res(_seDb); return; }
+    const req = indexedDB.open(SE_IMG_DB, 1);
+    req.onupgradeneeded = function(e){
+      if(!e.target.result.objectStoreNames.contains(SE_IMG_STORE))
+        e.target.result.createObjectStore(SE_IMG_STORE);
+    };
+    req.onsuccess = function(e){ _seDb = e.target.result; res(_seDb); };
+    req.onerror   = function(e){ rej(e.target.error); };
+  });
+}
+function seDbSet(key, val){
+  return seOpenDB().then(function(db){
+    return new Promise(function(res, rej){
+      const tx = db.transaction(SE_IMG_STORE, 'readwrite');
+      tx.objectStore(SE_IMG_STORE).put(val, key);
+      tx.oncomplete = res; tx.onerror = function(e){ rej(e.target.error); };
+    });
+  });
+}
+function seDbGet(key){
+  return seOpenDB().then(function(db){
+    return new Promise(function(res, rej){
+      const req = db.transaction(SE_IMG_STORE,'readonly').objectStore(SE_IMG_STORE).get(key);
+      req.onsuccess = function(e){ res(e.target.result || null); };
+      req.onerror   = function(e){ rej(e.target.error); };
+    });
+  });
+}
+
+// ── Text content in localStorage (no images) ──
+function seGetContent(){
+  try { return JSON.parse(localStorage.getItem(SE_KEY)) || {}; } catch { return {}; }
+}
+
+// Save: strip data: URLs from content before localStorage, put them in IndexedDB
+function seSaveContent(data){
+  const c = seGetContent();
+  // Extract images for IndexedDB
+  const imgData = {};
+
+  // Fotos: always store full array in IndexedDB (objects with src/name)
+  if(data.fotos){
+    imgData.fotos = data.fotos;
+    data = Object.assign({}, data);
+    data.fotos = '__idb__'; // placeholder — real data in IndexedDB
+  }
+
+  // Vorstand photos
+  if(data.vorstand){
+    const photoMap = {};
+    data = Object.assign({}, data);
+    data.vorstand = data.vorstand.map(function(v, i){
+      if(v.photo && v.photo.startsWith('data:')){
+        photoMap[i] = v.photo;
+        return Object.assign({}, v, {photo: '__idb__:'+i});
+      }
+      return v;
+    });
+    if(Object.keys(photoMap).length) imgData.vorstand_photos = photoMap;
+  }
+
+  Object.assign(c, data);
+  try {
+    localStorage.setItem(SE_KEY, JSON.stringify(c));
+  } catch(e) {
+    // localStorage full — clear old content and retry
+    localStorage.removeItem(SE_KEY);
+    try { localStorage.setItem(SE_KEY, JSON.stringify(c)); } catch(e2){}
+  }
+
+  // Save images to IndexedDB
+  const saves = [];
+  if(imgData.fotos)          saves.push(seDbSet('fotos', imgData.fotos));
+  if(imgData.vorstand_photos) saves.push(seDbSet('vorstand_photos', imgData.vorstand_photos));
+
+  Promise.all(saves).then(function(){
+    toast('Gespeichert ✓ — Seite wird beim nächsten Laden aktualisiert', 'ok');
+  }).catch(function(e){
+    toast('Gespeichert (Fehler bei Bildern: '+e.message+')', 'ok');
+  });
+}
+
+// Load full content including images from IndexedDB
+function seGetContentFull(){
+  return Promise.all([
+    seDbGet('fotos'),
+    seDbGet('vorstand_photos')
+  ]).then(function(results){
+    const c = seGetContent();
+    const dbFotos   = results[0];
+    const dbPhotos  = results[1];
+
+    // Restore fotos (always from IndexedDB)
+    if(dbFotos) c.fotos = dbFotos;
+    else if(c.fotos === '__idb__') c.fotos = [];
+
+    // Restore vorstand photos
+    if(dbPhotos && c.vorstand){
+      c.vorstand = c.vorstand.map(function(v, i){
+        if(v.photo && v.photo.startsWith('__idb__:')){
+          return Object.assign({}, v, {photo: dbPhotos[i] || ''});
+        }
+        return v;
+      });
+    }
+    return c;
+  });
+}
+
+// ── Tab switching ──
+function seTab(name){
+  document.querySelectorAll('.se-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.se-panel').forEach(p => { p.style.display='none'; p.classList.remove('active'); });
+  event.target.classList.add('active');
+  const panel = document.getElementById('se-'+name);
+  if(panel){ panel.style.display='block'; panel.classList.add('active'); }
+  seLoadTab(name);
+}
+
+function seLoadTab(name){
+  seGetContentFull().then(function(c){
+    if(name === 'hero')    seLoadHero(c);
+    if(name === 'stats')   seLoadStats(c);
+    if(name === 'fotos')   seLoadFotos(c);
+    if(name === 'ziele')   seLoadZiele(c);
+    if(name === 'vorstand')seLoadVorstand(c);
+    if(name === 'news')    seLoadNews(c);
+  });
+}
+
+// ── HERO ──
+const HERO_DEFAULTS = {
+  title1: 'Sichere Spielplätze.',
+  title2: 'Für alle Kinder.',
+  lead: 'Die SVSS vereint Fachpersonen, die sich für sichere, kindgerechte und qualitativ hochwertige Spiel- und Freizeitanlagen in der ganzen Schweiz einsetzen.',
+  btn: 'Fachperson finden →'
+};
+function seLoadHero(c){
+  const h = c.hero || {};
+  document.getElementById('se-hero-title1').value = h.title1 || HERO_DEFAULTS.title1;
+  document.getElementById('se-hero-title2').value = h.title2 || HERO_DEFAULTS.title2;
+  document.getElementById('se-hero-lead').value   = h.lead   || HERO_DEFAULTS.lead;
+  document.getElementById('se-hero-btn').value    = h.btn    || HERO_DEFAULTS.btn;
+}
+function seSaveHero(){
+  seSaveContent({ hero: {
+    title1: document.getElementById('se-hero-title1').value,
+    title2: document.getElementById('se-hero-title2').value,
+    lead:   document.getElementById('se-hero-lead').value,
+    btn:    document.getElementById('se-hero-btn').value
+  }});
+}
+
+// ── STATS ──
+const STATS_DEFAULTS = [
+  {num:'52', label:'Mitgliedfirmen schweizweit'},
+  {num:'26', label:'Kantone abgedeckt'},
+  {num:'EN', label:'1176 / 1177 zertifiziert'},
+  {num:'15+', label:'Jahre Verbandsarbeit'}
+];
+function seLoadStats(c){
+  const stats = (c.stats && c.stats.length) ? c.stats : STATS_DEFAULTS;
+  const list = document.getElementById('se-stats-list');
+  list.innerHTML = '';
+  stats.forEach(function(s, i){
+    const div = document.createElement('div');
+    div.className = 'se-item-card';
+    div.innerHTML = '<div class="form-row">'
+      + '<div class="fg"><label>Zahl/Kürzel</label><input class="se-stat-num" type="text" value="'+s.num+'"></div>'
+      + '<div class="fg"><label>Beschriftung</label><input class="se-stat-label" type="text" value="'+s.label+'"></div>'
+      + '</div>';
+    list.appendChild(div);
+  });
+}
+function seSaveStats(){
+  const items = document.querySelectorAll('#se-stats-list .se-item-card');
+  const stats = [...items].map(function(el){
+    return { num: el.querySelector('.se-stat-num').value, label: el.querySelector('.se-stat-label').value };
+  });
+  seSaveContent({stats});
+}
+
+// ── FOTOS ──
+// Fotos are stored in IndexedDB (large data), array of {src, name} objects max 4
+let _seFotosArr = []; // working array while editing
+
+function seLoadFotos(c){
+  // c.fotos from seGetContentFull already has resolved data: URLs
+  _seFotosArr = [];
+  if(c.fotos){
+    c.fotos.forEach(function(item){
+      if(typeof item === 'string'){
+        _seFotosArr.push({src: item, name: ''});
+      } else if(item && item.src){
+        _seFotosArr.push(item);
+      }
+    });
+  }
+  seFotosRenderGrid();
+}
+
+function seFotosRenderGrid(){
+  const grid = document.getElementById('se-fotos-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  if(_seFotosArr.length === 0){
+    grid.innerHTML = '<p style="font-size:13px;color:var(--tm);grid-column:1/-1;padding:.5rem 0">Noch keine Bilder — oben hochladen.</p>';
+    return;
+  }
+  _seFotosArr.forEach(function(img, i){
+    const div = document.createElement('div');
+    div.style.cssText = 'position:relative;aspect-ratio:16/9;border-radius:var(--r);overflow:hidden;background:var(--sd);cursor:grab';
+    div.draggable = true;
+    div.dataset.idx = i;
+    div.ondragstart = function(e){ e.dataTransfer.setData('text/plain', i); this.style.opacity='.5'; };
+    div.ondragend   = function(){ this.style.opacity='1'; };
+    div.ondragover  = function(e){ e.preventDefault(); this.style.outline='2px solid var(--gm)'; };
+    div.ondragleave = function(){ this.style.outline=''; };
+    div.ondrop      = function(e){
+      e.preventDefault(); this.style.outline='';
+      const from = parseInt(e.dataTransfer.getData('text/plain'));
+      const to   = parseInt(this.dataset.idx);
+      if(from !== to){
+        const tmp = _seFotosArr.splice(from, 1)[0];
+        _seFotosArr.splice(to, 0, tmp);
+        seFotosRenderGrid();
+      }
+    };
+
+    const im = document.createElement('img');
+    im.src = img.src;
+    im.style.cssText = 'width:100%;height:100%;object-fit:cover';
+
+    // Badge
+    const badge = document.createElement('div');
+    badge.style.cssText = 'position:absolute;top:4px;left:4px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:2px 7px;border-radius:3px';
+    badge.textContent = 'Foto ' + (i+1);
+
+    // Delete btn
+    const del = document.createElement('button');
+    del.textContent = '✕';
+    del.style.cssText = 'position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:4px;padding:2px 7px;cursor:pointer;font-size:12px';
+    del.onclick = function(e){ e.stopPropagation(); _seFotosArr.splice(i,1); seFotosRenderGrid(); };
+
+    // Drag hint
+    const hint = document.createElement('div');
+    hint.style.cssText = 'position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.4);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px';
+    hint.textContent = '⠿ ziehen zum Sortieren';
+
+    div.appendChild(im); div.appendChild(badge); div.appendChild(del); div.appendChild(hint);
+    grid.appendChild(div);
+  });
+
+  // Add placeholder slots up to 4
+  for(let i = _seFotosArr.length; i < 4; i++){
+    const ph = document.createElement('div');
+    ph.style.cssText = 'aspect-ratio:16/9;border-radius:var(--r);border:2px dashed var(--sd);display:flex;align-items:center;justify-content:center;color:var(--tm);font-size:12px;cursor:pointer';
+    ph.textContent = 'Foto ' + (i+1) + ' — leer';
+    ph.onclick = function(){ document.getElementById('se-fotos-input').click(); };
+    grid.appendChild(ph);
+  }
+}
+
+function seFotosHandleFiles(files){
+  const fileArr = [...files].filter(function(f){
+    if(f.size > 5*1024*1024){ toast(f.name + ': max. 5 MB', 'err'); return false; }
+    if(!f.type.startsWith('image/')){ toast(f.name + ': nur Bilder', 'err'); return false; }
+    return true;
+  });
+  if(!fileArr.length) return;
+
+  const prog = document.getElementById('se-fotos-progress');
+  const bar  = document.getElementById('se-fotos-prog-bar');
+  const pct  = document.getElementById('se-fotos-prog-pct');
+  const lbl  = document.getElementById('se-fotos-prog-label');
+  prog.style.display = 'block';
+
+  let done = 0;
+  fileArr.forEach(function(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      if(_seFotosArr.length < 4){
+        _seFotosArr.push({src: e.target.result, name: file.name});
+      }
+      done++;
+      const p = Math.round((done/fileArr.length)*100);
+      bar.style.width = p+'%'; pct.textContent = p+'%';
+      lbl.textContent = done + ' von ' + fileArr.length + ' hochgeladen';
+      if(done === fileArr.length){
+        seFotosRenderGrid();
+        setTimeout(function(){ prog.style.display='none'; bar.style.width='0%'; },1500);
+        document.getElementById('se-fotos-input').value = '';
+        if(_seFotosArr.length >= 4) toast('4 Fotos erreicht — Foto löschen um weitere hinzuzufügen', 'ok');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function seFotosDrop(e){
+  e.preventDefault();
+  document.getElementById('se-fotos-dropzone').classList.remove('drag');
+  seFotosHandleFiles(e.dataTransfer.files);
+}
+
+function seSaveFotos(){
+  seSaveContent({fotos: _seFotosArr});
+}
+// ── ZIELE ──
+const ZIELE_DEFAULTS = {
+  title: 'Unser Zweck & unsere Ziele',
+  lead: 'Die SVSS sieht sich als Fachvereinigung, die zusammen mit ihren Mitgliedern das Thema Spielwert, Gestaltung, Ökologie, Bauweise und Inspektion unter dem Aspekt der erforderlichen Sicherheit behandelt.',
+  items: [
+    {title:'Sicherheitsniveau garantieren', text:'Ein geeignetes und bedürfnisgerechtes Sicherheitsniveau für Spielplatz- und Freizeitanlagen in der ganzen Schweiz garantieren und kontinuierlich weiterentwickeln.'},
+    {title:'Wissen aufbauen & erhalten', text:'Schulungen, Fachgespräche und Publikationen, um das Fachwissen der Spielplatzprüfer auf einem adäquaten Stand zu bringen und dauerhaft zu sichern.'},
+    {title:'Normen & Standards vertreten', text:'Abstützung auf EN 1176 / EN 1177, gesetzliche Vorgaben und Unfallstatistiken. Bildung von Arbeitsgruppen zu aktuellen Themen der Spielplatzsicherheit.'},
+    {title:'Ganzheitliche Betrachtung', text:'Spielwert, Gestaltung, Ökologie, Bauweise, Entwicklungsstufen und Inklusion stets unter dem Aspekt der erforderlichen Sicherheit für alle Kinder.'}
+  ]
+};
+function seLoadZiele(c){
+  const z = c.ziele || ZIELE_DEFAULTS;
+  document.getElementById('se-ziele-title').value = z.title || ZIELE_DEFAULTS.title;
+  document.getElementById('se-ziele-lead').value  = z.lead  || ZIELE_DEFAULTS.lead;
+  const list = document.getElementById('se-ziele-list');
+  list.innerHTML = '';
+  (z.items || ZIELE_DEFAULTS.items).forEach(function(item, i){
+    const div = document.createElement('div');
+    div.className = 'se-item-card';
+    div.innerHTML = '<div class="fg"><label>Titel '+(i+1)+'</label><input class="se-ziel-title" type="text" value="'+item.title.replace(/"/g,'&quot;')+'"></div>'
+      + '<div class="fg"><label>Text</label><textarea class="se-ziel-text" rows="3">'+item.text+'</textarea></div>';
+    list.appendChild(div);
+  });
+}
+function seSaveZiele(){
+  const titleEls = document.querySelectorAll('.se-ziel-title');
+  const textEls  = document.querySelectorAll('.se-ziel-text');
+  const items = [...titleEls].map(function(el, i){
+    return { title: el.value, text: textEls[i].value };
+  });
+  seSaveContent({ ziele: {
+    title: document.getElementById('se-ziele-title').value,
+    lead:  document.getElementById('se-ziele-lead').value,
+    items
+  }});
+}
+
+// ── VORSTAND ──
+const VORSTAND_DEFAULTS = [
+  {initials:'AH', color:'#1a3a2a', role:'Präsident',       name:'Andreas Hochstrasser', firma:'Spielplatz Zone AG',    web:'spielplatzzone.ch'},
+  {initials:'TG', color:'#2d6a4a', role:'Vorstandsmitglied',name:'Thomas Gerster',       firma:'GTSM Magglinen AG',     web:'gtsm.ch'},
+  {initials:'YB', color:'#4a9068', role:'Vorstandsmitglied',name:'Yvonne Bindbeutel',    firma:'Spielklusion',          web:'spielklusion.com'},
+  {initials:'RB', color:'#3a5a6a', role:'Web & Social Media',name:'Raphael von Büren',   firma:'PSP – Spielplatzsicherheit',web:'psp.live'}
+];
+function seRenderVorstandItem(v, i){
+  const card = document.createElement('div');
+  card.className = 'se-item-card';
+  card.dataset.idx = i;
+
+  // Remove button
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'se-remove';
+  removeBtn.textContent = '✕';
+  removeBtn.onclick = function(){ seRemoveVorstand(i); };
+  card.appendChild(removeBtn);
+
+  // Outer flex row
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:12px;align-items:flex-start;margin-bottom:10px';
+
+  // Photo preview column
+  const photoCol = document.createElement('div');
+  photoCol.style.flexShrink = '0';
+
+  const preview = document.createElement('div');
+  preview.id = 'v-photo-prev-' + i;
+  preview.style.cssText = 'width:72px;height:72px;border-radius:50%;overflow:hidden;background:'+v.color+';display:flex;align-items:center;justify-content:center;font-family:serif;font-size:1.5rem;color:#fff;cursor:pointer';
+  if(v.photo){
+    const pImg = document.createElement('img');
+    pImg.src = v.photo;
+    pImg.style.cssText = 'width:100%;height:100%;object-fit:cover';
+    preview.appendChild(pImg);
+  } else {
+    preview.textContent = v.initials || '??';
+  }
+
+  // Upload label
+  const uploadLabel = document.createElement('label');
+  uploadLabel.className = 'btn btn-ghost btn-sm';
+  uploadLabel.style.cssText = 'margin-top:6px;cursor:pointer;font-size:11px;padding:4px 8px;display:block;text-align:center';
+  uploadLabel.textContent = 'Foto';
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  fileInput.dataset.idx = i;
+  fileInput.onchange = function(){ seUploadVorstandPhoto(this, i); };
+  uploadLabel.appendChild(fileInput);
+
+  photoCol.appendChild(preview);
+  photoCol.appendChild(uploadLabel);
+  row.appendChild(photoCol);
+
+  // Fields column
+  const fieldsCol = document.createElement('div');
+  fieldsCol.style.flex = '1';
+
+  function makeRow(fields){
+    const r = document.createElement('div');
+    r.className = 'form-row';
+    fields.forEach(function(f){
+      const fg = document.createElement('div');
+      fg.className = 'fg';
+      const lbl = document.createElement('label');
+      lbl.textContent = f.label;
+      const inp = document.createElement('input');
+      inp.type = f.type || 'text';
+      if(f.cls) inp.className = f.cls;
+      if(f.max) inp.maxLength = f.max;
+      if(f.val !== undefined) inp.value = f.val;
+      if(f.style) inp.style.cssText = f.style;
+      fg.appendChild(lbl); fg.appendChild(inp);
+      r.appendChild(fg);
+    });
+    return r;
+  }
+
+  fieldsCol.appendChild(makeRow([
+    {label:'Kürzel (2 Z.)', cls:'se-v-init', val:v.initials||'', max:2, style:'max-width:60px'},
+    {label:'Farbe (Fallback)', cls:'se-v-color', type:'color', val:v.color||'#1a3a2a', style:'height:38px;padding:4px;max-width:70px'}
+  ]));
+  fieldsCol.appendChild(makeRow([
+    {label:'Rolle', cls:'se-v-role', val:v.role||''},
+    {label:'Name', cls:'se-v-name', val:v.name||''}
+  ]));
+  fieldsCol.appendChild(makeRow([
+    {label:'Firma', cls:'se-v-firma', val:v.firma||''},
+    {label:'Website', cls:'se-v-web', val:v.web||''}
+  ]));
+
+  // Hidden photo value stored as data attribute on card
+  card.dataset.photo = v.photo || '';
+
+  row.appendChild(fieldsCol);
+  card.appendChild(row);
+  return card;
+}
+function seUploadVorstandPhoto(input, idx){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const url = e.target.result;
+    // Update preview
+    const prev = document.getElementById('v-photo-prev-'+idx);
+    if(prev){
+      prev.textContent = '';
+      const img = document.createElement('img');
+      img.src = url;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+      prev.appendChild(img);
+    }
+    // Store photo URL on the card's dataset
+    const card = input.closest('.se-item-card');
+    if(card) card.dataset.photo = url;
+  };
+  reader.readAsDataURL(file);
+}
+function seLoadVorstand(c){
+  const list = document.getElementById('se-vorstand-list');
+  list.innerHTML = '';
+  const items = (c.vorstand && c.vorstand.length) ? c.vorstand : VORSTAND_DEFAULTS;
+  items.forEach(function(v,i){ list.appendChild(seRenderVorstandItem(v,i)); });
+}
+function seAddVorstand(){
+  const c = seGetContent();
+  const items = (c.vorstand && c.vorstand.length) ? c.vorstand : [...VORSTAND_DEFAULTS];
+  items.push({initials:'XX',color:'#1a3a2a',role:'',name:'',firma:'',web:''});
+  seSaveContent({vorstand:items});
+  seLoadVorstand(seGetContent());
+}
+function seRemoveVorstand(idx){
+  const c = seGetContent();
+  const items = (c.vorstand && c.vorstand.length) ? c.vorstand : [...VORSTAND_DEFAULTS];
+  items.splice(idx,1);
+  seSaveContent({vorstand:items});
+  seLoadVorstand(seGetContent());
+}
+function seSaveVorstand(){
+  const cards = document.querySelectorAll('#se-vorstand-list .se-item-card');
+  const items = [...cards].map(function(el){
+    const q = function(cls){ const e = el.querySelector('.'+cls); return e ? e.value : ''; };
+    return {
+      initials: q('se-v-init'),
+      color:    q('se-v-color'),
+      role:     q('se-v-role'),
+      name:     q('se-v-name'),
+      firma:    q('se-v-firma'),
+      web:      q('se-v-web'),
+      photo:    el.dataset.photo || ''
+    };
+  });
+  seSaveContent({vorstand:items});
+}
+
+// ── NEWS ──
+const NEWS_DEFAULTS = [
+  {day:'08',month:'Apr',cat:'Normen',title:'Neue Normenrevision EN 1176 tritt ab 2027 in Kraft',text:'Der Vorstand informiert: Die überarbeitete EN 1176 tritt per Januar 2027 in Kraft.'},
+  {day:'15',month:'Mrz',cat:'Mitglieder',title:'Willkommen: 3 neue Mitgliedsfirmen',text:'Die SVSS wächst weiter: Drei neue Fachfirmen sind dem Verband beigetreten.'},
+  {day:'10',month:'Feb',cat:'Weiterbildung',title:'Kurs «Operative Inspektion» — Anmeldung offen',text:'Der Kurs zur operativen Inspektion nach EN 1176 wird am 3. Juni online durchgeführt.'},
+  {day:'02',month:'Feb',cat:'Verband',title:'Mitgliederbeiträge 2026 — Rechnungen versandt',text:'Die Jahresrechnungen wurden per E-Mail und Post versandt.'}
+];
+function seRenderNewsItem(n, i){
+  const div = document.createElement('div');
+  div.className = 'se-item-card';
+  const imgVal = n.img || '';
+  div.innerHTML =
+    '<button class="se-remove" onclick="seRemoveNews('+i+')">✕</button>'
+    + '<div class="form-row">'
+    + '<div class="fg"><label>Tag</label><input class="se-n-day" type="text" maxlength="2" value="'+n.day+'" style="max-width:60px"></div>'
+    + '<div class="fg"><label>Monat (3 Z.)</label><input class="se-n-month" type="text" maxlength="3" value="'+n.month+'" style="max-width:80px"></div>'
+    + '<div class="fg"><label>Kategorie</label><input class="se-n-cat" type="text" value="'+n.cat+'"></div>'
+    + '</div>'
+    + '<div class="fg"><label>Titel</label><input class="se-n-title" type="text" value="'+n.title.replace(/"/g,'&quot;')+'"></div>'
+    + '<div class="fg"><label>Text</label><textarea class="se-n-text" rows="2">'+n.text+'</textarea></div>'
+    + '<div class="fg"><label>Bild (URL oder hochladen)</label>'
+    + '<div style="display:flex;gap:8px;align-items:center">'
+    + '<input class="se-n-img" type="text" placeholder="https://... oder unten hochladen" value="'+imgVal+'">'
+    + (imgVal ? '<img src="'+imgVal+'" style="height:40px;border-radius:4px;object-fit:cover;flex-shrink:0">' : '')
+    + '</div>'
+    + '<label class="btn btn-ghost btn-sm" style="margin-top:6px;cursor:pointer;display:inline-flex">'
+    + '📷 Bild hochladen<input type="file" accept="image/*" style="display:none" onchange="seUploadNewsImg(this,'+i+')">'
+    + '</label>'
+    + '</div>';
+  return div;
+}
+function seUploadNewsImg(input, idx){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const url = e.target.result;
+    const card = input.closest('.se-item-card');
+    const textInput = card.querySelector('.se-n-img');
+    if(textInput) textInput.value = url;
+  };
+  reader.readAsDataURL(file);
+}
+function seLoadNews(c){
+  const list = document.getElementById('se-news-list');
+  list.innerHTML = '';
+  const items = (c.news && c.news.length) ? c.news : NEWS_DEFAULTS;
+  items.forEach(function(n,i){ list.appendChild(seRenderNewsItem(n,i)); });
+}
+function seAddNews(){
+  const c = seGetContent();
+  const items = (c.news && c.news.length) ? [...c.news] : [...NEWS_DEFAULTS];
+  items.unshift({day:'01',month:'Jan',cat:'Aktuell',title:'Neuer Eintrag',text:'Beschreibung hier eingeben.'});
+  seSaveContent({news:items});
+  seLoadNews(seGetContent());
+}
+function seRemoveNews(idx){
+  const c = seGetContent();
+  const items = (c.news && c.news.length) ? [...c.news] : [...NEWS_DEFAULTS];
+  items.splice(idx,1);
+  seSaveContent({news:items});
+  seLoadNews(seGetContent());
+}
+function seSaveNews(){
+  const cards = document.querySelectorAll('#se-news-list .se-item-card');
+  const items = [...cards].map(function(el){
+    return {
+      day:   el.querySelector('.se-n-day').value,
+      month: el.querySelector('.se-n-month').value,
+      cat:   el.querySelector('.se-n-cat').value,
+      title: el.querySelector('.se-n-title').value,
+      text:  el.querySelector('.se-n-text').value,
+      img:   el.querySelector('.se-n-img').value
+    };
+  });
+  seSaveContent({news:items});
+}
+
+// Load hero tab by default when Seiten-Editor opens
+const _origShowPanel = showPanel;
+
+
+// ═══════════════════════════════════════════════════════
+//  BILDPOOL + KI-GENERATOR
+// ═══════════════════════════════════════════════════════
+const BP_KEY = 'svss_bildpool';
+
+function bpGetPool(){ try{ return JSON.parse(localStorage.getItem(BP_KEY))||[]; }catch{ return []; } }
+function bpSavePool(imgs){ localStorage.setItem(BP_KEY, JSON.stringify(imgs)); }
+
+function bpTab(name){
+  document.querySelectorAll('#panel-bildpool .se-tab').forEach(t=>t.classList.remove('active'));
+  ['bp-upload','bp-ki','bp-pool'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  const tabBtn = document.getElementById('bp-tab-'+name);
+  if(tabBtn) tabBtn.classList.add('active');
+  const panel = document.getElementById('bp-'+name);
+  if(panel) panel.style.display='block';
+  if(name==='pool') bpRenderPool();
+}
+
+// Upload
+function bpHandleDrop(e){
+  e.preventDefault();
+  document.getElementById('bp-drop-zone').classList.remove('drag');
+  bpHandleFiles(e.dataTransfer.files);
+}
+function bpHandleFiles(files){
+  const fileArr=[...files].filter(f=>f.size<=5*1024*1024 && f.type.startsWith('image/'));
+  if(!fileArr.length){ toast('Keine gültigen Bilder ausgewählt','err'); return; }
+  const wrap=document.getElementById('bp-upload-progress');
+  const bar=document.getElementById('bp-up-bar');
+  const pct=document.getElementById('bp-up-pct');
+  const label=document.getElementById('bp-up-label');
+  wrap.style.display='block';
+  const pool=bpGetPool();
+  let done=0;
+  fileArr.forEach(function(file){
+    const reader=new FileReader();
+    reader.onload=function(e){
+      pool.push({src:e.target.result, name:file.name, date:new Date().toLocaleDateString('de-CH'), source:'upload'});
+      done++;
+      const p=Math.round((done/fileArr.length)*100);
+      bar.style.width=p+'%'; pct.textContent=p+'%';
+      label.textContent=done+' von '+fileArr.length+' hochgeladen';
+      if(done===fileArr.length){
+        bpSavePool(pool);
+        toast(fileArr.length+' Bild'+(fileArr.length>1?'er':'')+' gespeichert ✓','ok');
+        setTimeout(function(){ wrap.style.display='none'; bar.style.width='0%'; },2000);
+        document.getElementById('bp-file-input').value='';
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Pool rendering
+function bpRenderPool(){
+  const pool=bpGetPool();
+  const grid=document.getElementById('bp-pool-grid');
+  const countEl=document.getElementById('bp-pool-count');
+  if(!grid) return;
+  if(countEl) countEl.textContent='('+pool.length+' Bilder)';
+  grid.innerHTML='';
+  if(!pool.length){
+    grid.innerHTML='<p style="font-size:13px;color:var(--tm);padding:.5rem 0">Noch keine Bilder im Pool.</p>';
+    return;
+  }
+  pool.slice().reverse().forEach(function(img,ri){
+    const i = pool.length-1-ri;
+    const div=document.createElement('div');
+    div.className='img-thumb';
+    div.style.cursor='pointer';
+    div.title='Klicken: URL kopieren | Del: Löschen';
+    const im=document.createElement('img');
+    im.src=img.src; im.alt=img.name;
+    const del=document.createElement('button');
+    del.className='img-thumb-del'; del.textContent='✕';
+    del.onclick=function(e){ e.stopPropagation(); bpDeleteImg(i); };
+    const badge=document.createElement('div');
+    badge.style.cssText='position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:2px 5px;border-radius:3px';
+    badge.textContent=img.source==='ki'?'KI':'Upload';
+    div.onclick=function(){
+      navigator.clipboard.writeText(img.src).then(function(){
+        toast('URL kopiert ✓','ok');
+      }).catch(function(){ toast('URL: '+img.src.substring(0,40)+'...','ok'); });
+    };
+    div.appendChild(im); div.appendChild(del); div.appendChild(badge);
+    grid.appendChild(div);
+  });
+}
+function bpDeleteImg(idx){
+  const pool=bpGetPool();
+  pool.splice(idx,1);
+  bpSavePool(pool);
+  bpRenderPool();
+  toast('Bild gelöscht','ok');
+}
+function bpSaveKiImg(){
+  const img=document.getElementById('bp-ki-img');
+  if(!img||!img.src) return;
+  const pool=bpGetPool();
+  pool.push({src:img.src, name:'ki-generiert-'+Date.now()+'.png', date:new Date().toLocaleDateString('de-CH'), source:'ki'});
+  bpSavePool(pool);
+  toast('KI-Bild in Bildpool gespeichert ✓','ok');
+}
+function bpDownloadKiImg(){
+  const img=document.getElementById('bp-ki-img');
+  if(!img||!img.src) return;
+  const a=document.createElement('a');
+  a.href=img.src; a.download='ki-bild-svss.png'; a.click();
+}
+
+// KI Generator
+let _bpKiImgSrc = null;
+async function bpGenerate(){
+  const promptEl=document.getElementById('bp-ki-prompt');
+  const styleEl=document.getElementById('bp-ki-style');
+  const ratioEl=document.getElementById('bp-ki-ratio');
+  const btn=document.getElementById('bp-ki-btn');
+  const resultEl=document.getElementById('bp-ki-result');
+  const loadingEl=document.getElementById('bp-ki-loading');
+  const imgWrap=document.getElementById('bp-ki-img-wrap');
+  const errEl=document.getElementById('bp-ki-error');
+
+  const userPrompt = promptEl.value.trim();
+  if(!userPrompt){ toast('Bitte Bildbeschreibung eingeben','err'); return; }
+
+  const style = styleEl.value;
+  const ratio = ratioEl.value;
+  const fullPrompt = userPrompt + (style ? ', '+style : '') + ', '+ratio+', high quality, Swiss context';
+
+  btn.disabled=true; btn.textContent='Generiert…';
+  resultEl.style.display='block';
+  loadingEl.style.display='block';
+  imgWrap.style.display='none';
+  errEl.style.display='none';
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: 'Generate an SVG image based on this description: ' + fullPrompt + '. Return ONLY a complete, self-contained SVG element with viewBox="0 0 800 450" that visually represents the description. Use rich colors and detailed shapes. No text explanation, just the SVG code starting with <svg.'
+        }]
+      })
+    });
+    const data = await response.json();
+    const text = (data.content||[]).map(c=>c.text||'').join('');
+    const svgMatch = text.match(/<svg[\s\S]*?<\/svg>/i);
+    if(svgMatch){
+      const svgBlob = new Blob([svgMatch[0]], {type:'image/svg+xml'});
+      const url = URL.createObjectURL(svgBlob);
+      _bpKiImgSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgMatch[0])));
+      const imgEl = document.getElementById('bp-ki-img');
+      imgEl.src = url;
+      imgEl.onload = function(){ URL.revokeObjectURL(url); };
+      // Store as data URL for saving
+      imgEl.src = _bpKiImgSrc;
+      loadingEl.style.display='none';
+      imgWrap.style.display='block';
+    } else {
+      throw new Error('Kein SVG-Bild generiert');
+    }
+  } catch(err){
+    loadingEl.style.display='none';
+    errEl.style.display='block';
+    errEl.textContent='Fehler: ' + (err.message||err);
+  }
+  btn.disabled=false; btn.textContent='Bild generieren';
+}
+
+// Override showPanel to init bildpool tab
+
+// ═══════════════════════════════════════════════════════
+//  INIT (Supabase)
+// ═══════════════════════════════════════════════════════
+
+// Seed localStorage fallback if empty
+async function seedDefaults(){
+  if(localStorage.getItem('svss_members')) return;
+  try {
+    const members = await supaGetMembers();
+    localStorage.setItem('svss_members', JSON.stringify(members));
+  } catch(e) {
+    // Hard-coded fallback
+    const d={admin:{pw:'svss2026admin',display:'SVSS Admin',role:'admin'},psp:{pw:'psp2026',display:'PSP \u2013 Spielplatzsicherheit',role:'member'},gtsm:{pw:'gtsm2026',display:'GTSM Magglingen',role:'member'},spielklusion:{pw:'spiel2026',display:'Spielklusion',role:'member'},eibe:{pw:'eibe2026',display:'eibe AG',role:'member'},creaplay:{pw:'crea2026',display:'creaplay ag',role:'member'},herzig:{pw:'herzig2026',display:'HERZIG-Expertisen GmbH',role:'member'},spiko:{pw:'spiko2026',display:'Spiko GmbH',role:'member'},spkswiss:{pw:'spk2026',display:'SPK Swiss AG',role:'member'},checksafety:{pw:'check2026',display:'Check Safety SA',role:'member'}};
+    localStorage.setItem('svss_members', JSON.stringify(d));
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async function(){
+  await seedDefaults();
+  SESSION = getSession();
+  if(SESSION){ openApp(); } else { showView('login'); }
+});
+if(document.readyState === 'complete' || document.readyState === 'interactive'){
+  (async function(){
+    await seedDefaults();
+    SESSION = getSession();
+    if(SESSION){ openApp(); } else { showView('login'); }
+  })();
+}
+
+</script>
+</body>
+</html>
