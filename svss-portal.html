@@ -1442,33 +1442,33 @@ function seGetContentFull(){
 }
 // ── Tab switching ──
 function seTab(name, btn){
-  document.querySelectorAll('.se-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.se-panel').forEach(p => { p.style.display='none'; p.classList.remove('active'); });
-  // Use passed button or event.target
-  const activeBtn = btn || (typeof event !== 'undefined' && event && event.currentTarget) || 
-                    document.querySelector('[onclick*="seTab(\''+name+'\')"]');
-  if(activeBtn) activeBtn.classList.add('active');
+  // Remove active from all se-tabs and se-panels
+  document.querySelectorAll('.se-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.se-panel').forEach(function(p){ p.style.display='none'; });
+  // Activate the clicked button
+  if(btn) btn.classList.add('active');
+  // Show the correct panel
   const panel = document.getElementById('se-'+name);
-  if(panel){ panel.style.display='block'; panel.classList.add('active'); }
+  if(panel) panel.style.display = 'block';
+  // Load content
   seLoadTab(name);
 }
 
 function seLoadTab(name){
-  seGetContentFull().then(function(c){
-    if(name === 'hero')    seLoadHero(c);
-    if(name === 'stats')   seLoadStats(c);
-    if(name === 'fotos')   seLoadFotos(c);
-    if(name === 'ziele')   seLoadZiele(c);
-    if(name === 'vorstand')seLoadVorstand(c);
-    if(name === 'news')    seLoadNews(c);
+  // For text-only tabs: load immediately from localStorage (no async needed)
+  const c = seGetContent();
+  if(name === 'hero')  { seLoadHero(c); return; }
+  if(name === 'stats') { seLoadStats(c); return; }
+  if(name === 'ziele') { seLoadZiele(c); return; }
+
+  // For image-dependent tabs: load from IndexedDB too
+  seGetContentFull().then(function(full){
+    if(name === 'fotos')   seLoadFotos(full);
+    if(name === 'vorstand')seLoadVorstand(full);
+    if(name === 'news')    seLoadNews(full);
   }).catch(function(e){
-    console.warn('seLoadTab error:', e);
-    // Load with empty content so defaults show
-    const c = seGetContent();
-    if(name === 'hero')    seLoadHero(c);
-    if(name === 'stats')   seLoadStats(c);
+    console.warn('seLoadTab IndexedDB error:', e);
     if(name === 'fotos')   seLoadFotos(c);
-    if(name === 'ziele')   seLoadZiele(c);
     if(name === 'vorstand')seLoadVorstand(c);
     if(name === 'news')    seLoadNews(c);
   });
