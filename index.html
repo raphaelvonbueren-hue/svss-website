@@ -1636,6 +1636,8 @@ function buildMembersGrid(members){
   });
 }
 
+// Clear stale member cache (force fresh Supabase fetch)
+try { localStorage.removeItem('svss_members'); } catch(e) {}
 // Render immediately
 try { applySiteContent(); } catch(e) { console.error('applySiteContent:', e); }
 try { applyAuthState(); } catch(e) {}
