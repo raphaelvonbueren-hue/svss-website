@@ -560,7 +560,7 @@ footer p{font-size:13px;line-height:2;font-weight:300}
     <p class="section-lead">Von der Inspektion &uuml;ber Planung und Bau bis zur Wartung &mdash; alle SVSS-Mitglieder sind zertifizierte Fachpersonen.</p>
     <div class="member-preview-grid" id="preview-grid"></div>
     <div class="preview-footer">
-      <button class="view-all-btn" onclick="showPage('mitglieder')">Alle 52 Mitglieder anzeigen &#8594;</button>
+      <button class="view-all-btn" onclick="showPage('mitglieder')">Alle <span id="stat-member-count-btn">52</span> Mitglieder anzeigen &#8594;</button>
       <span class="member-count-label">inkl. Filter nach T&auml;tigkeitsbereich und Suche</span>
     </div>
   </section>
@@ -1605,7 +1605,7 @@ function buildMembersGrid(members){
   grid.innerHTML = '';
   
   const uids = Object.keys(members)
-    .filter(function(uid){ return uid !== 'admin'; })
+    .filter(function(uid){ return members[uid].role === 'member'; })
     .sort(function(a,b){ return (members[a].display||a).localeCompare(members[b].display||b); });
   
   uids.forEach(function(uid){
@@ -1645,9 +1645,11 @@ try { buildPreviewGrid(); } catch(e) {}
   try { await seedMembers(); } catch(e) {}
   try {
     const members = await supaGetMembers();
-    const count = Object.keys(members).filter(function(uid){ return uid !== 'admin'; }).length;
+    const count = Object.keys(members).filter(function(uid){ 
+      return members[uid].role === 'member'; 
+    }).length;
     // Update counts
-    ['stat-member-count','stat-member-count-2','stat-member-count-3'].forEach(function(id){
+    ['stat-member-count','stat-member-count-2','stat-member-count-3','stat-member-count-btn'].forEach(function(id){
       const el = document.getElementById(id);
       if(el && count > 0) el.textContent = count;
     });
