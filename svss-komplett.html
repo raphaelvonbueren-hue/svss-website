@@ -141,9 +141,9 @@ section{padding:96px 6vw}
   transition:transform var(--transition),box-shadow var(--transition);
   box-shadow:var(--shadow-sm)}
 .vorstand-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
-.vorstand-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;font-family:'DM Serif Display',serif;font-size:17px;color:#fff;
-  box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.vorstand-avatar{width:110px;height:110px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-family:'DM Serif Display',serif;font-size:2rem;color:#fff;
+  box-shadow:0 4px 16px rgba(0,0,0,.2)}
 .av-1{background:linear-gradient(135deg,var(--green-dark),var(--green-mid))}
 .av-2{background:linear-gradient(135deg,var(--green-mid),var(--green-soft))}
 .av-3{background:linear-gradient(135deg,var(--green-soft),#6ab88a)}
@@ -663,25 +663,7 @@ footer p{font-size:13px;line-height:2;font-weight:300}
     </div>
   </div>
   <div class="filter-bar">
-    <div class="filter-inner">
-      <div class="search-wrap">
-        <svg class="s-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l3 3"/></svg>
-        <input type="text" id="msearch" placeholder="Firma suchen&hellip;" oninput="doFilter()">
-      </div>
-      <div class="pills">
-        <button class="pill on" onclick="setTag('',this)">Alle</button>
-        <button class="pill" onclick="setTag('Inspektion',this)">Inspektion</button>
-        <button class="pill" onclick="setTag('Prüfung',this)">Prüfung</button>
-        <button class="pill" onclick="setTag('Planung',this)">Planung</button>
-        <button class="pill" onclick="setTag('Produktion',this)">Produktion</button>
-        <button class="pill" onclick="setTag('Montage',this)">Montage</button>
-        <button class="pill" onclick="setTag('Unterhalt',this)">Unterhalt</button>
-        <button class="pill" onclick="setTag('Fallschutz',this)">Fallschutz</button>
-        <button class="pill" onclick="setTag('Schulung',this)">Schulung</button>
-      </div>
-    </div>
-  </div>
-  <div class="count-bar"><p id="mcount">52 Mitglieder</p></div>
+  
   <div class="grid-section">
     <div class="members-grid" id="mgrid">
       <div class="category-label">Spielplatzpr&uuml;fung &amp; Inspektion</div>
@@ -1130,12 +1112,6 @@ function showPage(id){
 
 // ── MEMBER FILTER ──
 let activeTag='';
-function setTag(tag,el){
-  activeTag=tag;
-  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));
-  el.classList.add('on');
-  doFilter();
-}
 function doFilter(){
   const q=(document.getElementById('msearch')?.value||'').toLowerCase();
   const cards=document.querySelectorAll('#mgrid .mc');
