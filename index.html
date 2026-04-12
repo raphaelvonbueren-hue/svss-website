@@ -1481,62 +1481,35 @@ async function enrichMemberCards(){
 
 
 // ── APPLY SITE CONTENT FROM ADMIN EDITOR ──
-async function applySiteContent(){
+function applySiteContent(){
   let c = {};
-  // Try Supabase first, fallback to localStorage
-  try {
-    c = await supaGetSiteContent();
-    localStorage.setItem('svss_site_content', JSON.stringify(c));
-  } catch(e) {
-    try { c = JSON.parse(localStorage.getItem('svss_site_content')) || {}; } catch(e2){}
-  }
+  try{ c = JSON.parse(localStorage.getItem('svss_site_content')) || {}; }catch(e){}
 
-  // Always merge images from IndexedDB (overrides Supabase placeholders)
-  const SE_IMG_DB    = 'svss_site_images_db';
-  const SE_IMG_STORE = 'site_images';
-
-  function idbGet(key){
-    return new Promise(function(res){
-      try {
-        const req = indexedDB.open(SE_IMG_DB, 1);
-        req.onsuccess = function(e){
-          const r = e.target.result.transaction(SE_IMG_STORE,'readonly')
-                    .objectStore(SE_IMG_STORE).get(key);
-          r.onsuccess = function(ev){ res(ev.target.result || null); };
-          r.onerror   = function(){ res(null); };
-        };
-        req.onerror = function(){ res(null); };
-      } catch(e){ res(null); }
-    });
-  }
-
-  const [dbFotos, dbPhotos, dbNewsImg] = await Promise.all([
-    idbGet('fotos'),
-    idbGet('vorstand_photos'),
-    idbGet('news_imgs')
-  ]);
+  // Restore images from localStorage (same keys as portal)
+  function lsImg(key){ try{ return JSON.parse(localStorage.getItem('svss_sc_'+key)); }catch{ return null; } }
+  const dbFotos  = lsImg('fotos');
+  const dbPhotos = lsImg('vorstand_photos');
+  const dbNews   = lsImg('news_imgs');
 
   if(dbFotos) c.fotos = dbFotos;
-  else if(c.fotos === '__idb__') c.fotos = [];
+  else if(c.fotos === '__ls__' || c.fotos === '__idb__') c.fotos = [];
 
   if(dbPhotos && Array.isArray(c.vorstand)){
-    c.vorstand = c.vorstand.map(function(v, i){
-      if(v.photo && v.photo.startsWith('__idb__:')){
-        return Object.assign({}, v, {photo: dbPhotos[i] || ''});
+    c.vorstand = c.vorstand.map(function(v,i){
+      if(v.photo && (v.photo.startsWith('__ls__:') || v.photo.startsWith('__idb__:'))){
+        return Object.assign({},v,{photo: dbPhotos[i]||''});
       }
       return v;
     });
   }
-
-  if(dbNewsImg && Array.isArray(c.news)){
-    c.news = c.news.map(function(n, i){
-      if(n.img && n.img.startsWith('__idb__:')){
-        return Object.assign({}, n, {img: dbNewsImg[i] || ''});
+  if(dbNews && Array.isArray(c.news)){
+    c.news = c.news.map(function(n,i){
+      if(n.img && (n.img.startsWith('__ls__:') || n.img.startsWith('__idb__:'))){
+        return Object.assign({},n,{img: dbNews[i]||''});
       }
       return n;
     });
   }
-
   _doApplySiteContent(c);
 }
 function _doApplySiteContent(c){
@@ -1666,8 +1639,8 @@ function _doApplySiteContent(c){
   await seedMembers();
   applyAuthState();
   buildPreviewGrid();
-  await enrichMemberCards();
-  await applySiteContent();
+  applySiteContent();
+  enrichMemberCards();
 })();
 
 </script>
