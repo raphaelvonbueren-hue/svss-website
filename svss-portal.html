@@ -631,37 +631,55 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
       <!-- ADMIN -->
       <div id="panel-admin" class="panel" style="display:none">
         <p class="page-title">Mitglieder verwalten</p>
-        <p class="page-sub">Übersicht aller Mitglieder-Zugänge. Nur für Administratoren.</p>
-        <div class="card" style="margin-bottom:1.25rem">
-          <div class="card-title">Neues Mitglied anlegen</div>
-          <div class="form-row">
-            <div class="fg"><label>Benutzername</label><input id="new-user" type="text" placeholder="firmenname-kuerzel"></div>
-            <div class="fg"><label>Passwort</label><input id="new-pw" type="text" placeholder="Sicheres Passwort"></div>
+        <p class="page-sub">Alle Mitglieder-Zugänge verwalten. Passwörter ändern, neue Konten erstellen.</p>
+
+        <!-- Neues Mitglied -->
+        <div class="card" style="margin-bottom:1.5rem">
+          <div class="card-title">Neues Mitglied erstellen</div>
+          <div class="form-row" style="align-items:flex-end">
+            <div class="fg">
+              <label>Benutzername</label>
+              <input id="new-member-uid" type="text" placeholder="z.B. muster-ag">
+            </div>
+            <div class="fg">
+              <label>Anzeigename (Firma)</label>
+              <input id="new-member-name" type="text" placeholder="Muster AG">
+            </div>
+            <div class="fg">
+              <label>Passwort</label>
+              <input id="new-member-pw" type="text" placeholder="muster2026">
+            </div>
+            <button class="btn btn-dark btn-sm" onclick="adminAddMember()" style="white-space:nowrap;flex-shrink:0">+ Erstellen</button>
           </div>
-          <div class="fg"><label>Anzeigename (Firma)</label><input id="new-display" type="text" placeholder="Muster AG"></div>
-          <button class="btn btn-dark btn-sm" onclick="addMember()">Mitglied anlegen</button>
         </div>
+
+        <!-- Mitgliederliste -->
         <div class="card">
-          <div class="card-title">Alle Mitglieder (<span id="member-count">0</span>)</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <div class="card-title" style="margin:0">Alle Mitglieder <span id="member-count" style="font-size:13px;font-weight:400;color:var(--tm)"></span></div>
+            <button class="btn btn-ghost btn-sm" onclick="renderAdminTable()">&#8635; Neu laden</button>
+          </div>
           <div style="overflow-x:auto">
-            <table class="member-table">
-              <thead><tr><th>Benutzername</th><th>Anzeigename</th><th>Rolle</th><th>Profil</th><th style="text-align:right">Aktionen</th></tr></thead>
-              <tbody id="member-tbody"></tbody>
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr style="border-bottom:2px solid var(--sd);text-align:left">
+                  <th style="padding:8px 12px;font-weight:600;color:var(--ts)">Benutzername</th>
+                  <th style="padding:8px 12px;font-weight:600;color:var(--ts)">Firma</th>
+                  <th style="padding:8px 12px;font-weight:600;color:var(--ts)">Passwort</th>
+                  <th style="padding:8px 12px;font-weight:600;color:var(--ts)">Rolle</th>
+                  <th style="padding:8px 12px;font-weight:600;color:var(--ts)">Aktionen</th>
+                </tr>
+              </thead>
+              <tbody id="member-tbody">
+                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--tm)">Wird geladen...</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
+
       </div>
 
-    </div>
-  </main>
-</div>
-
-<!-- ══ VIEW: PUBLIC PROFILE ══ -->
-<div id="view-profile" class="view">
-  <div id="profile-content"></div>
-</div>
-
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+      <script>
 
 // ═══════════════════════════════════════════════════════
 //  SUPABASE CLIENT (inline, kein NPM nötig)
@@ -1243,25 +1261,97 @@ function buildProfileHTML(uid,p,isPreview){
 // ═══════════════════════════════════════════════════════
 //  ADMIN
 // ═══════════════════════════════════════════════════════
-function renderAdminTable(){
-  const members=getMembers();
-  const tbody=document.getElementById('member-tbody');
-  document.getElementById('member-count').textContent=Object.keys(members).length;
-  tbody.innerHTML='';
-  Object.entries(members).forEach(function([uid,m]){
-    const p=getProfile(uid);
-    const tr=document.createElement('tr');
-    tr.innerHTML='<td><code style="font-size:12px;background:var(--gl);padding:2px 6px;border-radius:4px">'+uid+'</code></td>'
-      +'<td>'+(m.display||'\u2014')+'</td>'
-      +'<td><span class="badge '+(m.role==='admin'?'badge-blue':'badge-gray')+'">'+m.role+'</span></td>'
-      +'<td style="text-align:center">'+(p.name?'\u2713':'\u2014')+'</td>'
-      +'<td><div class="actions"><button class="btn btn-ghost btn-sm" onclick="resetPw(\''+uid+'\')">Passwort \u00e4ndern</button>'
-      +(uid!=='admin'?'<button class="btn btn-danger btn-sm" onclick="deleteMember(\''+uid+'\')">L\u00f6schen</button>':'')
-      +'</div></td>';
+async function renderAdminTable(){
+  const tbody = document.getElementById('member-tbody');
+  const countEl = document.getElementById('member-count');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--tm)">&#9719; Lade Mitglieder...</td></tr>';
+
+  let members = {};
+  try {
+    members = await supaGetMembers();
+    // cache locally
+    localStorage.setItem('svss_members', JSON.stringify(members));
+  } catch(e) {
+    members = getLocalMembers();
+  }
+
+  if(countEl) countEl.textContent = Object.keys(members).length;
+  tbody.innerHTML = '';
+
+  // Sort: admin first, then alphabetically by uid
+  const sorted = Object.entries(members).sort(function(a,b){
+    if(a[1].role === 'admin' && b[1].role !== 'admin') return -1;
+    if(b[1].role === 'admin' && a[1].role !== 'admin') return 1;
+    return a[0].localeCompare(b[0]);
+  });
+
+  sorted.forEach(function([uid, m]){
+    const tr = document.createElement('tr');
+    const isAdmin = m.role === 'admin';
+    tr.innerHTML =
+      '<td><code style="font-size:12px;background:var(--sd);padding:2px 6px;border-radius:4px">'+uid+'</code></td>' +
+      '<td>'+( m.display || '<em style="color:var(--tm)">—</em>' )+'</td>' +
+      '<td><input type="password" value="'+m.pw+'" style="width:120px;font-size:12px;font-family:monospace;border:1px solid var(--sd);border-radius:4px;padding:3px 6px" ' +
+        'onchange="adminUpdatePw(this.dataset.uid, this.value)" data-uid="'+uid+'"></td>' +
+      '<td><span class="badge '+(isAdmin?'badge-green':'badge-gray')+'">'+(isAdmin?'Admin':'Mitglied')+'</span></td>' +
+      '<td style="display:flex;gap:6px;align-items:center">' +
+        (isAdmin ? '' : '<button class="btn btn-ghost btn-sm" data-uid="'+uid+'" onclick="adminMakeAdmin(this.dataset.uid)">Admin</button>') +
+        (uid === 'admin' ? '' : '<button class="btn btn-sm" style="background:#c0392b;color:#fff;border:none" data-uid="'+uid+'" onclick="adminDeleteMember(this.dataset.uid)">&#10005;</button>') +
+      '</td>';
     tbody.appendChild(tr);
   });
 }
-function addMember(){
+
+async function adminUpdatePw(uid, newPw){
+  if(!newPw || newPw.length < 4){ toast('Passwort zu kurz', 'err'); return; }
+  try {
+    const members = await supaGetMembers();
+    members[uid].pw = newPw;
+    await supaSaveMembers(members);
+    toast('Passwort für '+uid+' geändert ✓', 'ok');
+  } catch(e) {
+    toast('Fehler: '+e.message, 'err');
+  }
+}
+
+async function adminMakeAdmin(uid){
+  if(!confirm(uid+' zum Admin machen?')) return;
+  try {
+    const members = await supaGetMembers();
+    members[uid].role = 'admin';
+    await supaSaveMembers(members);
+    toast(uid+' ist jetzt Admin ✓', 'ok');
+    renderAdminTable();
+  } catch(e) { toast('Fehler: '+e.message, 'err'); }
+}
+
+async function adminDeleteMember(uid){
+  if(!confirm('Konto für '+uid+' wirklich löschen?')) return;
+  try {
+    const r = await fetch(SUPA_URL+'/rest/v1/members?uid=eq.'+encodeURIComponent(uid), {
+      method:'DELETE', headers:supaHeaders()
+    });
+    if(!r.ok) throw new Error('Status '+r.status);
+    toast(uid+' gelöscht ✓', 'ok');
+    renderAdminTable();
+  } catch(e) { toast('Fehler: '+e.message, 'err'); }
+}
+
+async function adminAddMember(){
+  const uid  = document.getElementById('new-member-uid').value.trim().toLowerCase();
+  const pw   = document.getElementById('new-member-pw').value.trim();
+  const name = document.getElementById('new-member-name').value.trim();
+  if(!uid || !pw){ toast('Benutzername und Passwort benötigt', 'err'); return; }
+  try {
+    await supaUpsert('members', [{uid, pw, display: name || uid, role:'member'}]);
+    toast(uid+' erstellt ✓', 'ok');
+    document.getElementById('new-member-uid').value='';
+    document.getElementById('new-member-pw').value='';
+    document.getElementById('new-member-name').value='';
+    renderAdminTable();
+  } catch(e) { toast('Fehler: '+e.message, 'err'); }
+}function addMember(){
   const uid=document.getElementById('new-user').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'');
   const pw=document.getElementById('new-pw').value.trim();
   const display=document.getElementById('new-display').value.trim();
