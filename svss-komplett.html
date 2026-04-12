@@ -1598,40 +1598,84 @@ function _doApplySiteContent(c){
 
 // ── INIT ──
 
-// Build full members grid from Supabase members list
-function buildMembersGrid(members){
+// Build members grid - hardcoded 52 official members
+const SVSS_MEMBERS_52 = [
+  {uid:'atelier-schelb', name:'atelier schelb+partner ag'},
+  {uid:'baumberger', name:'Baumberger Hansjürg GmbH'},
+  {uid:'besag', name:'Besag AG'},
+  {uid:'buerli', name:'Bürli Spiel- und Sportgeräte AG'},
+  {uid:'carve', name:'Carve Anstalt'},
+  {uid:'checksafety', name:'Check Safety SA'},
+  {uid:'childsplay', name:'ChildsPlay GmbH'},
+  {uid:'creaplay', name:'creaplay ag'},
+  {uid:'eibe', name:'eibe AG'},
+  {uid:'baar', name:'Einwohnergemeinde Baar'},
+  {uid:'fs-fallschutz', name:'FS Fallschutzbelag AG'},
+  {uid:'fuchs-thun', name:'Fuchs Thun AG'},
+  {uid:'oeschberg', name:'Gartenbauschule OESCHBERG'},
+  {uid:'birsfelden', name:'Gemeindeverwaltung Birsfelden'},
+  {uid:'gemfloor', name:'Gemfloor AG'},
+  {uid:'gep', name:'GeP Gestion Etude Expertise SA'},
+  {uid:'giuadora', name:'giuadora AG'},
+  {uid:'goeldi', name:'Göldi AG'},
+  {uid:'gtsm', name:'GTSM Magglingen'},
+  {uid:'herzig', name:'HERZIG-Expertisen GmbH'},
+  {uid:'hinnen', name:'HINNEN Spielplatzgeräte AG'},
+  {uid:'holzpur', name:'HOLZPUR AG'},
+  {uid:'kinderland', name:'Kinderland NEESER AG'},
+  {uid:'krummholz', name:'Krummholz GmbH'},
+  {uid:'kukuk', name:'KuKuk Schweiz GmbH'},
+  {uid:'ludocrea', name:'LudoCrea.ch GmbH'},
+  {uid:'motorsaenger', name:'motorsänger gmbh'},
+  {uid:'moveart', name:'moveART GmbH'},
+  {uid:'murimoos', name:'Murimoos werken und wohnen'},
+  {uid:'oeko-handels', name:'Oeko-Handels AG'},
+  {uid:'opt', name:'opt AG'},
+  {uid:'playground', name:'Playground design GmbH'},
+  {uid:'proxylon', name:'PROXYLON SARL'},
+  {uid:'psp', name:'PSP – Spielplatzsicherheit'},
+  {uid:'qs', name:'QS Spielplatz Sicherheit AG'},
+  {uid:'realsport', name:'Realsport SA'},
+  {uid:'ricoter', name:'RICOTER Erdaufbereitung AG'},
+  {uid:'rudolf', name:'Rudolf Spielplatz AG'},
+  {uid:'seilerei', name:'Seilerei Berger GmbH'},
+  {uid:'spielmitraum', name:'spiel mit raum GmbH'},
+  {uid:'spielgarten', name:'Spielgarten GmbH'},
+  {uid:'spielklusion', name:'Spielklusion'},
+  {uid:'spielplatzzone', name:'Spielplatz Zone AG'},
+  {uid:'spielraum', name:'Spielraum'},
+  {uid:'spiko', name:'Spiko GmbH'},
+  {uid:'spkswiss', name:'SPK Swiss AG'},
+  {uid:'winterthur', name:'Stadt Winterthur'},
+  {uid:'swisssafety', name:'Swiss Safety Center AG'},
+  {uid:'walo', name:'Walo Bertschinger AG'},
+  {uid:'wipfli', name:'Wipfli Spielplatz-Unterhalt GmbH'},
+  {uid:'zawa', name:'Zawa Sagl'},
+  {uid:'zingg', name:'zingg gartengestaltung ag'},
+];
+
+function buildMembersGrid(membersFromSupabase){
   const grid = document.getElementById('mgrid');
   if(!grid) return;
   grid.innerHTML = '';
-  
-  const uids = Object.keys(members)
-    .filter(function(uid){ return members[uid].role === 'member'; })
-    .sort(function(a,b){ return (members[a].display||a).localeCompare(members[b].display||b); });
-  
-  uids.forEach(function(uid){
-    const m = members[uid];
-    const name = m.display || uid;
-    const domain = name.toLowerCase()
-      .replace(/[äÄ]/g,'ae').replace(/[öÖ]/g,'oe').replace(/[üÜ]/g,'ue')
-      .replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'') + '.ch';
+
+  // Use hardcoded list for correct display names, enriched with Supabase data
+  SVSS_MEMBERS_52.forEach(function(m){
+    const supaData = membersFromSupabase && membersFromSupabase[m.uid];
+    const name = (supaData && supaData.display) || m.name;
     
     const card = document.createElement('div');
     card.className = 'mc';
-    card.dataset.uid = uid;
-    card.dataset.tags = '';
+    card.dataset.uid = m.uid;
     card.style.cursor = 'pointer';
-    card.onclick = function(){ openMemberProfile(uid, name); };
-    
+    card.onclick = function(){ openMemberProfile(m.uid, name); };
     card.innerHTML =
       '<div class="mc-logo">' +
-        '<img src="https://logo.clearbit.com/'+domain+'" alt="'+name+'" ' +
-          'onerror="this.dataset.err=1">' +
         '<span class="fallback">'+name+'</span>' +
       '</div>' +
       '<div class="mc-body">' +
         '<div class="mc-name">'+name+'</div>' +
       '</div>';
-    
     grid.appendChild(card);
   });
 }
@@ -1650,11 +1694,13 @@ try { buildPreviewGrid(); } catch(e) {}
     const count = Object.keys(members).filter(function(uid){ 
       return members[uid].role === 'member'; 
     }).length;
-    // Update counts
-    ['stat-member-count','stat-member-count-2','stat-member-count-3','stat-member-count-btn'].forEach(function(id){
-      const el = document.getElementById(id);
-      if(el && count > 0) el.textContent = count;
-    });
+    // Only update if count seems right (52 ± 5)
+    if(count >= 47 && count <= 57){
+      ['stat-member-count','stat-member-count-2','stat-member-count-3','stat-member-count-btn'].forEach(function(id){
+        const el = document.getElementById(id);
+        if(el) el.textContent = count;
+      });
+    }
     // Build member grid dynamically
     buildMembersGrid(members);
     // Enrich with profiles
