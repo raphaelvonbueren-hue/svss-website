@@ -489,7 +489,7 @@ footer p{font-size:13px;line-height:2;font-weight:300}
     </div>
     <div class="hero-right">
       <div class="hero-stats" id="site-hero-stats">
-        <div class="stat-card"><div class="stat-num">52</div><div class="stat-label">Mitgliedfirmen schweizweit</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-member-count">52</div><div class="stat-label">Mitgliedfirmen schweizweit</div></div>
         <div class="stat-card accent"><div class="stat-num">26</div><div class="stat-label">Kantone abgedeckt</div></div>
         <div class="stat-card"><div class="stat-num">EN</div><div class="stat-label">1176 / 1177 zertifiziert</div></div>
         <div class="stat-card"><div class="stat-num">15+</div><div class="stat-label">Jahre Verbandsarbeit</div></div>
@@ -556,7 +556,7 @@ footer p{font-size:13px;line-height:2;font-weight:300}
   <!-- MITGLIEDER VORSCHAU -->
   <section class="member-preview-section">
     <div class="section-label">Unser Netzwerk</div>
-    <h2 class="section-title">52 Fachfirmen in <em>der ganzen Schweiz</em></h2>
+    <h2 class="section-title"><span id="stat-member-count-2">52</span> Fachfirmen in <em>der ganzen Schweiz</em></h2>
     <p class="section-lead">Von der Inspektion &uuml;ber Planung und Bau bis zur Wartung &mdash; alle SVSS-Mitglieder sind zertifizierte Fachpersonen.</p>
     <div class="member-preview-grid" id="preview-grid"></div>
     <div class="preview-footer">
@@ -657,7 +657,7 @@ footer p{font-size:13px;line-height:2;font-weight:300}
     <h1>Unsere <em>Mitglieder</em></h1>
     <p class="members-hero-lead">Zertifizierte Fachfirmen f&uuml;r Spielplatzsicherheit in der ganzen Schweiz &mdash; von der Inspektion &uuml;ber Planung und Bau bis zur Wartung.</p>
     <div class="members-hero-stats">
-      <div><div class="mh-stat-num">52</div><div class="mh-stat-label">Mitgliedsfirmen</div></div>
+      <div><div class="mh-stat-num" id="stat-member-count-3">52</div><div class="mh-stat-label">Mitgliedsfirmen</div></div>
       <div><div class="mh-stat-num">26</div><div class="mh-stat-label">Kantone</div></div>
       <div><div class="mh-stat-num">EN 1176</div><div class="mh-stat-label">Zertifiziert</div></div>
     </div>
@@ -1663,6 +1663,15 @@ try { buildPreviewGrid(); } catch(e) {}
 (async function(){
   try { await seedMembers(); } catch(e) {}
   try { await enrichMemberCards(); } catch(e) {}
+  // Update member count dynamically from Supabase
+  try {
+    const members = await supaGetMembers();
+    const count = Object.keys(members).filter(function(uid){ return uid !== 'admin'; }).length;
+    ['stat-member-count','stat-member-count-2','stat-member-count-3'].forEach(function(id){
+      const el = document.getElementById(id);
+      if(el && count > 0) el.textContent = count;
+    });
+  } catch(e) {}
 })();
 
 </script>
