@@ -74,9 +74,16 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
 .app-nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}
 .app-nav-logo img{height:34px;filter:brightness(0) invert(1)}
 .app-nav-logo-fb{font-family:'DM Serif Display',serif;font-size:15px;color:#fff}
-.app-nav-user{display:flex;align-items:center;gap:12px}
-.app-nav-user span{font-size:13px;color:rgba(255,255,255,.7)}
-.app-nav-user strong{color:#fff}
+.app-nav-user{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.app-nav-user span{font-size:13px;color:rgba(255,255,255,.8);white-space:nowrap}
+.app-nav-user strong{color:#fff;font-weight:600}
+.app-nav-user a,.app-nav-user button{
+  padding:5px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.35);
+  color:#fff!important;font-size:13px;font-weight:500;background:transparent;
+  cursor:pointer;text-decoration:none;white-space:nowrap;
+  transition:background .15s;
+}
+.app-nav-user a:hover,.app-nav-user button:hover{background:rgba(255,255,255,.12)}
 .app-sidebar{
   position:fixed;top:60px;left:0;bottom:0;width:220px;
   background:var(--sand);border-right:1px solid var(--sd);
@@ -217,8 +224,8 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
     </div>
     <div class="app-nav-user">
       <span>Angemeldet als <strong id="nav-username"></strong></span>
-      <a href="https://www.richis.ch" class="btn btn-ghost btn-sm" style="text-decoration:none;margin-right:4px">&#8592; Hauptseite</a>
-    <button class="btn btn-ghost btn-sm" onclick="doLogout()">Abmelden</button>
+      <a href="https://www.richis.ch">&#8592; Hauptseite</a>
+    <button onclick="doLogout()">Abmelden</button>
     </div>
   </nav>
 
@@ -923,7 +930,9 @@ function doLogout(){
 function openApp(){
   const s = SESSION;
   showView('app');
-  document.getElementById('nav-username').textContent = s.display || s.uid || 'Angemeldet';
+  const displayName = s.display || s.uid || 'Angemeldet';
+  const roleLabel = s.role === 'admin' ? ' (Admin)' : '';
+  document.getElementById('nav-username').textContent = displayName + roleLabel;
   document.getElementById('dash-sub').textContent = 'Willkommen zur\u00fcck, ' + s.display + '.';
   // Show admin section
   const isAdmin = s.role === 'admin' || s.uid === 'admin';
