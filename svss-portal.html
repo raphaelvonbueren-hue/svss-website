@@ -2,7 +2,10 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="referrer" content="no-referrer">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon.svg">
+    <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SVSS – Mitgliederportal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -418,12 +421,12 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
 
         <!-- TABS -->
         <div style="display:flex;gap:6px;margin-bottom:1.5rem;border-bottom:1px solid var(--sd);padding-bottom:0">
-          <button class="se-tab active" onclick="seTab('hero')">Hero</button>
-          <button class="se-tab" onclick="seTab('stats')">Statistiken</button>
-          <button class="se-tab" onclick="seTab('fotos')">Fotos</button>
-          <button class="se-tab" onclick="seTab('ziele')">Ziele</button>
-          <button class="se-tab" onclick="seTab('vorstand')">Vorstand</button>
-          <button class="se-tab" onclick="seTab('news')">News</button>
+          <button class="se-tab active" onclick=\"seTab('hero', this)\">Hero</button>
+          <button class="se-tab" onclick=\"seTab('stats', this)\">Statistiken</button>
+          <button class="se-tab" onclick=\"seTab('fotos', this)\">Fotos</button>
+          <button class="se-tab" onclick=\"seTab('ziele', this)\">Ziele</button>
+          <button class="se-tab" onclick=\"seTab('vorstand', this)\">Vorstand</button>
+          <button class="se-tab" onclick=\"seTab('news', this)\">News</button>
         </div>
 
         <!-- HERO TAB -->
@@ -1302,13 +1305,17 @@ let _seDb = null;
 function seOpenDB(){
   return new Promise(function(res, rej){
     if(_seDb){ res(_seDb); return; }
-    const req = indexedDB.open(SE_IMG_DB, 1);
-    req.onupgradeneeded = function(e){
-      if(!e.target.result.objectStoreNames.contains(SE_IMG_STORE))
-        e.target.result.createObjectStore(SE_IMG_STORE);
-    };
-    req.onsuccess = function(e){ _seDb = e.target.result; res(_seDb); };
-    req.onerror   = function(e){ rej(e.target.error); };
+    try {
+      const req = indexedDB.open(SE_IMG_DB, 1);
+      req.onupgradeneeded = function(e){
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains(SE_IMG_STORE))
+          db.createObjectStore(SE_IMG_STORE);
+      };
+      req.onsuccess = function(e){ _seDb = e.target.result; res(_seDb); };
+      req.onerror   = function(e){ rej(e.target.error); };
+      req.onblocked = function(){ rej(new Error('IndexedDB blocked')); };
+    } catch(e){ rej(e); }
   });
 }
 function seDbSet(key, val){
@@ -1322,12 +1329,14 @@ function seDbSet(key, val){
 }
 function seDbGet(key){
   return seOpenDB().then(function(db){
-    return new Promise(function(res, rej){
-      const req = db.transaction(SE_IMG_STORE,'readonly').objectStore(SE_IMG_STORE).get(key);
-      req.onsuccess = function(e){ res(e.target.result || null); };
-      req.onerror   = function(e){ rej(e.target.error); };
+    return new Promise(function(res){
+      try {
+        const req = db.transaction(SE_IMG_STORE,'readonly').objectStore(SE_IMG_STORE).get(key);
+        req.onsuccess = function(e){ res(e.target.result || null); };
+        req.onerror   = function(){ res(null); };
+      } catch(e){ res(null); }
     });
-  });
+  }).catch(function(){ return null; });
 }
 
 // ── Text content in localStorage (no images) ──
@@ -1432,10 +1441,13 @@ function seGetContentFull(){
   });
 }
 // ── Tab switching ──
-function seTab(name){
+function seTab(name, btn){
   document.querySelectorAll('.se-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.se-panel').forEach(p => { p.style.display='none'; p.classList.remove('active'); });
-  event.target.classList.add('active');
+  // Use passed button or event.target
+  const activeBtn = btn || (typeof event !== 'undefined' && event && event.currentTarget) || 
+                    document.querySelector('[onclick*="seTab(\''+name+'\')"]');
+  if(activeBtn) activeBtn.classList.add('active');
   const panel = document.getElementById('se-'+name);
   if(panel){ panel.style.display='block'; panel.classList.add('active'); }
   seLoadTab(name);
@@ -1443,6 +1455,16 @@ function seTab(name){
 
 function seLoadTab(name){
   seGetContentFull().then(function(c){
+    if(name === 'hero')    seLoadHero(c);
+    if(name === 'stats')   seLoadStats(c);
+    if(name === 'fotos')   seLoadFotos(c);
+    if(name === 'ziele')   seLoadZiele(c);
+    if(name === 'vorstand')seLoadVorstand(c);
+    if(name === 'news')    seLoadNews(c);
+  }).catch(function(e){
+    console.warn('seLoadTab error:', e);
+    // Load with empty content so defaults show
+    const c = seGetContent();
     if(name === 'hero')    seLoadHero(c);
     if(name === 'stats')   seLoadStats(c);
     if(name === 'fotos')   seLoadFotos(c);
