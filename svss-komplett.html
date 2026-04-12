@@ -1582,7 +1582,7 @@ function _doApplySiteContent(c){
         const vav = document.createElement('div');
         vav.className = 'vorstand-avatar';
         vav.style.background = v.color;
-        if(v.photo){
+        if(v.photo && !v.photo.startsWith('__')){
           vav.style.padding='0'; vav.style.overflow='hidden';
           const vimg = document.createElement('img');
           vimg.src = v.photo;
