@@ -874,7 +874,7 @@ function getLocalProfile(uid){ try { const p=JSON.parse(localStorage.getItem('sv
 // ═══════════════════════════════════════════════════════
 //  LOGIN / LOGOUT (Supabase)
 // ═══════════════════════════════════════════════════════
-async async function doLogin(){
+async function doLogin(){
   const uid    = document.getElementById('login-user').value.trim().toLowerCase();
   const pw     = document.getElementById('login-pw').value;
   const errEl  = document.getElementById('login-err');
@@ -1338,67 +1338,78 @@ function seGetContent(){
 // Save: strip data: URLs from content before localStorage, put them in IndexedDB
 function seSaveContent(data){
   const c = seGetContent();
-  // Extract images for IndexedDB
-  const imgData = {};
+  // Separate image data (goes to IndexedDB) from text (goes to localStorage)
+  const imgKeys = {};
+  const textData = {};
 
-  // Fotos: always store full array in IndexedDB (objects with src/name)
-  if(data.fotos){
-    imgData.fotos = data.fotos;
-    data = Object.assign({}, data);
-    data.fotos = '__idb__'; // placeholder — real data in IndexedDB
-  }
+  Object.keys(data).forEach(function(key){
+    const val = data[key];
+    if(key === 'fotos' && Array.isArray(val)){
+      // Store fotos array in IndexedDB
+      imgKeys.fotos = val;
+      textData.fotos = '__idb__';
+    } else if(key === 'vorstand' && Array.isArray(val)){
+      // Extract photos from vorstand
+      const photos = {};
+      const vorstandClean = val.map(function(v, i){
+        if(v.photo && v.photo.startsWith('data:')){
+          photos[i] = v.photo;
+          return Object.assign({}, v, {photo: '__idb__:'+i});
+        }
+        return v;
+      });
+      if(Object.keys(photos).length) imgKeys.vorstand_photos = photos;
+      textData.vorstand = vorstandClean;
+    } else if(key === 'news' && Array.isArray(val)){
+      const newsImgs = {};
+      const newsClean = val.map(function(n, i){
+        if(n.img && n.img.startsWith('data:')){
+          newsImgs[i] = n.img;
+          return Object.assign({}, n, {img: '__idb__:'+i});
+        }
+        return n;
+      });
+      if(Object.keys(newsImgs).length) imgKeys.news_imgs = newsImgs;
+      textData.news = newsClean;
+    } else {
+      textData[key] = val;
+    }
+  });
 
-  // Vorstand photos
-  if(data.vorstand){
-    const photoMap = {};
-    data = Object.assign({}, data);
-    data.vorstand = data.vorstand.map(function(v, i){
-      if(v.photo && v.photo.startsWith('data:')){
-        photoMap[i] = v.photo;
-        return Object.assign({}, v, {photo: '__idb__:'+i});
-      }
-      return v;
-    });
-    if(Object.keys(photoMap).length) imgData.vorstand_photos = photoMap;
-  }
-
-  Object.assign(c, data);
-  try {
-    localStorage.setItem(SE_KEY, JSON.stringify(c));
-  } catch(e) {
-    // localStorage full — clear old content and retry
-    localStorage.removeItem(SE_KEY);
-    try { localStorage.setItem(SE_KEY, JSON.stringify(c)); } catch(e2){}
-  }
+  // Save text to localStorage
+  Object.assign(c, textData);
+  try { localStorage.setItem(SE_KEY, JSON.stringify(c)); } catch(e){ console.warn('localStorage full'); }
 
   // Save images to IndexedDB
   const saves = [];
-  if(imgData.fotos)          saves.push(seDbSet('fotos', imgData.fotos));
-  if(imgData.vorstand_photos) saves.push(seDbSet('vorstand_photos', imgData.vorstand_photos));
+  if(imgKeys.fotos)          saves.push(seDbSet('fotos', imgKeys.fotos));
+  if(imgKeys.vorstand_photos) saves.push(seDbSet('vorstand_photos', imgKeys.vorstand_photos));
+  if(imgKeys.news_imgs)       saves.push(seDbSet('news_imgs', imgKeys.news_imgs));
 
   Promise.all(saves).then(function(){
-    toast('Gespeichert ✓ — Seite wird beim nächsten Laden aktualisiert', 'ok');
+    toast('Gespeichert ✓', 'ok');
   }).catch(function(e){
-    toast('Gespeichert (Fehler bei Bildern: '+e.message+')', 'ok');
+    toast('Gespeichert (Bild-Fehler: '+e.message+')', 'ok');
   });
 }
-
 // Load full content including images from IndexedDB
 function seGetContentFull(){
   return Promise.all([
     seDbGet('fotos'),
-    seDbGet('vorstand_photos')
+    seDbGet('vorstand_photos'),
+    seDbGet('news_imgs')
   ]).then(function(results){
     const c = seGetContent();
     const dbFotos   = results[0];
     const dbPhotos  = results[1];
+    const dbNewsImg = results[2];
 
-    // Restore fotos (always from IndexedDB)
+    // Restore fotos
     if(dbFotos) c.fotos = dbFotos;
     else if(c.fotos === '__idb__') c.fotos = [];
 
     // Restore vorstand photos
-    if(dbPhotos && c.vorstand){
+    if(dbPhotos && Array.isArray(c.vorstand)){
       c.vorstand = c.vorstand.map(function(v, i){
         if(v.photo && v.photo.startsWith('__idb__:')){
           return Object.assign({}, v, {photo: dbPhotos[i] || ''});
@@ -1406,10 +1417,20 @@ function seGetContentFull(){
         return v;
       });
     }
+
+    // Restore news images
+    if(dbNewsImg && Array.isArray(c.news)){
+      c.news = c.news.map(function(n, i){
+        if(n.img && n.img.startsWith('__idb__:')){
+          return Object.assign({}, n, {img: dbNewsImg[i] || ''});
+        }
+        return n;
+      });
+    }
+
     return c;
   });
 }
-
 // ── Tab switching ──
 function seTab(name){
   document.querySelectorAll('.se-tab').forEach(t => t.classList.remove('active'));
