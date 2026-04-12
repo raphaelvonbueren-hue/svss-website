@@ -1482,35 +1482,31 @@ async function enrichMemberCards(){
 
 // ── APPLY SITE CONTENT FROM ADMIN EDITOR ──
 function applySiteContent(){
+  // 1. Load text from localStorage (instant)
   let c = {};
-  try{ c = JSON.parse(localStorage.getItem('svss_site_content')) || {}; }catch(e){}
+  try { c = JSON.parse(localStorage.getItem('svss_site_content')) || {}; } catch(e){}
 
-  // Restore images from localStorage (same keys as portal)
+  // 2. Load images from localStorage cache (fast)
   function lsImg(key){ try{ return JSON.parse(localStorage.getItem('svss_sc_'+key)); }catch{ return null; } }
-  const dbFotos  = lsImg('fotos');
-  const dbPhotos = lsImg('vorstand_photos');
-  const dbNews   = lsImg('news_imgs');
+  const lsFotos  = lsImg('fotos');
+  const lsPhotos = lsImg('vorstand_photos_meta');
+  const lsNews   = lsImg('news_meta');
+  if(lsFotos  && lsFotos.length)  c.fotos   = lsFotos;
+  if(lsPhotos && lsPhotos.length) c.vorstand = lsPhotos;
+  if(lsNews   && lsNews.length)   c.news     = lsNews;
 
-  if(dbFotos) c.fotos = dbFotos;
-  else if(c.fotos === '__ls__' || c.fotos === '__idb__') c.fotos = [];
-
-  if(dbPhotos && Array.isArray(c.vorstand)){
-    c.vorstand = c.vorstand.map(function(v,i){
-      if(v.photo && (v.photo.startsWith('__ls__:') || v.photo.startsWith('__idb__:'))){
-        return Object.assign({},v,{photo: dbPhotos[i]||''});
-      }
-      return v;
-    });
-  }
-  if(dbNews && Array.isArray(c.news)){
-    c.news = c.news.map(function(n,i){
-      if(n.img && (n.img.startsWith('__ls__:') || n.img.startsWith('__idb__:'))){
-        return Object.assign({},n,{img: dbNews[i]||''});
-      }
-      return n;
-    });
-  }
   _doApplySiteContent(c);
+
+  // 3. Also fetch from Supabase in background (catches updates from other browsers)
+  supaGetSiteContent().then(function(supaC){
+    // Update localStorage cache
+    try { localStorage.setItem('svss_site_content', JSON.stringify(supaC)); } catch(e){}
+    if(supaC.fotos)   { try { localStorage.setItem('svss_sc_fotos', JSON.stringify(supaC.fotos)); } catch(e){} }
+    if(supaC.vorstand){ try { localStorage.setItem('svss_sc_vorstand_photos_meta', JSON.stringify(supaC.vorstand)); } catch(e){} }
+    if(supaC.news)    { try { localStorage.setItem('svss_sc_news_meta', JSON.stringify(supaC.news)); } catch(e){} }
+    // Re-render with fresh data
+    _doApplySiteContent(supaC);
+  }).catch(function(){});
 }
 function _doApplySiteContent(c){
 
