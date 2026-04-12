@@ -500,20 +500,20 @@ footer p{font-size:13px;line-height:2;font-weight:300}
 
   <!-- PHOTO STRIP -->
   <div class="photo-strip" id="site-photo-strip">
-    <div style="background-image:url('https://images.unsplash.com/photo-1576502200916-3808e07386a5?w=600&q=80')"></div>
-    <div style="background-image:url('https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=600&q=80')"></div>
-    <div style="background-image:url('https://images.unsplash.com/photo-1575783970733-1aaedde1db74?w=600&q=80')"></div>
-    <div style="background-image:url('https://images.unsplash.com/photo-1551966775-a4ddc8df052b?w=600&q=80')"></div>
+    <div style="background:#2d6a4a"></div>
+    <div style="background:#1a3a2a"></div>
+    <div style="background:#4a9068"></div>
+    <div style="background:#2d6a4a"></div>
   </div>
 
   <!-- IMPRESSIONEN -->
   <section class="impressions-section">
     <div class="impressions-grid">
-      <div class="span2 row2" style="background-image:url('https://images.unsplash.com/photo-1575783970733-1aaedde1db74?w=900&q=85')"></div>
-      <div class="span2" style="background-image:url('https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=600&q=85')"></div>
-      <div class="span2" style="background-image:url('https://images.unsplash.com/photo-1560969184-10fe8719e047?w=600&q=85')"></div>
-      <div class="span3" style="background-image:url('https://images.unsplash.com/photo-1518611012118-696072aa579a?w=900&q=85')"></div>
-      <div style="background-image:url('https://images.unsplash.com/photo-1526391072176-97a45c320a36?w=400&q=85')"></div>
+      <div class="span2 row2" style="background:#1a3a2a"></div>
+      <div class="span2" style="background:#1a3a2a"></div>
+      <div class="span2" style="background:#1a3a2a"></div>
+      <div class="span3" style="background:#1a3a2a"></div>
+      <div style="background:#1a3a2a"></div>
     </div>
   </section>
 
@@ -1330,7 +1330,7 @@ function renderMemberProfile(uid, fallbackName){
 }
 
 // Static fallback gallery images per member (Unsplash, free to use)
-const MEMBER_FALLBACK_IMAGES = {"psp": ["https://images.unsplash.com/photo-1575783970733-1aaedde1db74?w=600&q=80", "https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=600&q=80", "https://images.unsplash.com/photo-1560969184-10fe8719e047?w=600&q=80"], "gtsm": ["https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&q=80", "https://images.unsplash.com/photo-1526391072176-97a45c320a36?w=600&q=80", "https://images.unsplash.com/photo-1551966775-a4ddc8df052b?w=600&q=80"], "eibe": ["https://images.unsplash.com/photo-1576502200916-3808e07386a5?w=600&q=80", "https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=600&q=80", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80"], "spielklusion": ["https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=600&q=80", "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=600&q=80"], "creaplay": ["https://images.unsplash.com/photo-1553356084-58ef4a67b2a7?w=600&q=80", "https://images.unsplash.com/photo-1560969184-10fe8719e047?w=600&q=80"]};
+const MEMBER_FALLBACK_IMAGES = {}
 
 function buildMemberBody(uid, p, images, name){
   const body = document.getElementById('mp-body');
