@@ -2051,6 +2051,35 @@ async function bpGenerate(){
 
 // Override showPanel to init bildpool tab
 
+
+// ── Migrate old IndexedDB fotos to localStorage (one-time) ──
+(function migrateIdbToLs(){
+  if(localStorage.getItem('svss_idb_migrated')) return;
+  try {
+    const req = indexedDB.open('svss_site_images_db');
+    req.onsuccess = function(e){
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains('site_images')){ 
+        localStorage.setItem('svss_idb_migrated','1'); return; 
+      }
+      try {
+        const tx = db.transaction('site_images','readonly');
+        const store = tx.objectStore('site_images');
+        ['fotos','vorstand_photos','news_imgs'].forEach(function(key){
+          const r = store.get(key);
+          r.onsuccess = function(ev){
+            if(ev.target.result){
+              try { localStorage.setItem('svss_sc_'+key, JSON.stringify(ev.target.result)); } catch(e){}
+            }
+          };
+        });
+        tx.oncomplete = function(){ localStorage.setItem('svss_idb_migrated','1'); };
+      } catch(e){ localStorage.setItem('svss_idb_migrated','1'); }
+    };
+    req.onerror = function(){ localStorage.setItem('svss_idb_migrated','1'); };
+  } catch(e){ localStorage.setItem('svss_idb_migrated','1'); }
+})();
+
 // ═══════════════════════════════════════════════════════
 //  INIT (Supabase)
 // ═══════════════════════════════════════════════════════
