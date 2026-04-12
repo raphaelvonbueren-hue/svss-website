@@ -1296,80 +1296,24 @@ function toast(msg,type){
 // ═══════════════════════════════════════════════════════
 //  SEITEN-EDITOR
 // ═══════════════════════════════════════════════════════
-const SE_KEY        = 'svss_site_content';
-const SE_IMG_DB     = 'svss_site_images_db';
-const SE_IMG_STORE  = 'site_images';
-const SE_DB_VERSION = 2;
-let _seDb = null;
+const SE_KEY = 'svss_site_content';
 
-// On load: ensure DB is properly initialized
-(function(){
-  try {
-    const req = indexedDB.open(SE_IMG_DB, SE_DB_VERSION);
-    req.onupgradeneeded = function(e){
-      const db = e.target.result;
-      if(!db.objectStoreNames.contains(SE_IMG_STORE))
-        db.createObjectStore(SE_IMG_STORE);
-    };
-    req.onsuccess = function(e){ _seDb = e.target.result; };
-    req.onerror   = function(){};
-  } catch(e){}
-})();
-
-// ── IndexedDB for large image data ──
-function seOpenDB(){
-  return new Promise(function(res, rej){
-    if(_seDb){ res(_seDb); return; }
-    try {
-      // Version 2: ensures site_images store exists even on old DBs
-      const req = indexedDB.open(SE_IMG_DB, SE_DB_VERSION);
-      req.onupgradeneeded = function(e){
-        const db = e.target.result;
-        if(!db.objectStoreNames.contains(SE_IMG_STORE))
-          db.createObjectStore(SE_IMG_STORE);
-      };
-      req.onsuccess = function(e){ _seDb = e.target.result; res(_seDb); };
-      req.onerror   = function(e){ rej(e.target.error); };
-      req.onblocked = function(e){
-        // Close old connections and retry
-        if(e.target.result) e.target.result.close();
-        _seDb = null;
-        rej(new Error('IndexedDB blocked - bitte Seite neu laden'));
-      };
-    } catch(e){ rej(e); }
-  });
+// ── Simple localStorage helpers for site images ──
+// Each image type stored under its own key to avoid 5MB limit
+function scImgGet(key){
+  try{ return JSON.parse(localStorage.getItem('svss_sc_'+key)); }catch{ return null; }
 }
-function seDbSet(key, val){
-  return seOpenDB().then(function(db){
-    return new Promise(function(res, rej){
-      try {
-        const tx = db.transaction(SE_IMG_STORE, 'readwrite');
-        tx.objectStore(SE_IMG_STORE).put(val, key);
-        tx.oncomplete = function(){ res(); };
-        tx.onerror = function(e){ rej(e.target.error); };
-        tx.onabort = function(e){ rej(new Error('Transaction aborted')); };
-      } catch(e){ rej(e); }
-    });
-  }).catch(function(e){
-    console.warn('seDbSet failed for key:', key, e.message);
-    // Try to delete old DB and recreate
-    _seDb = null;
-    throw e;
-  });
-}
-function seDbGet(key){
-  return seOpenDB().then(function(db){
-    return new Promise(function(res){
-      try {
-        const req = db.transaction(SE_IMG_STORE,'readonly').objectStore(SE_IMG_STORE).get(key);
-        req.onsuccess = function(e){ res(e.target.result || null); };
-        req.onerror   = function(){ res(null); };
-      } catch(e){ res(null); }
-    });
-  }).catch(function(){ return null; });
+function scImgSet(key, val){
+  try{
+    localStorage.setItem('svss_sc_'+key, JSON.stringify(val));
+    return true;
+  }catch(e){
+    console.warn('scImgSet quota for', key, e.message);
+    return false;
+  }
 }
 
-// ── Text content in localStorage (no images) ──
+// ── Text content in localStorage ──
 function seGetContent(){
   try { return JSON.parse(localStorage.getItem(SE_KEY)) || {}; } catch { return {}; }
 }
@@ -1377,98 +1321,72 @@ function seGetContent(){
 // Save: strip data: URLs from content before localStorage, put them in IndexedDB
 function seSaveContent(data){
   const c = seGetContent();
-  // Separate image data (goes to IndexedDB) from text (goes to localStorage)
-  const imgKeys = {};
   const textData = {};
 
   Object.keys(data).forEach(function(key){
     const val = data[key];
     if(key === 'fotos' && Array.isArray(val)){
-      // Store fotos array in IndexedDB
-      imgKeys.fotos = val;
-      textData.fotos = '__idb__';
+      scImgSet('fotos', val);
+      textData.fotos = '__ls__';
     } else if(key === 'vorstand' && Array.isArray(val)){
-      // Extract photos from vorstand
       const photos = {};
-      const vorstandClean = val.map(function(v, i){
+      const clean = val.map(function(v, i){
         if(v.photo && v.photo.startsWith('data:')){
           photos[i] = v.photo;
-          return Object.assign({}, v, {photo: '__idb__:'+i});
+          return Object.assign({}, v, {photo: '__ls__:'+i});
         }
         return v;
       });
-      if(Object.keys(photos).length) imgKeys.vorstand_photos = photos;
-      textData.vorstand = vorstandClean;
+      if(Object.keys(photos).length) scImgSet('vorstand_photos', photos);
+      textData.vorstand = clean;
     } else if(key === 'news' && Array.isArray(val)){
-      const newsImgs = {};
-      const newsClean = val.map(function(n, i){
+      const imgs = {};
+      const clean = val.map(function(n, i){
         if(n.img && n.img.startsWith('data:')){
-          newsImgs[i] = n.img;
-          return Object.assign({}, n, {img: '__idb__:'+i});
+          imgs[i] = n.img;
+          return Object.assign({}, n, {img: '__ls__:'+i});
         }
         return n;
       });
-      if(Object.keys(newsImgs).length) imgKeys.news_imgs = newsImgs;
-      textData.news = newsClean;
+      if(Object.keys(imgs).length) scImgSet('news_imgs', imgs);
+      textData.news = clean;
     } else {
       textData[key] = val;
     }
   });
 
-  // Save text to localStorage
   Object.assign(c, textData);
-  try { localStorage.setItem(SE_KEY, JSON.stringify(c)); } catch(e){ console.warn('localStorage full'); }
-
-  // Save images to IndexedDB
-  const saves = [];
-  if(imgKeys.fotos)          saves.push(seDbSet('fotos', imgKeys.fotos));
-  if(imgKeys.vorstand_photos) saves.push(seDbSet('vorstand_photos', imgKeys.vorstand_photos));
-  if(imgKeys.news_imgs)       saves.push(seDbSet('news_imgs', imgKeys.news_imgs));
-
-  Promise.all(saves).then(function(){
-    toast('Gespeichert ✓', 'ok');
-  }).catch(function(e){
-    toast('Gespeichert (Bild-Fehler: '+e.message+')', 'ok');
-  });
+  try{ localStorage.setItem(SE_KEY, JSON.stringify(c)); }catch(e){ console.warn('SE save:', e.message); }
+  toast('Gespeichert ✓', 'ok');
 }
 // Load full content including images from IndexedDB
 function seGetContentFull(){
-  return Promise.all([
-    seDbGet('fotos'),
-    seDbGet('vorstand_photos'),
-    seDbGet('news_imgs')
-  ]).then(function(results){
-    const c = seGetContent();
-    const dbFotos   = results[0];
-    const dbPhotos  = results[1];
-    const dbNewsImg = results[2];
+  // Synchronous - reads everything from localStorage
+  const c = seGetContent();
+  const dbFotos   = scImgGet('fotos');
+  const dbPhotos  = scImgGet('vorstand_photos');
+  const dbNewsImg = scImgGet('news_imgs');
 
-    // Restore fotos
-    if(dbFotos) c.fotos = dbFotos;
-    else if(c.fotos === '__idb__') c.fotos = [];
+  if(dbFotos) c.fotos = dbFotos;
+  else if(c.fotos === '__ls__') c.fotos = [];
 
-    // Restore vorstand photos
-    if(dbPhotos && Array.isArray(c.vorstand)){
-      c.vorstand = c.vorstand.map(function(v, i){
-        if(v.photo && v.photo.startsWith('__idb__:')){
-          return Object.assign({}, v, {photo: dbPhotos[i] || ''});
-        }
-        return v;
-      });
-    }
-
-    // Restore news images
-    if(dbNewsImg && Array.isArray(c.news)){
-      c.news = c.news.map(function(n, i){
-        if(n.img && n.img.startsWith('__idb__:')){
-          return Object.assign({}, n, {img: dbNewsImg[i] || ''});
-        }
-        return n;
-      });
-    }
-
-    return c;
-  });
+  if(dbPhotos && Array.isArray(c.vorstand)){
+    c.vorstand = c.vorstand.map(function(v, i){
+      if(v.photo && v.photo.startsWith('__ls__:')){
+        return Object.assign({}, v, {photo: dbPhotos[i] || ''});
+      }
+      return v;
+    });
+  }
+  if(dbNewsImg && Array.isArray(c.news)){
+    c.news = c.news.map(function(n, i){
+      if(n.img && n.img.startsWith('__ls__:')){
+        return Object.assign({}, n, {img: dbNewsImg[i] || ''});
+      }
+      return n;
+    });
+  }
+  return c;
 }
 // ── Tab switching ──
 function seTab(name, btn){
@@ -1485,23 +1403,13 @@ function seTab(name, btn){
 }
 
 function seLoadTab(name){
-  // For text-only tabs: load immediately from localStorage (no async needed)
-  const c = seGetContent();
-  if(name === 'hero')  { seLoadHero(c); return; }
-  if(name === 'stats') { seLoadStats(c); return; }
-  if(name === 'ziele') { seLoadZiele(c); return; }
-
-  // For image-dependent tabs: load from IndexedDB too
-  seGetContentFull().then(function(full){
-    if(name === 'fotos')   seLoadFotos(full);
-    if(name === 'vorstand')seLoadVorstand(full);
-    if(name === 'news')    seLoadNews(full);
-  }).catch(function(e){
-    console.warn('seLoadTab IndexedDB error:', e);
-    if(name === 'fotos')   seLoadFotos(c);
-    if(name === 'vorstand')seLoadVorstand(c);
-    if(name === 'news')    seLoadNews(c);
-  });
+  const c = seGetContentFull();
+  if(name === 'hero')    seLoadHero(c);
+  if(name === 'stats')   seLoadStats(c);
+  if(name === 'fotos')   seLoadFotos(c);
+  if(name === 'ziele')   seLoadZiele(c);
+  if(name === 'vorstand')seLoadVorstand(c);
+  if(name === 'news')    seLoadNews(c);
 }
 
 // ── HERO ──
