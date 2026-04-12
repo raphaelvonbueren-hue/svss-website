@@ -631,49 +631,51 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
       <!-- ADMIN -->
       <div id="panel-admin" class="panel" style="display:none">
         <p class="page-title">Mitglieder verwalten</p>
-        <p class="page-sub">Alle Mitglieder-Zugänge verwalten. Passwörter ändern, neue Konten erstellen.</p>
+        <p class="page-sub">Alle Mitgliedskonten verwalten — Passwörter ändern, neue Konten erstellen, Konten löschen.</p>
 
         <!-- Neues Mitglied -->
         <div class="card" style="margin-bottom:1.5rem">
-          <div class="card-title">Neues Mitglied erstellen</div>
-          <div class="form-row" style="align-items:flex-end">
-            <div class="fg">
+          <div class="card-title" style="margin-bottom:1rem">Neues Mitglied erstellen</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:flex-end">
+            <div class="fg" style="margin:0">
               <label>Benutzername</label>
               <input id="new-member-uid" type="text" placeholder="z.B. muster-ag">
             </div>
-            <div class="fg">
-              <label>Anzeigename (Firma)</label>
+            <div class="fg" style="margin:0">
+              <label>Firma / Anzeigename</label>
               <input id="new-member-name" type="text" placeholder="Muster AG">
             </div>
-            <div class="fg">
+            <div class="fg" style="margin:0">
               <label>Passwort</label>
               <input id="new-member-pw" type="text" placeholder="muster2026">
             </div>
-            <button class="btn btn-dark btn-sm" onclick="adminAddMember()" style="white-space:nowrap;flex-shrink:0">+ Erstellen</button>
+            <button class="btn btn-dark" onclick="adminAddMember()" 
+              style="white-space:nowrap;padding:10px 20px;height:42px;margin-top:20px">
+              + Erstellen
+            </button>
           </div>
         </div>
 
         <!-- Mitgliederliste -->
         <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-            <div class="card-title" style="margin:0">Alle Mitglieder <span id="member-count" style="font-size:13px;font-weight:400;color:var(--tm)"></span></div>
-            <button class="btn btn-ghost btn-sm" onclick="renderAdminTable()">&#8635; Neu laden</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px">
+            <div>
+              <div class="card-title" style="margin:0">Mitglieder</div>
+              <div style="font-size:12px;color:var(--tm);margin-top:2px">
+                <span id="member-count">—</span> Konten total
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="text" id="member-search" placeholder="Suchen…" 
+                style="width:160px;font-size:13px" oninput="adminFilterMembers(this.value)">
+              <button class="btn btn-ghost btn-sm" onclick="renderAdminTable()">&#8635; Aktualisieren</button>
+            </div>
           </div>
-          <div style="overflow-x:auto">
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
-              <thead>
-                <tr style="border-bottom:2px solid var(--sd);text-align:left">
-                  <th style="padding:8px 12px;font-weight:600;color:var(--ts)">Benutzername</th>
-                  <th style="padding:8px 12px;font-weight:600;color:var(--ts)">Firma</th>
-                  <th style="padding:8px 12px;font-weight:600;color:var(--ts)">Passwort</th>
-                  <th style="padding:8px 12px;font-weight:600;color:var(--ts)">Rolle</th>
-                  <th style="padding:8px 12px;font-weight:600;color:var(--ts)">Aktionen</th>
-                </tr>
-              </thead>
-              <tbody id="member-tbody">
-                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--tm)">Wird geladen...</td></tr>
-              </tbody>
-            </table>
+
+          <div id="member-list-wrap" style="display:flex;flex-direction:column;gap:6px">
+            <div style="text-align:center;padding:2rem;color:var(--tm);font-size:13px">
+              &#9719; Lade Mitglieder aus Supabase…
+            </div>
           </div>
         </div>
 
@@ -1262,44 +1264,119 @@ function buildProfileHTML(uid,p,isPreview){
 //  ADMIN
 // ═══════════════════════════════════════════════════════
 async function renderAdminTable(){
-  const tbody = document.getElementById('member-tbody');
+  const wrap  = document.getElementById('member-list-wrap');
   const countEl = document.getElementById('member-count');
-  if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--tm)">&#9719; Lade Mitglieder...</td></tr>';
+  if(!wrap) return;
+  wrap.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--tm);font-size:13px">&#9719; Lade...</div>';
 
   let members = {};
   try {
     members = await supaGetMembers();
-    // cache locally
     localStorage.setItem('svss_members', JSON.stringify(members));
   } catch(e) {
     members = getLocalMembers();
   }
 
   if(countEl) countEl.textContent = Object.keys(members).length;
-  tbody.innerHTML = '';
+  window._adminMembers = members;
+  adminRenderList(members, '');
+}
 
-  // Sort: admin first, then alphabetically by uid
-  const sorted = Object.entries(members).sort(function(a,b){
-    if(a[1].role === 'admin' && b[1].role !== 'admin') return -1;
-    if(b[1].role === 'admin' && a[1].role !== 'admin') return 1;
-    return a[0].localeCompare(b[0]);
-  });
+function adminFilterMembers(q){
+  if(!window._adminMembers) return;
+  adminRenderList(window._adminMembers, q.toLowerCase());
+}
+
+function adminRenderList(members, filter){
+  const wrap = document.getElementById('member-list-wrap');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+
+  const sorted = Object.entries(members)
+    .filter(function([uid, m]){
+      if(!filter) return true;
+      return uid.includes(filter) || (m.display||'').toLowerCase().includes(filter);
+    })
+    .sort(function(a,b){
+      if(a[1].role==='admin' && b[1].role!=='admin') return -1;
+      if(b[1].role==='admin' && a[1].role!=='admin') return 1;
+      return a[0].localeCompare(b[0]);
+    });
+
+  if(!sorted.length){
+    wrap.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--tm);font-size:13px">Keine Ergebnisse.</div>';
+    return;
+  }
 
   sorted.forEach(function([uid, m]){
-    const tr = document.createElement('tr');
     const isAdmin = m.role === 'admin';
-    tr.innerHTML =
-      '<td><code style="font-size:12px;background:var(--sd);padding:2px 6px;border-radius:4px">'+uid+'</code></td>' +
-      '<td>'+( m.display || '<em style="color:var(--tm)">—</em>' )+'</td>' +
-      '<td><input type="password" value="'+m.pw+'" style="width:120px;font-size:12px;font-family:monospace;border:1px solid var(--sd);border-radius:4px;padding:3px 6px" ' +
-        'onchange="adminUpdatePw(this.dataset.uid, this.value)" data-uid="'+uid+'"></td>' +
-      '<td><span class="badge '+(isAdmin?'badge-green':'badge-gray')+'">'+(isAdmin?'Admin':'Mitglied')+'</span></td>' +
-      '<td style="display:flex;gap:6px;align-items:center">' +
-        (isAdmin ? '' : '<button class="btn btn-ghost btn-sm" data-uid="'+uid+'" onclick="adminMakeAdmin(this.dataset.uid)">Admin</button>') +
-        (uid === 'admin' ? '' : '<button class="btn btn-sm" style="background:#c0392b;color:#fff;border:none" data-uid="'+uid+'" onclick="adminDeleteMember(this.dataset.uid)">&#10005;</button>') +
-      '</td>';
-    tbody.appendChild(tr);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;' +
+      'padding:12px 16px;border-radius:var(--r);background:var(--sl);border:1px solid var(--sd);' +
+      'transition:background .15s';
+    row.onmouseenter = function(){ this.style.background='var(--gl)'; };
+    row.onmouseleave = function(){ this.style.background='var(--sl)'; };
+
+    // Avatar
+    const av = document.createElement('div');
+    av.style.cssText = 'width:38px;height:38px;border-radius:50%;background:'+(isAdmin?'var(--gm)':'var(--sd)')+
+      ';display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:'+(isAdmin?'#fff':'var(--ts)')+';flex-shrink:0';
+    av.textContent = uid.substring(0,2).toUpperCase();
+
+    // Info
+    const info = document.createElement('div');
+    info.innerHTML = '<div style="font-weight:500;font-size:13px;color:var(--td)">' + (m.display||uid) + '</div>' +
+      '<div style="font-size:11px;color:var(--tm);margin-top:1px;display:flex;gap:8px;align-items:center">' +
+      '<code style="background:var(--sd);padding:1px 6px;border-radius:3px;font-size:11px">'+uid+'</code>' +
+      (isAdmin ? '<span style="background:#d4ead8;color:#1a3a2a;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:600">ADMIN</span>' : '') +
+      '</div>';
+
+    // Password field
+    const pwWrap = document.createElement('div');
+    pwWrap.style.cssText = 'display:flex;align-items:center;gap:6px';
+    const pwInput = document.createElement('input');
+    pwInput.type = 'password';
+    pwInput.value = m.pw;
+    pwInput.dataset.uid = uid;
+    pwInput.style.cssText = 'width:110px;font-size:12px;font-family:monospace;border:1px solid var(--sd);border-radius:4px;padding:5px 8px;background:var(--bg)';
+    pwInput.title = 'Passwort ändern';
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn btn-ghost btn-sm';
+    saveBtn.textContent = '✓';
+    saveBtn.title = 'Speichern';
+    saveBtn.dataset.uid = uid;
+    saveBtn.onclick = function(){ adminUpdatePw(pwInput.dataset.uid, pwInput.value); };
+    pwWrap.appendChild(pwInput);
+    pwWrap.appendChild(saveBtn);
+
+    // Actions
+    const acts = document.createElement('div');
+    acts.style.cssText = 'display:flex;gap:6px;align-items:center;flex-shrink:0';
+    if(!isAdmin){
+      const adminBtn = document.createElement('button');
+      adminBtn.className = 'btn btn-ghost btn-sm';
+      adminBtn.textContent = 'Admin';
+      adminBtn.title = 'Zum Admin machen';
+      adminBtn.dataset.uid = uid;
+      adminBtn.onclick = function(){ adminMakeAdmin(this.dataset.uid); };
+      acts.appendChild(adminBtn);
+    }
+    if(uid !== 'admin'){
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-sm';
+      delBtn.style.cssText = 'background:#fee2e2;color:#c0392b;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:13px';
+      delBtn.textContent = '✕';
+      delBtn.title = 'Löschen';
+      delBtn.dataset.uid = uid;
+      delBtn.onclick = function(){ adminDeleteMember(this.dataset.uid); };
+      acts.appendChild(delBtn);
+    }
+
+    row.appendChild(av);
+    row.appendChild(info);
+    row.appendChild(pwWrap);
+    row.appendChild(acts);
+    wrap.appendChild(row);
   });
 }
 
@@ -1441,70 +1518,103 @@ function compressImage(dataUrl, maxWidth, maxHeight, quality){
 function seSaveContent(data){
   const c = seGetContent();
   const textData = {};
+  const uploadPromises = [];
 
   Object.keys(data).forEach(function(key){
     const val = data[key];
     if(key === 'fotos' && Array.isArray(val)){
-      scImgSet('fotos', val);
-      textData.fotos = '__ls__';
+      // Upload each foto to Supabase Storage
+      const uploadedFotos = val.map(function(item){ return item; }); // will update async
+      textData.fotos = '__supa__'; // placeholder
+      uploadPromises.push(
+        Promise.all(val.map(async function(item, i){
+          if(item && item.src && item.src.startsWith('data:')){
+            try {
+              const url = await supaUploadBase64('site', 'foto-'+i+'-'+Date.now(), item.src);
+              return {src: url, name: item.name || 'foto'};
+            } catch(e) { return item; }
+          }
+          return item;
+        })).then(function(uploaded){
+          scImgSet('fotos', uploaded);
+          // Also update supabase site_content
+          return supaUpsert('site_content', [{key:'fotos', value: uploaded}]).catch(function(){});
+        })
+      );
     } else if(key === 'vorstand' && Array.isArray(val)){
-      const photos = {};
-      const clean = val.map(function(v, i){
+      const uploadVorstand = val.map(async function(v, i){
         if(v.photo && v.photo.startsWith('data:')){
-          photos[i] = v.photo;
-          return Object.assign({}, v, {photo: '__ls__:'+i});
+          try {
+            const url = await supaUploadBase64('site', 'vorstand-'+i+'-'+Date.now(), v.photo);
+            return Object.assign({}, v, {photo: url});
+          } catch(e) { return v; }
         }
         return v;
       });
-      if(Object.keys(photos).length) scImgSet('vorstand_photos', photos);
-      textData.vorstand = clean;
+      uploadPromises.push(
+        Promise.all(uploadVorstand).then(function(uploaded){
+          scImgSet('vorstand_photos_meta', uploaded);
+          textData.vorstand = uploaded;
+          return supaUpsert('site_content', [{key:'vorstand', value: uploaded}]).catch(function(){});
+        })
+      );
+      // Store clean version for localStorage (no base64)
+      textData.vorstand = val.map(function(v){ 
+        return v.photo && v.photo.startsWith('data:') ? Object.assign({}, v, {photo: '__uploading__'}) : v;
+      });
     } else if(key === 'news' && Array.isArray(val)){
-      const imgs = {};
-      const clean = val.map(function(n, i){
+      const newsUp = val.map(async function(n, i){
         if(n.img && n.img.startsWith('data:')){
-          imgs[i] = n.img;
-          return Object.assign({}, n, {img: '__ls__:'+i});
+          try {
+            const url = await supaUploadBase64('site', 'news-'+i+'-'+Date.now(), n.img);
+            return Object.assign({}, n, {img: url});
+          } catch(e) { return n; }
         }
         return n;
       });
-      if(Object.keys(imgs).length) scImgSet('news_imgs', imgs);
-      textData.news = clean;
+      uploadPromises.push(
+        Promise.all(newsUp).then(function(uploaded){
+          scImgSet('news_meta', uploaded);
+          return supaUpsert('site_content', [{key:'news', value: uploaded}]).catch(function(){});
+        })
+      );
+      textData.news = val.map(function(n){
+        return n.img && n.img.startsWith('data:') ? Object.assign({}, n, {img: '__uploading__'}) : n;
+      });
     } else {
       textData[key] = val;
+      // Also save text to Supabase
+      supaUpsert('site_content', [{key: key, value: val}]).catch(function(){});
     }
   });
 
+  // Save text to localStorage immediately
   Object.assign(c, textData);
-  try{ localStorage.setItem(SE_KEY, JSON.stringify(c)); }catch(e){ console.warn('SE save:', e.message); }
-  toast('Gespeichert ✓', 'ok');
+  try { localStorage.setItem(SE_KEY, JSON.stringify(c)); } catch(e){}
+
+  if(uploadPromises.length > 0){
+    toast('Bilder werden hochgeladen…', 'ok');
+    Promise.all(uploadPromises).then(function(){
+      toast('Gespeichert \u2713 (Bilder in Supabase)', 'ok');
+    }).catch(function(e){
+      toast('Lokal gespeichert (Supabase: '+e.message+')', 'ok');
+    });
+  } else {
+    toast('Gespeichert \u2713', 'ok');
+  }
 }
 // Load full content including images from IndexedDB
 function seGetContentFull(){
-  // Synchronous - reads everything from localStorage
+  // Merge: localStorage (text) + localStorage image cache + Supabase URLs
   const c = seGetContent();
-  const dbFotos   = scImgGet('fotos');
-  const dbPhotos  = scImgGet('vorstand_photos');
-  const dbNewsImg = scImgGet('news_imgs');
+  const lsFotos   = scImgGet('fotos');
+  const lsPhotos  = scImgGet('vorstand_photos_meta');
+  const lsNews    = scImgGet('news_meta');
 
-  if(dbFotos) c.fotos = dbFotos;
-  else if(c.fotos === '__ls__') c.fotos = [];
+  if(lsFotos && lsFotos.length)   c.fotos   = lsFotos;
+  if(lsPhotos && lsPhotos.length) c.vorstand = lsPhotos;
+  if(lsNews && lsNews.length)     c.news     = lsNews;
 
-  if(dbPhotos && Array.isArray(c.vorstand)){
-    c.vorstand = c.vorstand.map(function(v, i){
-      if(v.photo && v.photo.startsWith('__ls__:')){
-        return Object.assign({}, v, {photo: dbPhotos[i] || ''});
-      }
-      return v;
-    });
-  }
-  if(dbNewsImg && Array.isArray(c.news)){
-    c.news = c.news.map(function(n, i){
-      if(n.img && n.img.startsWith('__ls__:')){
-        return Object.assign({}, n, {img: dbNewsImg[i] || ''});
-      }
-      return n;
-    });
-  }
   return c;
 }
 // ── Tab switching ──
