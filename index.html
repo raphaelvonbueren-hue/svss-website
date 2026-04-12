@@ -1480,47 +1480,62 @@ async function enrichMemberCards(){
 // ── APPLY SITE CONTENT FROM ADMIN EDITOR ──
 async function applySiteContent(){
   let c = {};
+  // Try Supabase first, fallback to localStorage
   try {
     c = await supaGetSiteContent();
-    // Also update localStorage cache
     localStorage.setItem('svss_site_content', JSON.stringify(c));
   } catch(e) {
-    // fallback localStorage
     try { c = JSON.parse(localStorage.getItem('svss_site_content')) || {}; } catch(e2){}
   }
 
-  // Load images from IndexedDB and then render
-  const SE_IMG_DB = 'svss_site_images_db';
+  // Always merge images from IndexedDB (overrides Supabase placeholders)
+  const SE_IMG_DB    = 'svss_site_images_db';
   const SE_IMG_STORE = 'site_images';
-  function idbGet(key, cb){
-    try {
-      const req = indexedDB.open(SE_IMG_DB, 1);
-      req.onsuccess = function(e){
-        const db = e.target.result;
-        const r = db.transaction(SE_IMG_STORE,'readonly').objectStore(SE_IMG_STORE).get(key);
-        r.onsuccess = function(ev){ cb(ev.target.result || null); };
-        r.onerror   = function(){ cb(null); };
-      };
-      req.onerror = function(){ cb(null); };
-    } catch(e){ cb(null); }
+
+  function idbGet(key){
+    return new Promise(function(res){
+      try {
+        const req = indexedDB.open(SE_IMG_DB, 1);
+        req.onsuccess = function(e){
+          const r = e.target.result.transaction(SE_IMG_STORE,'readonly')
+                    .objectStore(SE_IMG_STORE).get(key);
+          r.onsuccess = function(ev){ res(ev.target.result || null); };
+          r.onerror   = function(){ res(null); };
+        };
+        req.onerror = function(){ res(null); };
+      } catch(e){ res(null); }
+    });
   }
 
-  idbGet('fotos', function(dbFotos){
-    if(dbFotos) c.fotos = dbFotos;
-    idbGet('vorstand_photos', function(dbPhotos){
-      if(dbPhotos && c.vorstand){
-        c.vorstand = c.vorstand.map(function(v, i){
-          if(v.photo && v.photo.startsWith('__idb__:')){
-            return Object.assign({}, v, {photo: dbPhotos[i] || ''});
-          }
-          return v;
-        });
-      }
-      _doApplySiteContent(c);
-    });
-  });
-}
+  const [dbFotos, dbPhotos, dbNewsImg] = await Promise.all([
+    idbGet('fotos'),
+    idbGet('vorstand_photos'),
+    idbGet('news_imgs')
+  ]);
 
+  if(dbFotos) c.fotos = dbFotos;
+  else if(c.fotos === '__idb__') c.fotos = [];
+
+  if(dbPhotos && Array.isArray(c.vorstand)){
+    c.vorstand = c.vorstand.map(function(v, i){
+      if(v.photo && v.photo.startsWith('__idb__:')){
+        return Object.assign({}, v, {photo: dbPhotos[i] || ''});
+      }
+      return v;
+    });
+  }
+
+  if(dbNewsImg && Array.isArray(c.news)){
+    c.news = c.news.map(function(n, i){
+      if(n.img && n.img.startsWith('__idb__:')){
+        return Object.assign({}, n, {img: dbNewsImg[i] || ''});
+      }
+      return n;
+    });
+  }
+
+  _doApplySiteContent(c);
+}
 function _doApplySiteContent(c){
 
   // Hero
