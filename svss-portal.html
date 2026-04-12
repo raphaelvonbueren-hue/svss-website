@@ -1329,6 +1329,25 @@ function seGetContent(){
 }
 
 // Save: strip data: URLs from content before localStorage, put them in IndexedDB
+
+// ── Image compression ──
+function compressImage(dataUrl, maxWidth, maxHeight, quality){
+  return new Promise(function(res){
+    const img = new Image();
+    img.onload = function(){
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if(w > maxWidth){ h = Math.round(h * maxWidth/w); w = maxWidth; }
+      if(h > maxHeight){ w = Math.round(w * maxHeight/h); h = maxHeight; }
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      res(canvas.toDataURL('image/jpeg', quality || 0.7));
+    };
+    img.onerror = function(){ res(dataUrl); };
+    img.src = dataUrl;
+  });
+}
 function seSaveContent(data){
   const c = seGetContent();
   const textData = {};
@@ -1597,8 +1616,18 @@ function seFotosDrop(e){
   seFotosHandleFiles(e.dataTransfer.files);
 }
 
-function seSaveFotos(){
-  seSaveContent({fotos: _seFotosArr});
+async function seSaveFotos(){
+  toast('Bilder werden komprimiert…', 'ok');
+  const compressed = [];
+  for(const item of _seFotosArr){
+    if(item.src && item.src.startsWith('data:')){
+      const small = await compressImage(item.src, 1200, 800, 0.75);
+      compressed.push({src: small, name: item.name});
+    } else {
+      compressed.push(item);
+    }
+  }
+  seSaveContent({fotos: compressed});
 }
 // ── ZIELE ──
 const ZIELE_DEFAULTS = {
@@ -1778,20 +1807,25 @@ function seRemoveVorstand(idx){
   seSaveContent({vorstand:items});
   seLoadVorstand(seGetContent());
 }
-function seSaveVorstand(){
+async function seSaveVorstand(){
   const cards = document.querySelectorAll('#se-vorstand-list .se-item-card');
-  const items = [...cards].map(function(el){
+  const items = [];
+  for(const el of cards){
     const q = function(cls){ const e = el.querySelector('.'+cls); return e ? e.value : ''; };
-    return {
+    let photo = el.dataset.photo || '';
+    if(photo && photo.startsWith('data:')){
+      photo = await compressImage(photo, 400, 400, 0.8);
+    }
+    items.push({
       initials: q('se-v-init'),
       color:    q('se-v-color'),
       role:     q('se-v-role'),
       name:     q('se-v-name'),
       firma:    q('se-v-firma'),
       web:      q('se-v-web'),
-      photo:    el.dataset.photo || ''
-    };
-  });
+      photo:    photo
+    });
+  }
   seSaveContent({vorstand:items});
 }
 
@@ -2092,7 +2126,7 @@ async function seedDefaults(){
     localStorage.setItem('svss_members', JSON.stringify(members));
   } catch(e) {
     // Hard-coded fallback
-    const d={admin:{pw:'svss2026admin',display:'SVSS Admin',role:'admin'},psp:{pw:'psp2026',display:'PSP \u2013 Spielplatzsicherheit',role:'member'},gtsm:{pw:'gtsm2026',display:'GTSM Magglingen',role:'member'},spielklusion:{pw:'spiel2026',display:'Spielklusion',role:'member'},eibe:{pw:'eibe2026',display:'eibe AG',role:'member'},creaplay:{pw:'crea2026',display:'creaplay ag',role:'member'},herzig:{pw:'herzig2026',display:'HERZIG-Expertisen GmbH',role:'member'},spiko:{pw:'spiko2026',display:'Spiko GmbH',role:'member'},spkswiss:{pw:'spk2026',display:'SPK Swiss AG',role:'member'},checksafety:{pw:'check2026',display:'Check Safety SA',role:'member'}};
+    const d={admin:{pw:'svss2026admin',display:'SVSS Admin',role:'admin'},'atelier-schelb':{pw:'schelb2026',display:'atelier schelb+partner ag',role:'member'},'baumberger':{pw:'baumberger2026',display:'Baumberger Hansjürg GmbH',role:'member'},'besag':{pw:'besag2026',display:'Besag AG',role:'member'},'buerli':{pw:'buerli2026',display:'Bürli Spiel- und Sportgeräte AG',role:'member'},'carve':{pw:'carve2026',display:'Carve Anstalt',role:'member'},'checksafety':{pw:'check2026',display:'Check Safety SA',role:'member'},'childsplay':{pw:'childs2026',display:'ChildsPlay GmbH',role:'member'},'creaplay':{pw:'crea2026',display:'creaplay ag',role:'member'},'eibe':{pw:'eibe2026',display:'eibe AG',role:'member'},'baar':{pw:'baar2026',display:'Einwohnergemeinde Baar',role:'member'},'fs-fallschutz':{pw:'fs2026',display:'FS Fallschutzbelag AG',role:'member'},'fuchs-thun':{pw:'fuchs2026',display:'Fuchs Thun AG',role:'member'},'oeschberg':{pw:'oeschberg2026',display:'Gartenbauschule OESCHBERG',role:'member'},'birsfelden':{pw:'birsfelden2026',display:'Gemeindeverwaltung Birsfelden',role:'member'},'gemfloor':{pw:'gemfloor2026',display:'Gemfloor AG',role:'member'},'gep':{pw:'gep2026',display:'GeP Gestion Etude Expertise SA',role:'member'},'giuadora':{pw:'giuadora2026',display:'giuadora AG',role:'member'},'goeldi':{pw:'goeldi2026',display:'Göldi AG',role:'member'},'gtsm':{pw:'gtsm2026',display:'GTSM Magglingen',role:'member'},'herzig':{pw:'herzig2026',display:'HERZIG-Expertisen GmbH',role:'member'},'hinnen':{pw:'hinnen2026',display:'HINNEN Spielplatzgeräte AG',role:'member'},'holzpur':{pw:'holzpur2026',display:'HOLZPUR AG',role:'member'},'kinderland':{pw:'kinderland2026',display:'Kinderland NEESER AG',role:'member'},'krummholz':{pw:'krummholz2026',display:'Krummholz GmbH',role:'member'},'kukuk':{pw:'kukuk2026',display:'KuKuk Schweiz GmbH',role:'member'},'ludocrea':{pw:'ludocrea2026',display:'LudoCrea.ch GmbH',role:'member'},'motorsaenger':{pw:'motor2026',display:'motorsänger gmbh',role:'member'},'moveart':{pw:'moveart2026',display:'moveART GmbH',role:'member'},'murimoos':{pw:'murimoos2026',display:'Murimoos werken und wohnen',role:'member'},'oeko-handels':{pw:'oeko2026',display:'Oeko-Handels AG',role:'member'},'opt':{pw:'opt2026',display:'opt AG',role:'member'},'playground':{pw:'playground2026',display:'Playground design GmbH',role:'member'},'proxylon':{pw:'proxylon2026',display:'PROXYLON SARL',role:'member'},'psp':{pw:'psp2026',display:'PSP - Spielplatzsicherheit',role:'member'},'qs':{pw:'qs2026',display:'QS Spielplatz Sicherheit AG',role:'member'},'realsport':{pw:'realsport2026',display:'Realsport SA',role:'member'},'ricoter':{pw:'ricoter2026',display:'RICOTER Erdaufbereitung AG',role:'member'},'rudolf':{pw:'rudolf2026',display:'Rudolf Spielplatz AG',role:'member'},'seilerei':{pw:'seilerei2026',display:'Seilerei Berger GmbH',role:'member'},'spielmitraum':{pw:'spielmitraum2026',display:'spiel mit raum GmbH',role:'member'},'spielgarten':{pw:'spielgarten2026',display:'Spielgarten GmbH',role:'member'},'spielklusion':{pw:'spiel2026',display:'Spielklusion',role:'member'},'spielplatzzone':{pw:'spielplatzzone2026',display:'Spielplatz Zone AG',role:'member'},'spielraum':{pw:'spielraum2026',display:'Spielraum',role:'member'},'spiko':{pw:'spiko2026',display:'Spiko GmbH',role:'member'},'spkswiss':{pw:'spk2026',display:'SPK Swiss AG',role:'member'},'winterthur':{pw:'winterthur2026',display:'Stadt Winterthur',role:'member'},'swisssafety':{pw:'swiss2026',display:'Swiss Safety Center AG',role:'member'},'walo':{pw:'walo2026',display:'Walo Bertschinger AG',role:'member'},'wipfli':{pw:'wipfli2026',display:'Wipfli Spielplatz-Unterhalt GmbH',role:'member'},'zawa':{pw:'zawa2026',display:'Zawa Sagl',role:'member'},'zingg':{pw:'zingg2026',display:'zingg gartengestaltung ag',role:'member'}}
     localStorage.setItem('svss_members', JSON.stringify(d));
   }
 }
