@@ -2,15 +2,1656 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=svss-komplett.html">
-<title>SVSS – Spielplatzsicherheit Schweiz</title>
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SVSS - Schweizerische Vereinigung für Spielplatzsicherheit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&display=swap" rel="stylesheet">
 <style>
-body{font-family:system-ui,sans-serif;background:#1a3a2a;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-p{color:#fff;font-size:1rem;opacity:.7}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green-dark:#1a3a2a;--green-mid:#2d6a4a;--green-soft:#4a9068;
+  --green-pale:#d4ead8;--green-light:#f0f7f1;
+  --sand:#f5f1e8;--sand-dark:#e8e2d4;--cream:#faf8f3;
+  --text:#1a1a18;--text-soft:#4a4a44;--text-muted:#8a8a80;--white:#fff;
+  --accent:#c8522a;--radius:8px;--radius-lg:16px;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.06);
+  --shadow-md:0 8px 28px rgba(0,0,0,.10);
+  --shadow-lg:0 20px 60px rgba(0,0,0,.14);
+  --transition:.22s cubic-bezier(.4,0,.2,1);
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;
+  background:rgba(20,46,32,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 3vw;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  box-shadow:0 4px 24px rgba(0,0,0,.18)}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;cursor:pointer}
+.nav-logo-img{height:40px;width:auto;object-fit:contain;filter:brightness(0) invert(1);transition:opacity var(--transition)}
+.nav-logo-img.hidden{display:none}
+.nav-brand{font-family:'DM Serif Display',serif;font-size:17px;color:#fff}
+.nav-brand-sub{font-size:10px;color:rgba(255,255,255,.45);display:block;font-weight:300;line-height:1.2}
+.nav-links{display:flex;align-items:center}
+.nav-links a{font-size:13px;color:rgba(255,255,255,.6);text-decoration:none;padding:0 1rem;height:64px;
+  display:flex;align-items:center;border-bottom:2px solid transparent;
+  transition:color var(--transition),border-color var(--transition);cursor:pointer;letter-spacing:.01em}
+.nav-links a:hover{color:#fff}
+.nav-links a.active{color:var(--green-pale);border-bottom-color:var(--green-pale);font-weight:500}
+.nav-cta{background:rgba(255,255,255,.12)!important;color:#fff!important;
+  border:1px solid rgba(255,255,255,.25)!important;border-bottom:1px solid rgba(255,255,255,.25)!important;
+  height:36px!important;border-radius:99px!important;margin-left:.5rem;padding:0 1.25rem!important;
+  transition:background var(--transition)!important}
+.nav-cta:hover{background:rgba(255,255,255,.22)!important}
+#nav-portal{font-size:13px;color:#fff!important;
+  border:1px solid var(--green-pale)!important;border-bottom:1px solid var(--green-pale)!important;
+  height:36px!important;border-radius:99px!important;margin-left:.5rem;padding:0 1.25rem!important;
+  background:rgba(212,234,216,.15)!important;cursor:pointer;
+  transition:background var(--transition)!important}
+#nav-portal:hover{background:rgba(212,234,216,.28)!important}
+
+/* ── PAGES ── */
+.page{display:none;padding-top:64px;min-height:100vh}
+.page.active{display:block}
+
+/* ── HERO ── */
+.hero{min-height:calc(100vh - 64px);background:var(--green-dark);
+  display:grid;grid-template-columns:1fr 1fr;align-items:center;
+  padding:80px 6vw;gap:4rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 70% 60% at 75% 20%,rgba(74,144,104,.30) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 50% at 15% 85%,rgba(45,106,74,.35) 0%,transparent 50%),
+    radial-gradient(ellipse 40% 40% at 50% 50%,rgba(26,58,42,.5) 0%,transparent 70%)}
+.hero-pattern{position:absolute;right:0;top:0;bottom:0;width:55%;opacity:.035;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 48px,rgba(255,255,255,1) 48px,rgba(255,255,255,1) 49px),
+    repeating-linear-gradient(90deg,transparent,transparent 48px,rgba(255,255,255,1) 48px,rgba(255,255,255,1) 49px)}
+.hero-dots{position:absolute;right:3vw;bottom:60px;display:flex;gap:6px;z-index:1}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.18)}
+.hero-dot.active{background:var(--green-pale);width:24px;border-radius:99px}
+.hero-left{position:relative;z-index:1}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:500;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--green-pale);margin-bottom:1.75rem;
+  background:rgba(212,234,216,.1);padding:5px 14px;border-radius:99px;border:1px solid rgba(212,234,216,.2)}
+.hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2.6rem,4.2vw,4rem);
+  line-height:1.08;color:#fff;margin-bottom:1.5rem;font-weight:400;letter-spacing:-.01em}
+.hero h1 em{font-style:italic;color:var(--green-pale)}
+.hero-lead{font-size:16px;color:rgba(255,255,255,.58);font-weight:300;max-width:440px;
+  line-height:1.8;margin-bottom:2.75rem}
+.hero-actions{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.btn-primary{background:linear-gradient(135deg,#fff 0%,var(--green-pale) 100%);
+  color:var(--green-dark);padding:13px 30px;border-radius:99px;font-size:14px;font-weight:500;
+  text-decoration:none;border:none;cursor:pointer;
+  transition:transform var(--transition),box-shadow var(--transition);
+  display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.3)}
+.btn-ghost{color:rgba(255,255,255,.7);font-size:14px;text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;
+  border:1px solid rgba(255,255,255,.2);padding:12px 22px;border-radius:99px;
+  transition:all var(--transition);cursor:pointer;backdrop-filter:blur(4px)}
+.btn-ghost:hover{color:#fff;border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.08)}
+.hero-right{position:relative;z-index:1}
+.hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.stat-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--radius-lg);padding:1.5rem;
+  backdrop-filter:blur(8px);transition:background var(--transition),transform var(--transition)}
+.stat-card:hover{background:rgba(255,255,255,.11);transform:translateY(-2px)}
+.stat-card.accent{background:rgba(200,82,42,.18);border-color:rgba(200,82,42,.35)}
+.stat-card.wide{grid-column:1/-1}
+.stat-num{font-family:'DM Serif Display',serif;font-size:2.8rem;color:#fff;line-height:1;margin-bottom:6px}
+.stat-card.wide .stat-num{font-size:1.3rem;font-style:italic;line-height:1.45}
+.stat-label{font-size:11.5px;color:rgba(255,255,255,.45);font-weight:300;letter-spacing:.03em}
+
+/* ── PHOTO STRIP ── */
+.photo-strip{display:none}
+
+/* ── LOGIN BAR ── */
+.login-bar{padding:16px 6vw;display:flex;align-items:center;justify-content:space-between;
+  background:var(--green-mid)}
+.login-bar p{font-size:13.5px;color:rgba(255,255,255,.85);font-weight:300}
+.login-bar a,.login-bar button.lbtn{font-size:13px;font-weight:500;color:#fff;text-decoration:none;
+  background:rgba(255,255,255,.15);padding:8px 18px;border-radius:99px;
+  border:1px solid rgba(255,255,255,.28);transition:background var(--transition);cursor:pointer}
+.login-bar a:hover,.login-bar button.lbtn:hover{background:rgba(255,255,255,.26)}
+.login-bar .lbtn-out{background:transparent;border-color:rgba(255,255,255,.3);
+  color:rgba(255,255,255,.75);margin-left:8px}
+
+/* ── SECTIONS ── */
+section{padding:96px 6vw}
+.section-label{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--green-soft);display:inline-flex;align-items:center;gap:8px;margin-bottom:1.1rem;
+  background:var(--green-light);padding:4px 12px;border-radius:99px}
+.section-label::before{content:'';width:16px;height:1px;background:var(--green-soft)}
+.section-title{font-family:'DM Serif Display',serif;font-size:clamp(1.9rem,3vw,2.7rem);
+  font-weight:400;line-height:1.15;color:var(--text);margin-bottom:1.25rem;letter-spacing:-.01em}
+.section-title em{font-style:italic;color:var(--green-mid)}
+.section-lead{font-size:15.5px;color:var(--text-soft);font-weight:300;max-width:560px;line-height:1.8}
+
+/* ── ZIELE / ÜBER UNS ── */
+.ziele-bg{background:linear-gradient(160deg,var(--sand) 0%,#ede9df 100%)}
+.ziele-grid{display:grid;grid-template-columns:1fr 2fr;gap:5rem;align-items:start;margin-top:3rem}
+.vorstand-card{background:#fff;border:1px solid var(--sand-dark);border-radius:var(--radius-lg);
+  padding:1.25rem;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;
+  transition:transform var(--transition),box-shadow var(--transition);
+  box-shadow:var(--shadow-sm)}
+.vorstand-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.vorstand-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-family:'DM Serif Display',serif;font-size:17px;color:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.av-1{background:linear-gradient(135deg,var(--green-dark),var(--green-mid))}
+.av-2{background:linear-gradient(135deg,var(--green-mid),var(--green-soft))}
+.av-3{background:linear-gradient(135deg,var(--green-soft),#6ab88a)}
+.av-4{background:linear-gradient(135deg,#3a5a6a,#4a7a8a)}
+.vorstand-role{font-size:10.5px;font-weight:500;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--green-soft)}
+.vorstand-name{font-size:14px;font-weight:500;color:var(--text)}
+.vorstand-firma{font-size:12px;color:var(--text-muted)}
+.vorstand-card a{font-size:12px;color:var(--green-mid);text-decoration:none}
+.ziele-items{display:flex;flex-direction:column;gap:0}
+.ziele-item{display:flex;gap:1.25rem;align-items:flex-start;padding:1.75rem 0;
+  border-bottom:1px solid var(--sand-dark);transition:background var(--transition)}
+.ziele-item:first-child{padding-top:0}.ziele-item:last-child{border-bottom:none}
+.ziele-num{font-family:'DM Serif Display',serif;font-size:2.2rem;
+  color:var(--green-pale);line-height:1;min-width:36px;margin-top:-4px;font-weight:400}
+.ziele-item h3{font-size:15px;font-weight:500;margin-bottom:5px;color:var(--text)}
+.ziele-item p{font-size:14px;color:var(--text-soft);font-weight:300;line-height:1.7}
+
+/* ── MEMBER PREVIEW ── */
+.member-preview-section{background:var(--green-dark);padding:96px 6vw;position:relative;overflow:hidden}
+.member-preview-section::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(74,144,104,.15),transparent 60%)}
+.member-preview-section .section-label{background:rgba(212,234,216,.12);color:var(--green-pale)}
+.member-preview-section .section-label::before{background:var(--green-pale)}
+.member-preview-section .section-title{color:#fff}
+.member-preview-section .section-lead{color:rgba(255,255,255,.55)}
+.member-preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:2.5rem}
+.member-logo-tile{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--radius-lg);padding:18px;height:96px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:transform var(--transition),background var(--transition),box-shadow var(--transition);
+  backdrop-filter:blur(4px)}
+.member-logo-tile:hover{transform:translateY(-3px);background:rgba(255,255,255,.14);
+  box-shadow:0 8px 24px rgba(0,0,0,.3);border-color:rgba(255,255,255,.22)}
+.member-logo-tile img{max-width:100%;max-height:58px;object-fit:contain;filter:brightness(0) invert(1) opacity(.75);
+  transition:filter var(--transition)}
+.member-logo-tile:hover img{filter:brightness(0) invert(1) opacity(1)}
+.member-logo-tile img.errored{display:none}
+.tile-fallback{font-size:11px;font-weight:500;color:rgba(255,255,255,.6);text-align:center;line-height:1.35;display:none}
+.member-logo-tile img.errored~.tile-fallback{display:block}
+.preview-footer{margin-top:2.5rem;display:flex;align-items:center;gap:1.25rem}
+.view-all-btn{background:linear-gradient(135deg,var(--green-pale),#b8d4bc);
+  color:var(--green-dark);padding:13px 30px;border-radius:99px;font-size:14px;font-weight:500;
+  cursor:pointer;border:none;transition:transform var(--transition),box-shadow var(--transition);
+  box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.view-all-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.member-count-label{font-size:13px;color:rgba(255,255,255,.45)}
+
+/* ── NEWS ── */
+.news-grid{display:grid;grid-template-columns:2fr 1fr;gap:2.5rem;margin-top:3rem}
+.news-item{padding:1.75rem 0;border-bottom:1px solid var(--sand-dark);
+  display:grid;grid-template-columns:72px 1fr;gap:1.5rem;align-items:start;
+  transition:background var(--transition)}
+.news-item:first-child{padding-top:0}.news-item:last-child{border-bottom:none}
+.news-day{font-family:'DM Serif Display',serif;font-size:2.2rem;line-height:1;color:var(--green-mid)}
+.news-month{font-size:10px;text-transform:uppercase;color:var(--text-muted);letter-spacing:.06em}
+.news-cat{font-size:10.5px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--green-soft);margin-bottom:5px}
+.news-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:5px;line-height:1.35}
+.news-excerpt{font-size:13.5px;color:var(--text-soft);font-weight:300;line-height:1.65}
+.events-card{background:linear-gradient(160deg,var(--green-dark),#0f2a1a);
+  border-radius:var(--radius-lg);padding:1.75rem;color:#fff;
+  box-shadow:var(--shadow-md)}
+.events-card-title{font-size:11px;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--green-pale);margin-bottom:1.25rem;font-weight:500}
+.ev-item{display:flex;gap:12px;align-items:flex-start;padding:.875rem 0;
+  border-bottom:1px solid rgba(255,255,255,.07)}
+.ev-item:last-child{border-bottom:none;padding-bottom:0}
+.ev-day{font-family:'DM Serif Display',serif;font-size:1.5rem;line-height:1;color:#fff;min-width:32px;text-align:center}
+.ev-mo{font-size:9px;text-transform:uppercase;color:rgba(255,255,255,.4);letter-spacing:.06em;text-align:center}
+.ev-title{font-size:13px;color:rgba(255,255,255,.88);font-weight:400;line-height:1.35}
+.ev-loc{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px}
+.wb-card{background:var(--sand);border:1px solid var(--sand-dark);
+  border-radius:var(--radius-lg);padding:1.25rem;margin-top:12px;
+  box-shadow:var(--shadow-sm)}
+.wb-card h4{font-size:13px;font-weight:500;margin-bottom:4px}
+.wb-date{font-size:12px;color:var(--green-mid);margin-bottom:8px;font-weight:500}
+.wb-card p{font-size:12px;color:var(--text-soft);font-weight:300;line-height:1.55;margin-bottom:12px}
+.btn-sm-green{display:inline-flex;align-items:center;font-size:12px;font-weight:500;
+  padding:7px 16px;border-radius:99px;background:var(--green-dark);color:#fff;
+  text-decoration:none;border:none;cursor:pointer;transition:background var(--transition)}
+.btn-sm-green:hover{background:var(--green-mid)}
+.btn-sm-outline{background:transparent;color:var(--green-dark);border:1px solid var(--green-mid)}
+.btn-sm-outline:hover{background:var(--green-light)}
+
+/* ── ANMELDUNG / JOIN ── */
+.anmeldung-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start}
+.tier{background:#fff;border:1px solid var(--sand-dark);border-radius:var(--radius-lg);
+  padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;transition:transform var(--transition),box-shadow var(--transition);
+  box-shadow:var(--shadow-sm)}
+.tier:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.tier.featured{border-color:var(--green-mid);background:var(--green-light);
+  box-shadow:0 4px 20px rgba(45,106,74,.15)}
+.tier-name{font-size:14px;font-weight:500}
+.tier-desc{font-size:12px;color:var(--text-muted);margin-top:2px}
+.tier-price{font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--green-dark)}
+.tier-period{font-size:11px;color:var(--text-muted)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.fg label{font-size:12px;color:var(--text-soft);font-weight:500;letter-spacing:.02em}
+.fg input,.fg select,.fg textarea{padding:11px 14px;border:1px solid var(--sand-dark);
+  border-radius:var(--radius);background:#fff;color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:14px;outline:none;
+  transition:border-color var(--transition),box-shadow var(--transition);width:100%}
+.fg input:focus,.fg select:focus,.fg textarea:focus{
+  border-color:var(--green-mid);box-shadow:0 0 0 3px rgba(45,106,74,.12)}
+.fg textarea{resize:vertical}
+.form-submit{width:100%;padding:13px;
+  background:linear-gradient(135deg,var(--green-dark),var(--green-mid));
+  color:#fff;border:none;border-radius:99px;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;
+  transition:transform var(--transition),box-shadow var(--transition);
+  box-shadow:0 4px 16px rgba(26,58,42,.25)}
+.form-submit:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(26,58,42,.35)}
+
+/* ── PORTAL CARD (logged-in) ── */
+.portal-card{background:linear-gradient(160deg,var(--green-dark),#0f2518);
+  border-radius:var(--radius-lg);padding:2rem;color:#fff;box-shadow:var(--shadow-md)}
+.portal-card-title{font-size:11px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:1.25rem}
+.portal-link{display:flex;align-items:center;gap:12px;font-size:14px;
+  color:rgba(255,255,255,.82);cursor:pointer;padding:11px 12px;border-radius:var(--radius);
+  transition:background var(--transition)}
+.portal-link:hover{background:rgba(255,255,255,.1)}
+
+/* ── MEMBERS DIRECTORY PAGE ── */
+.members-hero{background:linear-gradient(160deg,var(--green-dark) 0%,#0e2318 100%);
+  padding:64px 6vw 52px;text-align:center;position:relative;overflow:hidden}
+.members-hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 80% at 50% 100%,rgba(74,144,104,.18),transparent 60%)}
+.members-hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,3.5vw,3rem);
+  color:#fff;font-weight:400;line-height:1.15;margin-bottom:1rem;position:relative}
+.members-hero h1 em{font-style:italic;color:var(--green-pale)}
+.members-hero-eyebrow{font-size:11px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--green-pale);margin-bottom:1rem;display:block}
+.members-hero-lead{font-size:15px;color:rgba(255,255,255,.55);font-weight:300;
+  max-width:560px;margin:0 auto 2rem;line-height:1.75;position:relative}
+.members-hero-stats{display:flex;gap:3rem;justify-content:center;flex-wrap:wrap;position:relative}
+.mh-stat-num{font-family:'DM Serif Display',serif;font-size:2.2rem;color:#fff;line-height:1}
+.mh-stat-label{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px}
+.filter-bar{background:rgba(255,255,255,.96);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--sand-dark);padding:1.125rem 6vw;
+  position:sticky;top:64px;z-index:90;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.filter-inner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;max-width:1400px;margin:0 auto}
+.search-wrap{flex:1;min-width:200px;position:relative}
+.search-wrap input{width:100%;padding:10px 14px 10px 40px;font-family:'DM Sans',sans-serif;
+  font-size:13.5px;border:1px solid var(--sand-dark);border-radius:99px;
+  background:#fff;color:var(--text);outline:none;transition:border-color var(--transition),box-shadow var(--transition)}
+.search-wrap input:focus{border-color:var(--green-mid);box-shadow:0 0 0 3px rgba(45,106,74,.1)}
+.s-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  width:15px;height:15px;color:var(--text-muted);pointer-events:none}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{padding:6px 16px;border-radius:99px;font-size:12.5px;font-family:'DM Sans',sans-serif;
+  border:1px solid var(--sand-dark);background:#fff;color:var(--text-soft);cursor:pointer;
+  transition:all var(--transition);white-space:nowrap}
+.pill:hover{border-color:var(--green-mid);color:var(--green-dark)}
+.pill.on{background:var(--green-dark);color:#fff;border-color:var(--green-dark);
+  box-shadow:0 2px 8px rgba(26,58,42,.25)}
+.count-bar{padding:.75rem 6vw 0}
+.count-bar p{font-size:12.5px;color:var(--text-muted);max-width:1400px;margin:0 auto}
+.grid-section{padding:1.25rem 6vw 80px}
+.members-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:14px;max-width:1400px;margin:0 auto}
+.mc{background:#fff;border:1px solid var(--sand-dark);border-radius:var(--radius-lg);
+  display:flex;flex-direction:column;overflow:hidden;cursor:pointer;text-decoration:none;
+  transition:transform var(--transition),box-shadow var(--transition),border-color var(--transition);
+  box-shadow:var(--shadow-sm)}
+.mc:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--green-pale)}
+.mc.hidden{display:none}
+.mc-logo{height:100px;display:flex;align-items:center;justify-content:center;
+  padding:16px 18px;background:#fff;border-bottom:1px solid var(--sand-dark)}
+.mc-logo img{max-width:100%;max-height:66px;object-fit:contain;transition:transform var(--transition)}
+.mc:hover .mc-logo img{transform:scale(1.05)}
+.mc-logo img.errored{display:none}
+.mc-logo .fallback{font-size:11px;font-weight:500;color:var(--green-mid);text-align:center;line-height:1.4;display:none}
+.mc-logo img.errored~.fallback{display:block}
+.mc-body{padding:.875rem 1rem 1.1rem;flex:1;display:flex;flex-direction:column;gap:7px}
+.mc-name{font-size:13px;font-weight:500;color:var(--text);line-height:1.35}
+.mc-tags{display:flex;flex-wrap:wrap;gap:4px}
+.mc-tag{font-size:10.5px;padding:3px 9px;border-radius:99px;
+  background:var(--green-light);color:var(--green-dark);white-space:nowrap;
+  border:1px solid rgba(45,106,74,.12)}
+.mc-loc{font-size:11px;color:var(--text-muted);margin-top:auto;display:flex;align-items:center;gap:4px}
+.mc-loc::before{content:'📍';font-size:9px}
+.category-label{grid-column:1/-1;font-size:11px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--green-soft);padding:1.75rem 0 .5rem;
+  border-top:1px solid var(--sand-dark)}
+.category-label:first-child{border-top:none;padding-top:0}
+.no-results{grid-column:1/-1;text-align:center;padding:4rem;color:var(--text-muted);font-size:14px}
+
+/* ── FOOTER ── */
+footer{background:linear-gradient(160deg,var(--green-dark) 0%,#0d2016 100%);
+  color:rgba(255,255,255,.5);padding:60px 6vw 36px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem}
+.footer-brand{font-family:'DM Serif Display',serif;font-size:1.5rem;color:#fff;margin-bottom:.75rem}
+.footer-tagline{font-size:13px;font-weight:300;line-height:1.7;max-width:260px;color:rgba(255,255,255,.45)}
+.footer-heading{font-size:11px;text-transform:uppercase;letter-spacing:.12em;
+  color:var(--green-pale);margin-bottom:1rem;font-weight:500}
+.footer-links{display:flex;flex-direction:column;gap:9px}
+.footer-links a{font-size:13px;color:rgba(255,255,255,.45);text-decoration:none;
+  transition:color var(--transition);cursor:pointer}
+.footer-links a:hover{color:#fff}
+footer p{font-size:13px;line-height:2;font-weight:300}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:1.5rem;
+  display:flex;justify-content:space-between;align-items:center;font-size:12px;
+  color:rgba(255,255,255,.3)}
+
+@media(max-width:768px){
+  .hero{grid-template-columns:1fr;padding:60px 1.5rem 40px}.hero-right{display:none}
+  .ziele-grid,.news-grid,.anmeldung-grid,.footer-grid{grid-template-columns:1fr;gap:2rem}
+  nav{padding:0 1rem}.nav-links a{padding:0 .6rem;font-size:12px}
+  .member-preview-section{padding:60px 1.5rem}
+  section{padding:64px 1.5rem}
+}
+
+/* ── MEMBER PROFILE PAGE ── */
+#page-member{background:var(--cream)}
+.mp-hero{background:linear-gradient(160deg,var(--green-dark),#0e2318);
+  padding:3.5rem 6vw 3rem;position:relative}
+.mp-back{display:inline-flex;align-items:center;gap:8px;font-size:13px;
+  color:rgba(255,255,255,.55);cursor:pointer;margin-bottom:1.5rem;
+  transition:color var(--transition);border:none;background:none}
+.mp-back:hover{color:#fff}
+.mp-logo-wrap{width:100px;height:100px;background:#fff;border-radius:var(--radius-lg);
+  padding:12px;display:flex;align-items:center;justify-content:center;
+  margin-bottom:1.25rem;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.mp-logo-wrap img{max-width:100%;max-height:76px;object-fit:contain}
+.mp-logo-initials{font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--green-mid)}
+.mp-name{font-family:'DM Serif Display',serif;font-size:clamp(1.6rem,3vw,2.4rem);
+  color:#fff;font-weight:400;margin-bottom:.5rem}
+.mp-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.mp-tag{font-size:11px;padding:4px 12px;border-radius:99px;
+  background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);
+  border:1px solid rgba(255,255,255,.2)}
+.mp-contact-bar{display:flex;gap:1.5rem;flex-wrap:wrap;
+  font-size:13.5px;color:rgba(255,255,255,.6);font-weight:300}
+.mp-contact-bar a{color:var(--green-pale);text-decoration:none;transition:color var(--transition)}
+.mp-contact-bar a:hover{color:#fff}
+.mp-body{max-width:900px;padding:3rem 6vw;margin:0 auto}
+.mp-section{margin-bottom:2.5rem}
+.mp-section h2{font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:400;
+  color:var(--green-dark);margin-bottom:1rem;padding-bottom:.5rem;
+  border-bottom:1px solid var(--sand-dark)}
+.mp-short{font-size:1.05rem;color:var(--text-soft);line-height:1.8;font-weight:300;
+  background:var(--green-light);border-radius:var(--radius-lg);padding:1.5rem 1.75rem;
+  border-left:3px solid var(--green-mid);box-shadow:var(--shadow-sm)}
+.mp-content{font-size:15px;line-height:1.85;color:var(--text-soft)}
+.mp-content h2{font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--green-dark);
+  margin:1.5rem 0 .5rem;padding:0;border:none}
+.mp-content h3{font-size:1.05rem;font-weight:500;margin:1rem 0 .3rem}
+.mp-content p{margin:.5rem 0}.mp-content ul,.mp-content ol{margin:.5rem 0 .5rem 1.5rem}
+.mp-content strong{font-weight:500}.mp-content a{color:var(--green-mid)}
+.mp-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.mp-gallery img{width:100%;border-radius:var(--radius);aspect-ratio:4/3;object-fit:cover;
+  transition:transform var(--transition),box-shadow var(--transition)}
+.mp-gallery img:hover{transform:scale(1.03);box-shadow:var(--shadow-md)}
+.mp-info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.mp-info-item{background:var(--sand);border-radius:var(--radius-lg);padding:1rem 1.25rem;
+  border:1px solid var(--sand-dark)}
+.mp-info-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text-muted);margin-bottom:5px}
+.mp-info-value{font-size:14px;color:var(--text)}
+.mp-info-value a{color:var(--green-mid);text-decoration:none}
+.mp-cta{background:linear-gradient(135deg,var(--green-dark),#0f2518);
+  color:#fff;border-radius:var(--radius-lg);padding:2rem;
+  display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap;
+  box-shadow:var(--shadow-md)}
+.mp-cta p{font-size:15px;color:rgba(255,255,255,.75);font-weight:300;line-height:1.7}
+.mp-cta a{background:#fff;color:var(--green-dark);padding:12px 26px;border-radius:99px;
+  font-size:14px;font-weight:500;text-decoration:none;white-space:nowrap;
+  transition:transform var(--transition),box-shadow var(--transition);
+  box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.mp-cta a:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.22)}
+.mp-empty{text-align:center;padding:4rem 2rem;color:var(--text-muted)}
+.mp-empty h3{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--text-soft);margin-bottom:.5rem}
+
+/* ── IMPRESSIONS GALLERY ── */
+.impressions-section{padding:0;overflow:hidden}
+.impressions-grid{display:grid;grid-template-columns:repeat(6,1fr);
+  grid-template-rows:200px 200px;gap:3px}
+.impressions-grid div{background-size:cover;background-position:center;
+  transition:transform .5s cubic-bezier(.4,0,.2,1),filter .5s;filter:brightness(.92)}
+.impressions-grid div:hover{transform:scale(1.04);filter:brightness(1.05);z-index:2}
+.impressions-grid .span2{grid-column:span 2}
+.impressions-grid .span3{grid-column:span 3}
+.impressions-grid .row2{grid-row:span 2}
 </style>
 </head>
 <body>
-<p>Weiterleitung...</p>
-<script>window.location.replace('svss-komplett.html');</script>
+
+<!-- LOGIN MODAL -->
+<div id="login-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:1rem" aria-modal="true" role="dialog">
+  <div style="background:#fff;border-radius:16px;padding:2.5rem;width:100%;max-width:400px;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.3)">
+    <button onclick="closeLoginModal()" style="position:absolute;top:1rem;right:1.25rem;background:none;border:none;font-size:22px;color:var(--text-muted);cursor:pointer;line-height:1">&#215;</button>
+    <img referrerpolicy="no-referrer" src="https://images.weserv.nl/?url=shop3.webschmied.ch/mt-content/uploads/2026/01/svss_logo.png" alt="SVSS" style="height:32px;margin-bottom:1.5rem;display:block" onerror="this.style.display='none'">
+    <p style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--green-dark);margin-bottom:.3rem">Mitglieder-Login</p>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:1.5rem">Melden Sie sich mit Ihren Zugangsdaten an.</p>
+    <div id="modal-err" style="display:none;background:#fbeaea;color:#7a1a1a;border:1px solid #f5a3a3;border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:1rem"></div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:500;color:var(--text-soft);display:block;margin-bottom:4px">Benutzername</label>
+      <input id="modal-user" type="text" placeholder="z.B. psp" style="width:100%;padding:10px 14px;border:1px solid var(--sand-dark);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .15s" autocomplete="username">
+    </div>
+    <div style="margin-bottom:1.25rem">
+      <label style="font-size:12px;font-weight:500;color:var(--text-soft);display:block;margin-bottom:4px">Passwort</label>
+      <input id="modal-pw" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" style="width:100%;padding:10px 14px;border:1px solid var(--sand-dark);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .15s" autocomplete="current-password">
+    </div>
+    <button onclick="doLogin()" style="width:100%;padding:12px;background:var(--green-dark);color:#fff;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s">Anmelden &#8594;</button>
+    <p style="font-size:12px;color:var(--text-muted);margin-top:1.25rem;text-align:center">Noch kein Konto? <a href="/cdn-cgi/l/email-protection#0d7e7b7e7e4d7e7d6468617d616c79777e646e65687f65686479207e6e657a686477236e65" style="color:var(--green-mid)">Kontakt aufnehmen</a></p>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+    <div class="nav-logo" onclick="showPage('home')">
+    <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI0LjAuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkViZW5lXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCA5MjAuNzMgMzEwLjYzIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA5MjAuNzMgMzEwLjYzOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6I2ZmZmZmZjt9Cgkuc3Qxe2ZpbGw6I2ZmZmZmZjt9Cjwvc3R5bGU+CjxnPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM2MS41OSwyMzUuMWMwLDEuMjktMC4yNCwyLjQxLTAuNzMsMy4zNWMtMC40OSwwLjk1LTEuMTEsMS43OS0xLjg1LDIuNTRjLTEuMDYsMS4wMy0yLjM2LDEuOC0zLjksMi4zCgkJYy0xLjU0LDAuNS0zLjEyLDAuNzUtNC43NiwwLjc1Yy0zLjcsMC02LjYyLTAuOTctOC43NC0yLjkyYy0wLjk4LTAuOTItMS43Ny0yLTIuMzctMy4yNWMtMC42LTEuMjUtMC45LTIuNi0wLjktNC4wNmg0CgkJYzAsMC45MiwwLjIsMS44LDAuNiwyLjY0YzAuNCwwLjg1LDAuOTIsMS41NywxLjU1LDIuMTdjMC42OSwwLjY2LDEuNTYsMS4xNCwyLjYzLDEuNDRjMS4wNiwwLjMsMi4xNCwwLjQ1LDMuMjMsMC40NQoJCWMxLjE4LDAsMi4yNS0wLjEzLDMuMjEtMC4zOWMwLjk2LTAuMjYsMS43OS0wLjcyLDIuNDgtMS4zOGMwLjQ5LTAuNDMsMC44Ny0wLjkyLDEuMTQtMS40OGMwLjI3LTAuNTYsMC40MS0xLjI1LDAuNDEtMi4wOAoJCWMwLTEuMi0wLjQtMi4yNS0xLjIxLTMuMTRjLTAuOC0wLjg5LTIuMTEtMS40OC0zLjkyLTEuNzZsLTQuODItMC43M2MtMS4xNS0wLjE3LTIuMjItMC40Ni0zLjIxLTAuODZzLTEuODUtMC45NC0yLjU4LTEuNjEKCQlzLTEuMzEtMS40OC0xLjcyLTIuNDFzLTAuNjItMi0wLjYyLTMuMmMwLTEuMTUsMC4yNC0yLjI0LDAuNzEtMy4yOWMwLjQ3LTEuMDUsMS4xMy0xLjk2LDEuOTYtMi43M2MyLjE1LTIuMDEsNC44Mi0zLjAxLDguMDEtMy4wMQoJCWMxLjQ5LDAsMi45MywwLjI0LDQuMzMsMC43M2MxLjM5LDAuNDksMi41OSwxLjIyLDMuNiwyLjE5YzEuODcsMS43OCwyLjg0LDMuOTYsMi45Myw2LjU0aC00Yy0wLjA2LTAuNzUtMC4yMi0xLjQ1LTAuNDctMi4xMQoJCWMtMC4yNi0wLjY2LTAuNi0xLjIzLTEuMDMtMS43MmMtMC41OC0wLjY2LTEuMzEtMS4xNy0yLjIyLTEuNTVjLTAuOS0wLjM3LTEuOTYtMC41Ni0zLjE3LTAuNTZjLTEuMDksMC0yLjEsMC4xNy0zLjA0LDAuNDkKCQljLTAuOTMsMC4zMy0xLjczLDAuODctMi4zOSwxLjYxYy0wLjQsMC40Ni0wLjcxLDAuOTUtMC45MywxLjQ4Yy0wLjIxLDAuNTMtMC4zMiwxLjE0LTAuMzIsMS44M2MwLDAuNjksMC4xMywxLjI4LDAuMzksMS43OAoJCWMwLjI2LDAuNSwwLjYsMC45MiwxLjAzLDEuMjdzMC45MiwwLjYyLDEuNDYsMC44MmMwLjU0LDAuMiwxLjEsMC4zNCwxLjY4LDAuNDNjMC44NiwwLjExLDEuNzEsMC4yNCwyLjU2LDAuMzcKCQljMC44NSwwLjEzLDEuNjksMC4yNywyLjUyLDAuNDFjMi41NSwwLjM3LDQuNjEsMS4zLDYuMTYsMi43N0MzNjAuODEsMjMwLjcxLDM2MS41OSwyMzIuNjYsMzYxLjU5LDIzNS4xeiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM4NC42NywyMzYuMThjLTAuMDksMS4xOC0wLjM0LDIuMjEtMC43OCwzLjFzLTEuMDIsMS42OS0xLjc3LDIuNDFjLTAuNzgsMC43NS0xLjY4LDEuMzMtMi43MSwxLjc0CgkJcy0yLjIzLDAuNjItMy41NywwLjYyYy0xLjk4LDAtMy42MS0wLjM5LTQuODktMS4xOHMtMi4zLTEuNzYtMy4wOC0yLjljLTAuNTctMC44Ni0xLjAyLTEuODktMS4zMy0zLjEKCQljLTAuMzItMS4yLTAuNDctMi42Mi0wLjQ3LTQuMjZzMC4xNi0zLjA1LDAuNDctNC4yNmMwLjMyLTEuMiwwLjc2LTIuMjQsMS4zMy0zLjFjMC43OC0xLjE1LDEuOC0yLjExLDMuMDgtMi45CgkJYzEuMjgtMC43OSwyLjg5LTEuMTgsNC44NC0xLjE4YzEuMjksMCwyLjQ2LDAuMiwzLjUxLDAuNmMxLjA1LDAuNCwxLjk0LDAuOTcsMi42OSwxLjcyYzAuNzUsMC43MiwxLjM0LDEuNTMsMS43OSwyLjQzCgkJYzAuNDQsMC45LDAuNzEsMS45NiwwLjgsMy4xNmgtMy43Yy0wLjA5LTAuNzUtMC4yNy0xLjQtMC41NC0xLjk2Yy0wLjI3LTAuNTYtMC42MS0xLjA0LTEuMDEtMS40NGMtMC40My0wLjQtMC45NS0wLjcyLTEuNTUtMC45NwoJCWMtMC42LTAuMjQtMS4yNi0wLjM3LTEuOTgtMC4zN2MtMC44MywwLTEuNTUsMC4xNC0yLjE1LDAuNDFzLTEuMTUsMC42MS0xLjY0LDEuMDFjLTAuODYsMC43NS0xLjQ0LDEuNzMtMS43NCwyLjk3CgkJYy0wLjMsMS4yMy0wLjQ1LDIuNTItMC40NSwzLjg3czAuMTUsMi42NCwwLjQ1LDMuODdjMC4zLDEuMjMsMC44OCwyLjIyLDEuNzQsMi45N2MwLjQ5LDAuNCwxLjAzLDAuNzQsMS42NCwxLjAxCgkJczEuMzIsMC40MSwyLjE1LDAuNDFjMC43NSwwLDEuNDQtMC4xMywyLjA5LTAuMzljMC42NS0wLjI2LDEuMTgtMC42MiwxLjYyLTEuMDhjMC40LTAuNCwwLjcyLTAuODYsMC45Ny0xLjM4czAuNDEtMS4xMywwLjUtMS44NQoJCUgzODQuNjd6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNDA0LjMsMjQzLjQ5di0xMy44YzAtMS42My0wLjM3LTIuOTEtMS4xLTMuODNjLTAuNzMtMC45Mi0xLjk2LTEuMzgtMy42OC0xLjM4Yy0xLjA2LDAtMiwwLjMxLTIuOCwwLjkyCgkJcy0xLjQ1LDEuNDMtMS45NCwyLjQzYy0wLjM3LDAuOC0wLjYsMS43Mi0wLjY3LDIuNzVjLTAuMDcsMS4wMy0wLjExLDEuOTYtMC4xMSwyLjc5djEwLjExaC0zLjY2di0zMS4wNWgzLjY2djEyLjE3CgkJYzAuNjYtMS4xMiwxLjU4LTEuOTcsMi43Ni0yLjU2YzEuMTgtMC41OSwyLjM4LTAuODgsMy42Mi0wLjg4YzIuNSwwLDQuMzgsMC43LDUuNjYsMi4xMWMxLjI4LDEuNDEsMS45MiwzLjM3LDEuOTIsNS44OXYxNC4zMgoJCUg0MDQuM3oiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00MzcuMDgsMjQzLjQ5aC0zLjUzbC01LjY4LTE2LjY0bC01LjgxLDE2LjY0aC0zLjQ5bC01LjYtMjEuNzZoMy42Mmw0LjE4LDE2LjQzbDUuNTUtMTYuMTdoMy4xNGw1LjQ3LDE2LjE3CgkJbDQuMjItMTYuNDNoMy41N0w0MzcuMDgsMjQzLjQ5eiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTQ2NS42NywyMzMuODFoLTE1LjQyYzAsMSwwLjE5LDIsMC41NiwyLjk5YzAuMzcsMC45OSwwLjg5LDEuODEsMS41NSwyLjQ3YzEuMDMsMS4wMywyLjM3LDEuNTUsNCwxLjU1CgkJYzEuNzgsMCwzLjEzLTAuNDcsNC4wNS0xLjQyYzAuMzItMC4zMiwwLjU3LTAuNjUsMC43OC0wLjk5YzAuMi0wLjM0LDAuMzctMC44LDAuNTItMS4zOGgzLjU3Yy0wLjE0LDEuMDktMC41MiwyLjExLTEuMTIsMy4wNQoJCWMtMC42LDAuOTUtMS4zNSwxLjcyLTIuMjQsMi4zMmMtMC43OCwwLjUyLTEuNjQsMC45Mi0yLjU4LDEuMnMtMS45NCwwLjQzLTIuOTcsMC40M2MtMS41NSwwLTIuOTQtMC4yOS00LjE2LTAuODgKCQljLTEuMjItMC41OS0yLjI1LTEuMzgtMy4wOC0yLjM5Yy0wLjkyLTEuMDYtMS42LTIuMjktMi4wNC0zLjY4Yy0wLjQ1LTEuMzktMC42Ny0yLjg2LTAuNjctNC40MWMwLTEuMzIsMC4xMy0yLjU2LDAuMzktMy43MgoJCXMwLjY5LTIuMjQsMS4yOS0zLjI1YzAuNzgtMS4zMiwxLjg3LTIuNDEsMy4yNy0zLjI3YzEuNDEtMC44NiwzLjA2LTEuMjksNC45NS0xLjI5YzEuNDEsMCwyLjY2LDAuMjUsMy43NywwLjc1CgkJYzEuMSwwLjUsMi4wNiwxLjE4LDIuODYsMi4wNGMwLjg5LDAuOTgsMS41NywyLjEzLDIuMDQsMy40NnMwLjcxLDIuNzMsMC43MSw0LjE5TDQ2NS42NywyMzMuODF6IE00NjEuOTcsMjMwLjY3CgkJYzAtMC44My0wLjEyLTEuNjMtMC4zNC0yLjQxYy0wLjIzLTAuNzctMC41Ni0xLjQ1LTAuOTktMi4wMmMtMC40Ni0wLjYtMS4wNS0xLjA4LTEuNzctMS40NGMtMC43Mi0wLjM2LTEuNTctMC41NC0yLjU0LTAuNTQKCQljLTEsMC0xLjg3LDAuMTktMi42MSwwLjU2Yy0wLjczLDAuMzctMS4zNSwwLjg2LTEuODUsMS40NmMtMC41LDAuNi0wLjg4LDEuMjgtMS4xMiwyLjA0Yy0wLjI0LDAuNzYtMC4zOCwxLjU0LTAuNDEsMi4zNEg0NjEuOTd6IgoJCS8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNDcxLjYxLDIxNi43NHYtNC4zaDQuMjZ2NC4zSDQ3MS42MXogTTQ3MS44NywyNDMuNDl2LTIxLjc2aDMuNzV2MjEuNzZINDcxLjg3eiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTQ4MS45LDI0My40OXYtMy4yMmwxMi42Ni0xNS4zNUg0ODEuOXYtMy4xOEg0OTl2My4yMmwtMTIuNjIsMTUuMzVoMTIuNzV2My4xOEg0ODEuOXoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01MDUuNjMsMjQzLjQ5di01LjEyaDUuMDh2NS4xMkg1MDUuNjN6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTQwLjUsMjQzLjQ5aC00TDUyNi4yMSwyMTNoMy45Nmw4LjQ0LDI1Ljc2bDguMjctMjUuNzZoMy45Mkw1NDAuNSwyNDMuNDl6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTcxLjQyLDIzMy44MWgtMTUuNDJjMCwxLDAuMTksMiwwLjU2LDIuOTljMC4zNywwLjk5LDAuODksMS44MSwxLjU1LDIuNDdjMS4wMywxLjAzLDIuMzcsMS41NSw0LDEuNTUKCQljMS43OCwwLDMuMTMtMC40Nyw0LjA1LTEuNDJjMC4zMi0wLjMyLDAuNTctMC42NSwwLjc4LTAuOTljMC4yLTAuMzQsMC4zNy0wLjgsMC41Mi0xLjM4aDMuNTdjLTAuMTQsMS4wOS0wLjUyLDIuMTEtMS4xMiwzLjA1CgkJYy0wLjYsMC45NS0xLjM1LDEuNzItMi4yNCwyLjMyYy0wLjc4LDAuNTItMS42NCwwLjkyLTIuNTgsMS4ycy0xLjk0LDAuNDMtMi45NywwLjQzYy0xLjU1LDAtMi45NC0wLjI5LTQuMTYtMC44OAoJCWMtMS4yMi0wLjU5LTIuMjUtMS4zOC0zLjA4LTIuMzljLTAuOTItMS4wNi0xLjYtMi4yOS0yLjA0LTMuNjhjLTAuNDUtMS4zOS0wLjY3LTIuODYtMC42Ny00LjQxYzAtMS4zMiwwLjEzLTIuNTYsMC4zOS0zLjcyCgkJczAuNjktMi4yNCwxLjI5LTMuMjVjMC43OC0xLjMyLDEuODctMi40MSwzLjI3LTMuMjdjMS40MS0wLjg2LDMuMDYtMS4yOSw0Ljk1LTEuMjljMS40MSwwLDIuNjYsMC4yNSwzLjc3LDAuNzUKCQljMS4xLDAuNSwyLjA2LDEuMTgsMi44NiwyLjA0YzAuODksMC45OCwxLjU3LDIuMTMsMi4wNCwzLjQ2czAuNzEsMi43MywwLjcxLDQuMTlMNTcxLjQyLDIzMy44MXogTTU2Ny43MiwyMzAuNjcKCQljMC0wLjgzLTAuMTItMS42My0wLjM0LTIuNDFjLTAuMjMtMC43Ny0wLjU2LTEuNDUtMC45OS0yLjAyYy0wLjQ2LTAuNi0xLjA1LTEuMDgtMS43Ny0xLjQ0Yy0wLjcyLTAuMzYtMS41Ny0wLjU0LTIuNTQtMC41NAoJCWMtMSwwLTEuODcsMC4xOS0yLjYxLDAuNTZjLTAuNzMsMC4zNy0xLjM1LDAuODYtMS44NSwxLjQ2Yy0wLjUsMC42LTAuODgsMS4yOC0xLjEyLDIuMDRjLTAuMjQsMC43Ni0wLjM4LDEuNTQtMC40MSwyLjM0SDU2Ny43MnoiCgkJLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01ODkuMzgsMjI1LjNjLTAuMzItMC4wNi0wLjY1LTAuMS0xLjAxLTAuMTNjLTAuMzYtMC4wMy0wLjctMC4wNC0xLjAxLTAuMDRjLTAuODYsMC0xLjY0LDAuMTctMi4zNSwwLjUKCQljLTAuNywwLjMzLTEuMywwLjc0LTEuNzksMS4yM2MtMC40MywwLjQzLTAuNzgsMC45Mi0xLjA1LDEuNDhjLTAuMjcsMC41Ni0wLjQ3LDEuMTUtMC42LDEuNzhjLTAuMTMsMC42My0wLjIyLDEuMjYtMC4yNiwxLjg5CgkJYy0wLjA0LDAuNjMtMC4wNiwxLjIzLTAuMDYsMS44MXY5LjY3aC0zLjYydi0yMS43NmgzLjIzbDAuMywzLjgzYzAuNTctMS4zNSwxLjQ2LTIuMzQsMi42NS0yLjk5YzEuMTktMC42NCwyLjQ4LTAuOTcsMy44NS0wLjk3CgkJYzAuNTcsMCwxLjE1LDAuMDQsMS43MiwwLjEzVjIyNS4zeiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTYxMS4yNiwyMzMuODFoLTE1LjQyYzAsMSwwLjE5LDIsMC41NiwyLjk5YzAuMzcsMC45OSwwLjg5LDEuODEsMS41NSwyLjQ3YzEuMDMsMS4wMywyLjM3LDEuNTUsNCwxLjU1CgkJYzEuNzgsMCwzLjEzLTAuNDcsNC4wNS0xLjQyYzAuMzItMC4zMiwwLjU3LTAuNjUsMC43OC0wLjk5YzAuMi0wLjM0LDAuMzctMC44LDAuNTItMS4zOGgzLjU3Yy0wLjE0LDEuMDktMC41MiwyLjExLTEuMTIsMy4wNQoJCWMtMC42LDAuOTUtMS4zNSwxLjcyLTIuMjQsMi4zMmMtMC43OCwwLjUyLTEuNjQsMC45Mi0yLjU4LDEuMnMtMS45NCwwLjQzLTIuOTcsMC40M2MtMS41NSwwLTIuOTQtMC4yOS00LjE2LTAuODgKCQljLTEuMjItMC41OS0yLjI1LTEuMzgtMy4wOC0yLjM5Yy0wLjkyLTEuMDYtMS42LTIuMjktMi4wNC0zLjY4Yy0wLjQ1LTEuMzktMC42Ny0yLjg2LTAuNjctNC40MWMwLTEuMzIsMC4xMy0yLjU2LDAuMzktMy43MgoJCXMwLjY5LTIuMjQsMS4yOS0zLjI1YzAuNzgtMS4zMiwxLjg3LTIuNDEsMy4yNy0zLjI3YzEuNDEtMC44NiwzLjA2LTEuMjksNC45NS0xLjI5YzEuNDEsMCwyLjY2LDAuMjUsMy43NywwLjc1CgkJYzEuMSwwLjUsMi4wNiwxLjE4LDIuODYsMi4wNGMwLjg5LDAuOTgsMS41NywyLjEzLDIuMDQsMy40NnMwLjcxLDIuNzMsMC43MSw0LjE5TDYxMS4yNiwyMzMuODF6IE02MDcuNTUsMjMwLjY3CgkJYzAtMC44My0wLjEyLTEuNjMtMC4zNC0yLjQxYy0wLjIzLTAuNzctMC41Ni0xLjQ1LTAuOTktMi4wMmMtMC40Ni0wLjYtMS4wNS0xLjA4LTEuNzctMS40NGMtMC43Mi0wLjM2LTEuNTctMC41NC0yLjU0LTAuNTQKCQljLTEsMC0xLjg3LDAuMTktMi42MSwwLjU2Yy0wLjczLDAuMzctMS4zNSwwLjg2LTEuODUsMS40NmMtMC41LDAuNi0wLjg4LDEuMjgtMS4xMiwyLjA0Yy0wLjI0LDAuNzYtMC4zOCwxLjU0LTAuNDEsMi4zNEg2MDcuNTV6IgoJCS8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNjE3LjIsMjE2Ljc0di00LjNoNC4yNnY0LjNINjE3LjJ6IE02MTcuNDYsMjQzLjQ5di0yMS43NmgzLjc1djIxLjc2SDYxNy40NnoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik02NDMuMTcsMjQzLjQ5di0xMy44YzAtMS42My0wLjM3LTIuOTEtMS4xLTMuODNjLTAuNzMtMC45Mi0xLjk2LTEuMzgtMy42OC0xLjM4Yy0xLjA2LDAtMiwwLjMxLTIuOCwwLjkyCgkJcy0xLjQ1LDEuNDMtMS45NCwyLjQzYy0wLjM3LDAuOC0wLjYsMS43Mi0wLjY3LDIuNzVjLTAuMDcsMS4wMy0wLjExLDEuOTYtMC4xMSwyLjc5djEwLjExaC0zLjY2di0yMS43NmgzLjE5bDAuMywzLjI3CgkJYzAuMjktMC42MywwLjY3LTEuMTgsMS4xNi0xLjY2czEuMDMtMC44NywxLjY0LTEuMThzMS4yMy0wLjU2LDEuODktMC43M2MwLjY2LTAuMTcsMS4yOS0wLjI2LDEuODktMC4yNmMyLjUsMCw0LjM4LDAuNyw1LjY0LDIuMTEKCQljMS4yNiwxLjQxLDEuODksMy4zNywxLjg5LDUuODl2MTQuMzJINjQzLjE3eiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTY1NC4xNSwyMTYuNzR2LTQuM2g0LjI2djQuM0g2NTQuMTV6IE02NTQuNDEsMjQzLjQ5di0yMS43NmgzLjc1djIxLjc2SDY1NC40MXoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik02ODQuNzYsMjQ2LjcxYzAsMC45NS0wLjE4LDEuNzktMC41NCwyLjUyYy0wLjM2LDAuNzMtMC44LDEuMzUtMS4zMSwxLjg3Yy0wLjUyLDAuNTItMS4xMywwLjk0LTEuODMsMS4yNwoJCWMtMC43LDAuMzMtMS40NCwwLjU5LTIuMjIsMC43N3MtMS41NiwwLjMyLTIuMzcsMC4zOXMtMS41OSwwLjExLTIuMzcsMC4xMWMtMC43MiwwLTEuNDYtMC4wNC0yLjIyLTAuMTEKCQljLTAuNzYtMC4wNy0xLjUtMC4yLTIuMjItMC4zOWMtMC43Mi0wLjE5LTEuNDEtMC40NC0yLjA3LTAuNzdjLTAuNjYtMC4zMy0xLjI1LTAuNzUtMS43Ny0xLjI3Yy0wLjQ2LTAuNDYtMC44My0xLTEuMTItMS42MwoJCWMtMC4yOS0wLjYzLTAuNDMtMS4zOC0wLjQzLTIuMjRjMC0xLjE1LDAuMy0yLjEzLDAuOS0yLjk1YzAuNi0wLjgyLDEuMzMtMS40NCwyLjItMS44N2MtMC43NS0wLjI5LTEuMzYtMC43Ni0xLjgzLTEuNDIKCQljLTAuNDctMC42Ni0wLjcxLTEuNC0wLjcxLTIuMjRjMC0wLjk3LDAuMjctMS44MiwwLjgyLTIuNTRjMC41NC0wLjcyLDEuMjMtMS4yOCwyLjA3LTEuNjhjLTAuOC0wLjcyLTEuNDItMS41OC0xLjg1LTIuNTgKCQljLTAuNDMtMS0wLjY1LTIuMDItMC42NS0zLjA1YzAtMS4yLDAuMTktMi4yMiwwLjU2LTMuMDVjMC4zNy0wLjgzLDAuODgtMS41OCwxLjUxLTIuMjRjMC43NS0wLjc3LDEuNjQtMS4zOCwyLjY5LTEuODEKCQlzMi4zLTAuNjUsMy43Ny0wLjY1YzEuMDMsMCwxLjk2LDAuMTIsMi43OCwwLjM0czEuNTYsMC41NCwyLjIyLDAuOTVjMC4zNy0wLjk3LDAuOTUtMS43MywxLjc0LTIuMjZjMC43OS0wLjUzLDEuNy0wLjgsMi43My0wLjgKCQljMC4xNywwLDAuMzUsMC4wMSwwLjU0LDAuMDJjMC4xOSwwLjAxLDAuMzcsMC4wNCwwLjU0LDAuMDZ2Mi45N2MtMC4xMS0wLjAzLTAuMjQtMC4wNC0wLjM5LTAuMDRoLTAuNDMKCQljLTAuNzIsMC0xLjMxLDAuMTgtMS43OSwwLjU0cy0wLjc3LDAuODQtMC44OCwxLjQ0YzAuNDYsMC41NywwLjgxLDEuMjMsMS4wNSwxLjk2YzAuMjQsMC43MywwLjM3LDEuNTgsMC4zNywyLjU2CgkJYzAsMS4wMy0wLjE4LDEuOTktMC41NCwyLjg4Yy0wLjM2LDAuODktMC44NCwxLjY2LTEuNDQsMi4zMmMtMC43MiwwLjc3LTEuNjEsMS40LTIuNjksMS44N2MtMS4wOCwwLjQ3LTIuMzUsMC43MS0zLjgxLDAuNzEKCQljLTAuNzUsMC0xLjM3LTAuMDQtMS44Ny0wLjEzYy0wLjUtMC4wOS0xLjEtMC4yNC0xLjc5LTAuNDdjLTAuNCwwLjE0LTAuODEsMC4zNy0xLjIzLDAuNjlzLTAuNjIsMC43My0wLjYyLDEuMjUKCQljMCwwLjQ5LDAuMTEsMC44NywwLjMyLDEuMTRjMC4yMiwwLjI3LDAuNDgsMC40OSwwLjgsMC42NGMwLjMyLDAuMTYsMC42NywwLjI2LDEuMDUsMC4zYzAuMzksMC4wNCwwLjc1LDAuMDcsMS4xLDAuMDdoNC4zMQoJCWMxLjI5LDAsMi42LDAuMTYsMy45MiwwLjQ3czIuNDEsMC45MiwzLjI3LDEuODFjMC41MiwwLjUyLDAuOTMsMS4xMywxLjI1LDEuODNDNjg0LjYxLDI0NC45OCw2ODQuNzYsMjQ1Ljc5LDY4NC43NiwyNDYuNzF6CgkJIE02ODEuMTksMjQ2LjcxYzAtMC44LTAuMTgtMS40My0wLjU0LTEuODljLTAuMzYtMC40Ni0wLjgyLTAuOC0xLjM4LTEuMDNzLTEuMTgtMC4zNy0xLjg1LTAuNDNjLTAuNjctMC4wNi0xLjM0LTAuMDktMi0wLjA5aC01LjA0CgkJYy0wLjc1LDAuMjMtMS4zOSwwLjY1LTEuOTQsMS4yN2MtMC41NSwwLjYyLTAuODIsMS4zNC0wLjgyLDIuMTdjMCwwLjkyLDAuMywxLjY4LDAuOSwyLjI4YzAuMzQsMC4zNCwwLjc1LDAuNjIsMS4yMywwLjgyCgkJYzAuNDcsMC4yLDAuOTcsMC4zNSwxLjQ5LDAuNDVzMS4wNCwwLjE3LDEuNTcsMC4xOWMwLjUzLDAuMDMsMS4wNCwwLjA0LDEuNTMsMC4wNGMwLjQ2LDAsMC45Ni0wLjAxLDEuNTEtMC4wNAoJCWMwLjU1LTAuMDMsMS4wOS0wLjEsMS42NC0wLjIxYzAuNTQtMC4xMiwxLjA2LTAuMjcsMS41NS0wLjQ3YzAuNDktMC4yLDAuOS0wLjQ3LDEuMjUtMC44MgoJCUM2ODAuODksMjQ4LjM1LDY4MS4xOSwyNDcuNiw2ODEuMTksMjQ2LjcxeiBNNjc4LjY5LDIyOC45MWMwLTEuMzgtMC40NC0yLjUyLTEuMzEtMy40MmMtMC44OC0wLjktMi4wOS0xLjM1LTMuNjQtMS4zNQoJCWMtMS40OSwwLTIuNjksMC40NS0zLjYsMS4zNWMtMC45LDAuOS0xLjM2LDIuMDQtMS4zNiwzLjQyczAuNDQsMi41MywxLjMxLDMuNDZjMC44OCwwLjkzLDIuMDksMS40LDMuNjQsMS40CgkJYzEuNDksMCwyLjY5LTAuNDcsMy42LTEuNFM2NzguNjksMjMwLjI4LDY3OC42OSwyMjguOTF6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNzAyLjg1LDI0My40OWwtMC4zLTMuMzFjLTAuNTcsMS4yNi0xLjQ3LDIuMjEtMi42OSwyLjg2Yy0xLjIyLDAuNjQtMi40OCwwLjk3LTMuNzcsMC45NwoJCWMtMi41LDAtNC4zNi0wLjctNS42LTIuMTFzLTEuODUtMy4zNy0xLjg1LTUuODl2LTE0LjI4aDMuNjZ2MTMuNzZjMCwxLjYzLDAuMzQsMi45MSwxLjAzLDMuODNjMC42OSwwLjkyLDEuODksMS4zOCwzLjYyLDEuMzgKCQljMC43NSwwLDEuNDEtMC4xNSwyLTAuNDVjMC41OS0wLjMsMS4xMy0wLjcsMS42Mi0xLjE4YzAuNjktMC43MiwxLjE2LTEuNjIsMS40Mi0yLjcxYzAuMjYtMS4wOSwwLjM5LTIuMTksMC4zOS0zLjMxdi0xMS4zMWgzLjY2CgkJdjIxLjc2SDcwMi44NXoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik03MjgsMjQzLjQ5di0xMy44YzAtMS42My0wLjM3LTIuOTEtMS4xLTMuODNjLTAuNzMtMC45Mi0xLjk2LTEuMzgtMy42OC0xLjM4Yy0xLjA2LDAtMiwwLjMxLTIuOCwwLjkyCgkJcy0xLjQ1LDEuNDMtMS45NCwyLjQzYy0wLjM3LDAuOC0wLjYsMS43Mi0wLjY3LDIuNzVjLTAuMDcsMS4wMy0wLjExLDEuOTYtMC4xMSwyLjc5djEwLjExaC0zLjY2di0yMS43NmgzLjE5bDAuMywzLjI3CgkJYzAuMjktMC42MywwLjY3LTEuMTgsMS4xNi0xLjY2czEuMDMtMC44NywxLjY0LTEuMThzMS4yMy0wLjU2LDEuODktMC43M2MwLjY2LTAuMTcsMS4yOS0wLjI2LDEuODktMC4yNmMyLjUsMCw0LjM4LDAuNyw1LjY0LDIuMTEKCQljMS4yNiwxLjQxLDEuODksMy4zNywxLjg5LDUuODl2MTQuMzJINzI4eiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTc1Ny44NCwyNDYuNzFjMCwwLjk1LTAuMTgsMS43OS0wLjU0LDIuNTJjLTAuMzYsMC43My0wLjgsMS4zNS0xLjMxLDEuODdjLTAuNTIsMC41Mi0xLjEzLDAuOTQtMS44MywxLjI3CgkJYy0wLjcsMC4zMy0xLjQ0LDAuNTktMi4yMiwwLjc3cy0xLjU2LDAuMzItMi4zNywwLjM5cy0xLjU5LDAuMTEtMi4zNywwLjExYy0wLjcyLDAtMS40Ni0wLjA0LTIuMjItMC4xMQoJCWMtMC43Ni0wLjA3LTEuNS0wLjItMi4yMi0wLjM5Yy0wLjcyLTAuMTktMS40MS0wLjQ0LTIuMDctMC43N2MtMC42Ni0wLjMzLTEuMjUtMC43NS0xLjc3LTEuMjdjLTAuNDYtMC40Ni0wLjgzLTEtMS4xMi0xLjYzCgkJYy0wLjI5LTAuNjMtMC40My0xLjM4LTAuNDMtMi4yNGMwLTEuMTUsMC4zLTIuMTMsMC45LTIuOTVjMC42LTAuODIsMS4zMy0xLjQ0LDIuMi0xLjg3Yy0wLjc1LTAuMjktMS4zNi0wLjc2LTEuODMtMS40MgoJCWMtMC40Ny0wLjY2LTAuNzEtMS40LTAuNzEtMi4yNGMwLTAuOTcsMC4yNy0xLjgyLDAuODItMi41NGMwLjU0LTAuNzIsMS4yMy0xLjI4LDIuMDctMS42OGMtMC44LTAuNzItMS40Mi0xLjU4LTEuODUtMi41OAoJCWMtMC40My0xLTAuNjUtMi4wMi0wLjY1LTMuMDVjMC0xLjIsMC4xOS0yLjIyLDAuNTYtMy4wNWMwLjM3LTAuODMsMC44OC0xLjU4LDEuNTEtMi4yNGMwLjc1LTAuNzcsMS42NC0xLjM4LDIuNjktMS44MQoJCXMyLjMtMC42NSwzLjc3LTAuNjVjMS4wMywwLDEuOTYsMC4xMiwyLjc4LDAuMzRzMS41NiwwLjU0LDIuMjIsMC45NWMwLjM3LTAuOTcsMC45NS0xLjczLDEuNzQtMi4yNmMwLjc5LTAuNTMsMS43LTAuOCwyLjczLTAuOAoJCWMwLjE3LDAsMC4zNSwwLjAxLDAuNTQsMC4wMmMwLjE5LDAuMDEsMC4zNywwLjA0LDAuNTQsMC4wNnYyLjk3Yy0wLjExLTAuMDMtMC4yNC0wLjA0LTAuMzktMC4wNGgtMC40MwoJCWMtMC43MiwwLTEuMzEsMC4xOC0xLjc5LDAuNTRzLTAuNzcsMC44NC0wLjg4LDEuNDRjMC40NiwwLjU3LDAuODEsMS4yMywxLjA1LDEuOTZjMC4yNCwwLjczLDAuMzcsMS41OCwwLjM3LDIuNTYKCQljMCwxLjAzLTAuMTgsMS45OS0wLjU0LDIuODhjLTAuMzYsMC44OS0wLjg0LDEuNjYtMS40NCwyLjMyYy0wLjcyLDAuNzctMS42MSwxLjQtMi42OSwxLjg3Yy0xLjA4LDAuNDctMi4zNSwwLjcxLTMuODEsMC43MQoJCWMtMC43NSwwLTEuMzctMC4wNC0xLjg3LTAuMTNjLTAuNS0wLjA5LTEuMS0wLjI0LTEuNzktMC40N2MtMC40LDAuMTQtMC44MSwwLjM3LTEuMjMsMC42OXMtMC42MiwwLjczLTAuNjIsMS4yNQoJCWMwLDAuNDksMC4xMSwwLjg3LDAuMzIsMS4xNGMwLjIyLDAuMjcsMC40OCwwLjQ5LDAuOCwwLjY0YzAuMzIsMC4xNiwwLjY3LDAuMjYsMS4wNSwwLjNjMC4zOSwwLjA0LDAuNzUsMC4wNywxLjEsMC4wN2g0LjMxCgkJYzEuMjksMCwyLjYsMC4xNiwzLjkyLDAuNDdzMi40MSwwLjkyLDMuMjcsMS44MWMwLjUyLDAuNTIsMC45MywxLjEzLDEuMjUsMS44M0M3NTcuNjgsMjQ0Ljk4LDc1Ny44NCwyNDUuNzksNzU3Ljg0LDI0Ni43MXoKCQkgTTc1NC4yNiwyNDYuNzFjMC0wLjgtMC4xOC0xLjQzLTAuNTQtMS44OWMtMC4zNi0wLjQ2LTAuODItMC44LTEuMzgtMS4wM3MtMS4xOC0wLjM3LTEuODUtMC40M2MtMC42Ny0wLjA2LTEuMzQtMC4wOS0yLTAuMDloLTUuMDQKCQljLTAuNzUsMC4yMy0xLjM5LDAuNjUtMS45NCwxLjI3Yy0wLjU1LDAuNjItMC44MiwxLjM0LTAuODIsMi4xN2MwLDAuOTIsMC4zLDEuNjgsMC45LDIuMjhjMC4zNCwwLjM0LDAuNzUsMC42MiwxLjIzLDAuODIKCQljMC40NywwLjIsMC45NywwLjM1LDEuNDksMC40NXMxLjA0LDAuMTcsMS41NywwLjE5YzAuNTMsMC4wMywxLjA0LDAuMDQsMS41MywwLjA0YzAuNDYsMCwwLjk2LTAuMDEsMS41MS0wLjA0CgkJYzAuNTUtMC4wMywxLjA5LTAuMSwxLjY0LTAuMjFjMC41NC0wLjEyLDEuMDYtMC4yNywxLjU1LTAuNDdjMC40OS0wLjIsMC45LTAuNDcsMS4yNS0wLjgyCgkJQzc1My45NiwyNDguMzUsNzU0LjI2LDI0Ny42LDc1NC4yNiwyNDYuNzF6IE03NTEuNzcsMjI4LjkxYzAtMS4zOC0wLjQ0LTIuNTItMS4zMS0zLjQyYy0wLjg4LTAuOS0yLjA5LTEuMzUtMy42NC0xLjM1CgkJYy0xLjQ5LDAtMi42OSwwLjQ1LTMuNiwxLjM1Yy0wLjksMC45LTEuMzYsMi4wNC0xLjM2LDMuNDJzMC40NCwyLjUzLDEuMzEsMy40NmMwLjg4LDAuOTMsMi4wOSwxLjQsMy42NCwxLjQKCQljMS40OSwwLDIuNjktMC40NywzLjYtMS40Uzc1MS43NywyMzAuMjgsNzUxLjc3LDIyOC45MXoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik03ODguNjcsMjE1LjQ1Yy0wLjU4LTAuMDYtMS4xMy0wLjEzLTEuNjYtMC4yMXMtMS4xOC0wLjEzLTEuOTYtMC4xM2MtMC45OCwwLTEuNzQsMC4yNy0yLjI4LDAuODIKCQljLTAuNTQsMC41NC0wLjgyLDEuMjYtMC44MiwyLjE1djMuNjZoNi4yOXYzLjFoLTYuMjl2MTguNjZoLTMuNjZ2LTE4LjY2aC0zLjk2di0zLjFoMy45NnYtMy44N2MwLTAuOCwwLjE1LTEuNTYsMC40NS0yLjI4CgkJYzAuMy0wLjcyLDAuNzMtMS4zNCwxLjI5LTEuODdjMC41Ni0wLjUzLDEuMjMtMC45NSwyLTEuMjVzMS42NC0wLjQ1LDIuNTgtMC40NWMwLjc1LDAsMS40NiwwLjA0LDIuMTMsMC4xMXMxLjMxLDAuMTcsMS45MiwwLjI4CgkJVjIxNS40NXoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik04MDYuMzMsMjQzLjQ5bC0wLjMtMy4zMWMtMC41NywxLjI2LTEuNDcsMi4yMS0yLjY5LDIuODZjLTEuMjIsMC42NC0yLjQ4LDAuOTctMy43NywwLjk3CgkJYy0yLjUsMC00LjM2LTAuNy01LjYtMi4xMXMtMS44NS0zLjM3LTEuODUtNS44OXYtMTQuMjhoMy42NnYxMy43NmMwLDEuNjMsMC4zNCwyLjkxLDEuMDMsMy44M2MwLjY5LDAuOTIsMS44OSwxLjM4LDMuNjIsMS4zOAoJCWMwLjc1LDAsMS40MS0wLjE1LDItMC40NWMwLjU5LTAuMywxLjEzLTAuNywxLjYyLTEuMThjMC42OS0wLjcyLDEuMTYtMS42MiwxLjQyLTIuNzFjMC4yNi0xLjA5LDAuMzktMi4xOSwwLjM5LTMuMzF2LTExLjMxaDMuNjYKCQl2MjEuNzZIODA2LjMzeiBNNzk1LjEzLDIxNy43M3YtMy45NmgzLjk2djMuOTZINzk1LjEzeiBNODAyLjcxLDIxNy43M3YtMy45NmgzLjk2djMuOTZIODAyLjcxeiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTgyOS4yOCwyMjUuM2MtMC4zMi0wLjA2LTAuNjUtMC4xLTEuMDEtMC4xM2MtMC4zNi0wLjAzLTAuNy0wLjA0LTEuMDEtMC4wNGMtMC44NiwwLTEuNjQsMC4xNy0yLjM1LDAuNQoJCWMtMC43LDAuMzMtMS4zLDAuNzQtMS43OSwxLjIzYy0wLjQzLDAuNDMtMC43OCwwLjkyLTEuMDUsMS40OGMtMC4yNywwLjU2LTAuNDcsMS4xNS0wLjYsMS43OGMtMC4xMywwLjYzLTAuMjIsMS4yNi0wLjI2LDEuODkKCQljLTAuMDQsMC42My0wLjA2LDEuMjMtMC4wNiwxLjgxdjkuNjdoLTMuNjJ2LTIxLjc2aDMuMjNsMC4zLDMuODNjMC41Ny0xLjM1LDEuNDYtMi4zNCwyLjY1LTIuOTljMS4xOS0wLjY0LDIuNDgtMC45NywzLjg1LTAuOTcKCQljMC41NywwLDEuMTUsMC4wNCwxLjcyLDAuMTNWMjI1LjN6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNODYzLjA5LDI0My40OWwtMC4yNi0yLjg0Yy0wLjYzLDEuMDktMS41NiwxLjkzLTIuOCwyLjUyYy0xLjIzLDAuNTktMi40NywwLjg4LTMuNywwLjg4CgkJYy0xLjM1LDAtMi41My0wLjIxLTMuNTUtMC42MmMtMS4wMi0wLjQyLTEuODktMS0yLjYxLTEuNzRjLTEuMDMtMS4wNi0xLjgyLTIuMzgtMi4zNS0zLjk2cy0wLjgtMy4yNy0wLjgtNS4wNwoJCWMwLTEuODksMC4yOC0zLjY1LDAuODQtNS4yN2MwLjU2LTEuNjIsMS4zOC0yLjk2LDIuNDgtNC4wMmMwLjcyLTAuNjYsMS41Ny0xLjE5LDIuNTYtMS41OXMyLjEzLTAuNiwzLjQyLTAuNgoJCWMwLjYsMCwxLjIxLDAuMDcsMS44MywwLjIyYzAuNjIsMC4xNCwxLjIxLDAuMzQsMS43OSwwLjZzMS4xLDAuNTgsMS41NywwLjk3YzAuNDcsMC4zOSwwLjg1LDAuODIsMS4xNCwxLjMxdi0xMS44M2gzLjY2djMxLjA1CgkJSDg2My4wOXogTTg2Mi44NywyMzIuNjFjMC0xLjM4LTAuMTctMi42Ny0wLjUyLTMuODljLTAuMzQtMS4yMi0wLjk4LTIuMjMtMS44OS0zLjAzYy0wLjQzLTAuNC0wLjkzLTAuNzQtMS40OS0xLjAxCgkJcy0xLjI0LTAuNDEtMi4wNS0wLjQxYy0xLjIxLDAtMi4yMSwwLjI0LTMuMDEsMC43M2MtMC44LDAuNDktMS40NCwxLjEzLTEuOSwxLjk0cy0wLjc4LDEuNy0wLjk3LDIuNjkKCQljLTAuMTksMC45OS0wLjI4LDEuOTktMC4yOCwyLjk5YzAsMSwwLjA5LDIsMC4yOCwyLjk5czAuNTEsMS44OSwwLjk3LDIuNjljMC40NiwwLjgsMS4wOSwxLjQ1LDEuOSwxLjk0CgkJYzAuOCwwLjQ5LDEuODEsMC43MywzLjAxLDAuNzNjMC44LDAsMS40OS0wLjE0LDIuMDUtMC40MXMxLjA1LTAuNjEsMS40OS0xLjAxYzAuOTItMC44LDEuNTUtMS44MSwxLjg5LTMuMDMKCQlDODYyLjcsMjM1LjI4LDg2Mi44NywyMzMuOTgsODYyLjg3LDIzMi42MXoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik04NzQuMDIsMjE2Ljc0di00LjNoNC4yNnY0LjNIODc0LjAyeiBNODc0LjI4LDI0My40OXYtMjEuNzZoMy43NXYyMS43Nkg4NzQuMjh6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNOTAzLjUyLDIzMy44MUg4ODguMWMwLDEsMC4xOSwyLDAuNTYsMi45OWMwLjM3LDAuOTksMC44OSwxLjgxLDEuNTUsMi40N2MxLjAzLDEuMDMsMi4zNywxLjU1LDQsMS41NQoJCWMxLjc4LDAsMy4xMy0wLjQ3LDQuMDUtMS40MmMwLjMyLTAuMzIsMC41Ny0wLjY1LDAuNzgtMC45OWMwLjItMC4zNCwwLjM3LTAuOCwwLjUyLTEuMzhoMy41N2MtMC4xNCwxLjA5LTAuNTIsMi4xMS0xLjEyLDMuMDUKCQljLTAuNiwwLjk1LTEuMzUsMS43Mi0yLjI0LDIuMzJjLTAuNzgsMC41Mi0xLjY0LDAuOTItMi41OCwxLjJzLTEuOTQsMC40My0yLjk3LDAuNDNjLTEuNTUsMC0yLjk0LTAuMjktNC4xNi0wLjg4CgkJYy0xLjIyLTAuNTktMi4yNS0xLjM4LTMuMDgtMi4zOWMtMC45Mi0xLjA2LTEuNi0yLjI5LTIuMDQtMy42OGMtMC40NS0xLjM5LTAuNjctMi44Ni0wLjY3LTQuNDFjMC0xLjMyLDAuMTMtMi41NiwwLjM5LTMuNzIKCQlzMC42OS0yLjI0LDEuMjktMy4yNWMwLjc4LTEuMzIsMS44Ny0yLjQxLDMuMjctMy4yN2MxLjQxLTAuODYsMy4wNi0xLjI5LDQuOTUtMS4yOWMxLjQxLDAsMi42NiwwLjI1LDMuNzcsMC43NQoJCWMxLjEsMC41LDIuMDYsMS4xOCwyLjg2LDIuMDRjMC44OSwwLjk4LDEuNTcsMi4xMywyLjA0LDMuNDZzMC43MSwyLjczLDAuNzEsNC4xOUw5MDMuNTIsMjMzLjgxeiBNODk5LjgyLDIzMC42NwoJCWMwLTAuODMtMC4xMi0xLjYzLTAuMzQtMi40MWMtMC4yMy0wLjc3LTAuNTYtMS40NS0wLjk5LTIuMDJjLTAuNDYtMC42LTEuMDUtMS4wOC0xLjc3LTEuNDRjLTAuNzItMC4zNi0xLjU3LTAuNTQtMi41NC0wLjU0CgkJYy0xLDAtMS44NywwLjE5LTIuNjEsMC41NmMtMC43MywwLjM3LTEuMzUsMC44Ni0xLjg1LDEuNDZjLTAuNSwwLjYtMC44OCwxLjI4LTEuMTIsMi4wNGMtMC4yNCwwLjc2LTAuMzgsMS41NC0wLjQxLDIuMzRIODk5LjgyeiIKCQkvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM2MS41OSwyODYuN2MwLDEuMjktMC4yNCwyLjQxLTAuNzMsMy4zNWMtMC40OSwwLjk1LTEuMTEsMS43OS0xLjg1LDIuNTRjLTEuMDYsMS4wMy0yLjM2LDEuOC0zLjksMi4zCgkJYy0xLjU0LDAuNS0zLjEyLDAuNzUtNC43NiwwLjc1Yy0zLjcsMC02LjYyLTAuOTctOC43NC0yLjkyYy0wLjk4LTAuOTItMS43Ny0yLTIuMzctMy4yNWMtMC42LTEuMjUtMC45LTIuNi0wLjktNC4wNmg0CgkJYzAsMC45MiwwLjIsMS44LDAuNiwyLjY0YzAuNCwwLjg1LDAuOTIsMS41NywxLjU1LDIuMTdjMC42OSwwLjY2LDEuNTYsMS4xNCwyLjYzLDEuNDRjMS4wNiwwLjMsMi4xNCwwLjQ1LDMuMjMsMC40NQoJCWMxLjE4LDAsMi4yNS0wLjEzLDMuMjEtMC4zOWMwLjk2LTAuMjYsMS43OS0wLjcyLDIuNDgtMS4zOGMwLjQ5LTAuNDMsMC44Ny0wLjkyLDEuMTQtMS40OGMwLjI3LTAuNTYsMC40MS0xLjI1LDAuNDEtMi4wOAoJCWMwLTEuMi0wLjQtMi4yNS0xLjIxLTMuMTRjLTAuOC0wLjg5LTIuMTEtMS40OC0zLjkyLTEuNzZsLTQuODItMC43M2MtMS4xNS0wLjE3LTIuMjItMC40Ni0zLjIxLTAuODZzLTEuODUtMC45NC0yLjU4LTEuNjEKCQlzLTEuMzEtMS40OC0xLjcyLTIuNDFzLTAuNjItMi0wLjYyLTMuMmMwLTEuMTUsMC4yNC0yLjI0LDAuNzEtMy4yOWMwLjQ3LTEuMDUsMS4xMy0xLjk2LDEuOTYtMi43M2MyLjE1LTIuMDEsNC44Mi0zLjAxLDguMDEtMy4wMQoJCWMxLjQ5LDAsMi45MywwLjI0LDQuMzMsMC43M2MxLjM5LDAuNDksMi41OSwxLjIyLDMuNiwyLjE5YzEuODcsMS43OCwyLjg0LDMuOTYsMi45Myw2LjU0aC00Yy0wLjA2LTAuNzUtMC4yMi0xLjQ1LTAuNDctMi4xMQoJCWMtMC4yNi0wLjY2LTAuNi0xLjIzLTEuMDMtMS43MmMtMC41OC0wLjY2LTEuMzEtMS4xNy0yLjIyLTEuNTVjLTAuOS0wLjM3LTEuOTYtMC41Ni0zLjE3LTAuNTZjLTEuMDksMC0yLjEsMC4xNy0zLjA0LDAuNDkKCQljLTAuOTMsMC4zMy0xLjczLDAuODctMi4zOSwxLjYxYy0wLjQsMC40Ni0wLjcxLDAuOTUtMC45MywxLjQ4Yy0wLjIxLDAuNTMtMC4zMiwxLjE0LTAuMzIsMS44M2MwLDAuNjksMC4xMywxLjI4LDAuMzksMS43OAoJCWMwLjI2LDAuNSwwLjYsMC45MiwxLjAzLDEuMjdzMC45MiwwLjYyLDEuNDYsMC44MmMwLjU0LDAuMiwxLjEsMC4zNCwxLjY4LDAuNDNjMC44NiwwLjExLDEuNzEsMC4yNCwyLjU2LDAuMzcKCQljMC44NSwwLjEzLDEuNjksMC4yNywyLjUyLDAuNDFjMi41NSwwLjM3LDQuNjEsMS4zLDYuMTYsMi43N0MzNjAuODEsMjgyLjMxLDM2MS41OSwyODQuMjYsMzYxLjU5LDI4Ni43eiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM2Ny40NCwyNjguMzR2LTQuM2g0LjI2djQuM0gzNjcuNDR6IE0zNjcuNywyOTUuMDl2LTIxLjc2aDMuNzV2MjEuNzZIMzY3Ljd6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzk2LjM0LDI4Ny43OGMtMC4wOSwxLjE4LTAuMzQsMi4yMS0wLjc4LDMuMXMtMS4wMiwxLjY5LTEuNzcsMi40MWMtMC43OCwwLjc1LTEuNjgsMS4zMy0yLjcxLDEuNzQKCQlzLTIuMjMsMC42Mi0zLjU3LDAuNjJjLTEuOTgsMC0zLjYxLTAuMzktNC44OS0xLjE4cy0yLjMtMS43Ni0zLjA4LTIuOWMtMC41Ny0wLjg2LTEuMDItMS44OS0xLjMzLTMuMQoJCWMtMC4zMi0xLjItMC40Ny0yLjYyLTAuNDctNC4yNnMwLjE2LTMuMDUsMC40Ny00LjI2YzAuMzItMS4yLDAuNzYtMi4yNCwxLjMzLTMuMWMwLjc4LTEuMTUsMS44LTIuMTEsMy4wOC0yLjkKCQljMS4yOC0wLjc5LDIuODktMS4xOCw0Ljg0LTEuMThjMS4yOSwwLDIuNDYsMC4yLDMuNTEsMC42YzEuMDUsMC40LDEuOTQsMC45NywyLjY5LDEuNzJjMC43NSwwLjcyLDEuMzQsMS41MywxLjc5LDIuNDMKCQljMC40NCwwLjksMC43MSwxLjk2LDAuOCwzLjE2aC0zLjdjLTAuMDktMC43NS0wLjI3LTEuNC0wLjU0LTEuOTZjLTAuMjctMC41Ni0wLjYxLTEuMDQtMS4wMS0xLjQ0Yy0wLjQzLTAuNC0wLjk1LTAuNzItMS41NS0wLjk3CgkJYy0wLjYtMC4yNC0xLjI2LTAuMzctMS45OC0wLjM3Yy0wLjgzLDAtMS41NSwwLjE0LTIuMTUsMC40MXMtMS4xNSwwLjYxLTEuNjQsMS4wMWMtMC44NiwwLjc1LTEuNDQsMS43My0xLjc0LDIuOTcKCQljLTAuMywxLjIzLTAuNDUsMi41Mi0wLjQ1LDMuODdzMC4xNSwyLjY0LDAuNDUsMy44N2MwLjMsMS4yMywwLjg4LDIuMjIsMS43NCwyLjk3YzAuNDksMC40LDEuMDMsMC43NCwxLjY0LDEuMDEKCQlzMS4zMiwwLjQxLDIuMTUsMC40MWMwLjc1LDAsMS40NC0wLjEzLDIuMDktMC4zOWMwLjY1LTAuMjYsMS4xOC0wLjYyLDEuNjItMS4wOGMwLjQtMC40LDAuNzItMC44NiwwLjk3LTEuMzhzMC40MS0xLjEzLDAuNS0xLjg1CgkJSDM5Ni4zNHoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00MTUuOTMsMjk1LjA5di0xMy44YzAtMS42My0wLjM3LTIuOTEtMS4xLTMuODNjLTAuNzMtMC45Mi0xLjk2LTEuMzgtMy42OC0xLjM4Yy0xLjA2LDAtMiwwLjMxLTIuOCwwLjkyCgkJcy0xLjQ1LDEuNDMtMS45NCwyLjQzYy0wLjM3LDAuOC0wLjYsMS43Mi0wLjY3LDIuNzVjLTAuMDcsMS4wMy0wLjExLDEuOTYtMC4xMSwyLjc5djEwLjExaC0zLjY2di0zMS4wNWgzLjY2djEyLjE3CgkJYzAuNjYtMS4xMiwxLjU4LTEuOTcsMi43Ni0yLjU2YzEuMTgtMC41OSwyLjM4LTAuODgsMy42Mi0wLjg4YzIuNSwwLDQuMzgsMC43LDUuNjYsMi4xMWMxLjI4LDEuNDEsMS45MiwzLjM3LDEuOTIsNS44OXYxNC4zMgoJCUg0MTUuOTN6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNDQ0Ljc0LDI4NS40MWgtMTUuNDJjMCwxLDAuMTksMiwwLjU2LDIuOTljMC4zNywwLjk5LDAuODksMS44MSwxLjU1LDIuNDdjMS4wMywxLjAzLDIuMzcsMS41NSw0LDEuNTUKCQljMS43OCwwLDMuMTMtMC40Nyw0LjA1LTEuNDJjMC4zMi0wLjMyLDAuNTctMC42NSwwLjc4LTAuOTljMC4yLTAuMzQsMC4zNy0wLjgsMC41Mi0xLjM4aDMuNTdjLTAuMTQsMS4wOS0wLjUyLDIuMTEtMS4xMiwzLjA1CgkJYy0wLjYsMC45NS0xLjM1LDEuNzItMi4yNCwyLjMyYy0wLjc4LDAuNTItMS42NCwwLjkyLTIuNTgsMS4ycy0xLjk0LDAuNDMtMi45NywwLjQzYy0xLjU1LDAtMi45NC0wLjI5LTQuMTYtMC44OAoJCWMtMS4yMi0wLjU5LTIuMjUtMS4zOC0zLjA4LTIuMzljLTAuOTItMS4wNi0xLjYtMi4yOS0yLjA0LTMuNjhjLTAuNDUtMS4zOS0wLjY3LTIuODYtMC42Ny00LjQxYzAtMS4zMiwwLjEzLTIuNTYsMC4zOS0zLjcyCgkJczAuNjktMi4yNCwxLjI5LTMuMjVjMC43OC0xLjMyLDEuODctMi40MSwzLjI3LTMuMjdjMS40MS0wLjg2LDMuMDYtMS4yOSw0Ljk1LTEuMjljMS40MSwwLDIuNjYsMC4yNSwzLjc3LDAuNzUKCQljMS4xLDAuNSwyLjA2LDEuMTgsMi44NiwyLjA0YzAuODksMC45OCwxLjU3LDIuMTMsMi4wNCwzLjQ2czAuNzEsMi43MywwLjcxLDQuMTlMNDQ0Ljc0LDI4NS40MXogTTQ0MS4wNCwyODIuMjcKCQljMC0wLjgzLTAuMTItMS42My0wLjM0LTIuNDFjLTAuMjMtMC43Ny0wLjU2LTEuNDUtMC45OS0yLjAyYy0wLjQ2LTAuNi0xLjA1LTEuMDgtMS43Ny0xLjQ0Yy0wLjcyLTAuMzYtMS41Ny0wLjU0LTIuNTQtMC41NAoJCWMtMSwwLTEuODcsMC4xOS0yLjYxLDAuNTZjLTAuNzMsMC4zNy0xLjM1LDAuODYtMS44NSwxLjQ2Yy0wLjUsMC42LTAuODgsMS4yOC0xLjEyLDIuMDRjLTAuMjQsMC43Ni0wLjM4LDEuNTQtMC40MSwyLjM0SDQ0MS4wNHoiCgkJLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00NjIuNjUsMjc2LjljLTAuMzItMC4wNi0wLjY1LTAuMS0xLjAxLTAuMTNjLTAuMzYtMC4wMy0wLjctMC4wNC0xLjAxLTAuMDRjLTAuODYsMC0xLjY0LDAuMTctMi4zNSwwLjUKCQljLTAuNywwLjMzLTEuMywwLjc0LTEuNzksMS4yM2MtMC40MywwLjQzLTAuNzgsMC45Mi0xLjA1LDEuNDhjLTAuMjcsMC41Ni0wLjQ3LDEuMTUtMC42LDEuNzhjLTAuMTMsMC42My0wLjIyLDEuMjYtMC4yNiwxLjg5CgkJYy0wLjA0LDAuNjMtMC4wNiwxLjIzLTAuMDYsMS44MXY5LjY3aC0zLjYydi0yMS43NmgzLjIzbDAuMywzLjgzYzAuNTctMS4zNSwxLjQ2LTIuMzQsMi42NS0yLjk5YzEuMTktMC42NCwyLjQ4LTAuOTcsMy44NS0wLjk3CgkJYzAuNTcsMCwxLjE1LDAuMDQsMS43MiwwLjEzVjI3Ni45eiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTQ4MS4zNCwyOTUuMDl2LTEzLjhjMC0xLjYzLTAuMzctMi45MS0xLjEtMy44M2MtMC43My0wLjkyLTEuOTYtMS4zOC0zLjY4LTEuMzhjLTEuMDYsMC0yLDAuMzEtMi44LDAuOTIKCQlzLTEuNDUsMS40My0xLjk0LDIuNDNjLTAuMzcsMC44LTAuNiwxLjcyLTAuNjcsMi43NWMtMC4wNywxLjAzLTAuMTEsMS45Ni0wLjExLDIuNzl2MTAuMTFoLTMuNjZ2LTMxLjA1aDMuNjZ2MTIuMTcKCQljMC42Ni0xLjEyLDEuNTgtMS45NywyLjc2LTIuNTZjMS4xOC0wLjU5LDIuMzgtMC44OCwzLjYyLTAuODhjMi41LDAsNC4zOCwwLjcsNS42NiwyLjExYzEuMjgsMS40MSwxLjkyLDMuMzcsMS45Miw1Ljg5djE0LjMyCgkJSDQ4MS4zNHoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01MTAuMTUsMjg1LjQxaC0xNS40MmMwLDEsMC4xOSwyLDAuNTYsMi45OWMwLjM3LDAuOTksMC44OSwxLjgxLDEuNTUsMi40N2MxLjAzLDEuMDMsMi4zNywxLjU1LDQsMS41NQoJCWMxLjc4LDAsMy4xMy0wLjQ3LDQuMDUtMS40MmMwLjMyLTAuMzIsMC41Ny0wLjY1LDAuNzgtMC45OWMwLjItMC4zNCwwLjM3LTAuOCwwLjUyLTEuMzhoMy41N2MtMC4xNCwxLjA5LTAuNTIsMi4xMS0xLjEyLDMuMDUKCQljLTAuNiwwLjk1LTEuMzUsMS43Mi0yLjI0LDIuMzJjLTAuNzgsMC41Mi0xLjY0LDAuOTItMi41OCwxLjJzLTEuOTQsMC40My0yLjk3LDAuNDNjLTEuNTUsMC0yLjk0LTAuMjktNC4xNi0wLjg4CgkJYy0xLjIyLTAuNTktMi4yNS0xLjM4LTMuMDgtMi4zOWMtMC45Mi0xLjA2LTEuNi0yLjI5LTIuMDQtMy42OGMtMC40NS0xLjM5LTAuNjctMi44Ni0wLjY3LTQuNDFjMC0xLjMyLDAuMTMtMi41NiwwLjM5LTMuNzIKCQlzMC42OS0yLjI0LDEuMjktMy4yNWMwLjc4LTEuMzIsMS44Ny0yLjQxLDMuMjctMy4yN2MxLjQxLTAuODYsMy4wNi0xLjI5LDQuOTUtMS4yOWMxLjQxLDAsMi42NiwwLjI1LDMuNzcsMC43NQoJCWMxLjEsMC41LDIuMDYsMS4xOCwyLjg2LDIuMDRjMC44OSwwLjk4LDEuNTcsMi4xMywyLjA0LDMuNDZzMC43MSwyLjczLDAuNzEsNC4xOUw1MTAuMTUsMjg1LjQxeiBNNTA2LjQ1LDI4Mi4yNwoJCWMwLTAuODMtMC4xMi0xLjYzLTAuMzQtMi40MWMtMC4yMy0wLjc3LTAuNTYtMS40NS0wLjk5LTIuMDJjLTAuNDYtMC42LTEuMDUtMS4wOC0xLjc3LTEuNDRjLTAuNzItMC4zNi0xLjU3LTAuNTQtMi41NC0wLjU0CgkJYy0xLDAtMS44NywwLjE5LTIuNjEsMC41NmMtMC43MywwLjM3LTEuMzUsMC44Ni0xLjg1LDEuNDZjLTAuNSwwLjYtMC44OCwxLjI4LTEuMTIsMi4wNGMtMC4yNCwwLjc2LTAuMzgsMS41NC0wLjQxLDIuMzRINTA2LjQ1eiIKCQkvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTUxNi4wNSwyNjguMzR2LTQuM2g0LjI2djQuM0g1MTYuMDV6IE01MTYuMzEsMjk1LjA5di0yMS43NmgzLjc1djIxLjc2SDUxNi4zMXoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01MzkuMywyOTQuNzljLTAuNDksMC4xNC0xLjA4LDAuMjgtMS43OSwwLjQxYy0wLjcsMC4xMy0xLjU2LDAuMTktMi41NiwwLjE5Yy0xLjE4LDAtMi4xNS0wLjE3LTIuOTMtMC41MgoJCXMtMS4zOS0wLjc5LTEuODMtMS4zM2MtMC40NS0wLjU0LTAuNzYtMS4xNy0wLjk1LTEuODdjLTAuMTktMC43LTAuMjgtMS40Mi0wLjI4LTIuMTd2LTEzLjAzaC00LjIydi0zLjE0aDQuMjJ2LTUuNTVsMy42Ni0wLjg2CgkJdjYuNDFoNi40NnYzLjE0aC02LjQ2djEyLjZjMCwxLjA2LDAuMjQsMS44MiwwLjcxLDIuMjhjMC40NywwLjQ2LDEuMjEsMC42OSwyLjIyLDAuNjljMC40LDAsMC44Mi0wLjAxLDEuMjUtMC4wNAoJCWMwLjQzLTAuMDMsMC44My0wLjA3LDEuMjEtMC4xM2MwLjQzLTAuMDYsMC44Ni0wLjEzLDEuMjktMC4yMlYyOTQuNzl6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTcxLjczLDI5NS4wOWgtMy45NmwtOC4wNS0yMS43NmgzLjgzbDYuMjksMTcuNDZsNi4wNy0xNy40NmgzLjdMNTcxLjczLDI5NS4wOXoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik02MDEuNTcsMjg0LjIxYzAsMS43Mi0wLjIxLDMuMzQtMC42NSw0Ljg2cy0xLjI1LDIuODctMi40Niw0LjA0Yy0wLjgsMC43Ny0xLjc2LDEuMzktMi44NiwxLjg1CgkJYy0xLjExLDAuNDYtMi4zNSwwLjY5LTMuNzIsMC42OXMtMi42Mi0wLjIzLTMuNzMtMC42OXMtMi4wNi0xLjA4LTIuODYtMS44NWMtMS4yMS0xLjE4LTIuMDItMi41Mi0yLjQ1LTQuMDRzLTAuNjUtMy4xNC0wLjY1LTQuODYKCQlzMC4yMi0zLjM0LDAuNjUtNC44NmMwLjQzLTEuNTIsMS4yNS0yLjg3LDIuNDUtNC4wNGMwLjgtMC43NywxLjc2LTEuMzksMi44Ni0xLjg1YzEuMTEtMC40NiwyLjM1LTAuNjksMy43My0wLjY5CgkJczIuNjIsMC4yMywzLjcyLDAuNjljMS4xLDAuNDYsMi4wNiwxLjA4LDIuODYsMS44NWMxLjIxLDEuMTgsMi4wMiwyLjUyLDIuNDYsNC4wNEM2MDEuMzYsMjgwLjg3LDYwMS41NywyODIuNDksNjAxLjU3LDI4NC4yMXoKCQkgTTU5Ny44MywyODQuMjFjMC0xLjI5LTAuMTQtMi41NC0wLjQzLTMuNzRzLTAuODItMi4yMS0xLjU5LTMuMDFjLTAuNDYtMC40Ni0xLjAxLTAuODMtMS42Ni0xLjEyYy0wLjY1LTAuMjktMS40LTAuNDMtMi4yNi0wLjQzCgkJcy0xLjYyLDAuMTQtMi4yNiwwLjQzYy0wLjY1LDAuMjktMS4yLDAuNjYtMS42NiwxLjEyYy0wLjc4LDAuOC0xLjMxLDEuODEtMS41OSwzLjAxcy0wLjQzLDIuNDUtMC40MywzLjc0czAuMTQsMi41NCwwLjQzLDMuNzQKCQlzMC44MiwyLjIxLDEuNTksMy4wMWMwLjQ2LDAuNDYsMS4wMSwwLjgzLDEuNjYsMS4xMmMwLjY1LDAuMjksMS40LDAuNDMsMi4yNiwwLjQzczEuNjEtMC4xNCwyLjI2LTAuNDMKCQljMC42NS0wLjI5LDEuMi0wLjY2LDEuNjYtMS4xMmMwLjc4LTAuOCwxLjMxLTEuODEsMS41OS0zLjAxUzU5Ny44MywyODUuNSw1OTcuODMsMjg0LjIxeiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTYyMS44MSwyOTUuMDl2LTEzLjhjMC0xLjYzLTAuMzctMi45MS0xLjEtMy44M2MtMC43My0wLjkyLTEuOTYtMS4zOC0zLjY4LTEuMzhjLTEuMDYsMC0yLDAuMzEtMi44LDAuOTIKCQlzLTEuNDUsMS40My0xLjk0LDIuNDNjLTAuMzcsMC44LTAuNiwxLjcyLTAuNjcsMi43NWMtMC4wNywxLjAzLTAuMTEsMS45Ni0wLjExLDIuNzl2MTAuMTFoLTMuNjZ2LTIxLjc2aDMuMTlsMC4zLDMuMjcKCQljMC4yOS0wLjYzLDAuNjctMS4xOCwxLjE2LTEuNjZzMS4wMy0wLjg3LDEuNjQtMS4xOHMxLjIzLTAuNTYsMS44OS0wLjczYzAuNjYtMC4xNywxLjI5LTAuMjYsMS44OS0wLjI2YzIuNSwwLDQuMzgsMC43LDUuNjQsMi4xMQoJCWMxLjI2LDEuNDEsMS44OSwzLjM3LDEuODksNS44OXYxNC4zMkg2MjEuODF6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNjcyLjExLDI4Ni43YzAsMS4yOS0wLjI0LDIuNDEtMC43MywzLjM1Yy0wLjQ5LDAuOTUtMS4xMSwxLjc5LTEuODUsMi41NGMtMS4wNiwxLjAzLTIuMzYsMS44LTMuOSwyLjMKCQljLTEuNTQsMC41LTMuMTIsMC43NS00Ljc2LDAuNzVjLTMuNywwLTYuNjItMC45Ny04Ljc0LTIuOTJjLTAuOTgtMC45Mi0xLjc3LTItMi4zNy0zLjI1Yy0wLjYtMS4yNS0wLjktMi42LTAuOS00LjA2aDQKCQljMCwwLjkyLDAuMiwxLjgsMC42LDIuNjRjMC40LDAuODUsMC45MiwxLjU3LDEuNTUsMi4xN2MwLjY5LDAuNjYsMS41NiwxLjE0LDIuNjMsMS40NGMxLjA2LDAuMywyLjE0LDAuNDUsMy4yMywwLjQ1CgkJYzEuMTgsMCwyLjI1LTAuMTMsMy4yMS0wLjM5YzAuOTYtMC4yNiwxLjc5LTAuNzIsMi40OC0xLjM4YzAuNDktMC40MywwLjg3LTAuOTIsMS4xNC0xLjQ4YzAuMjctMC41NiwwLjQxLTEuMjUsMC40MS0yLjA4CgkJYzAtMS4yLTAuNC0yLjI1LTEuMjEtMy4xNGMtMC44LTAuODktMi4xMS0xLjQ4LTMuOTItMS43NmwtNC44Mi0wLjczYy0xLjE1LTAuMTctMi4yMi0wLjQ2LTMuMjEtMC44NnMtMS44NS0wLjk0LTIuNTgtMS42MQoJCXMtMS4zMS0xLjQ4LTEuNzItMi40MXMtMC42Mi0yLTAuNjItMy4yYzAtMS4xNSwwLjI0LTIuMjQsMC43MS0zLjI5YzAuNDctMS4wNSwxLjEzLTEuOTYsMS45Ni0yLjczYzIuMTUtMi4wMSw0LjgyLTMuMDEsOC4wMS0zLjAxCgkJYzEuNDksMCwyLjkzLDAuMjQsNC4zMywwLjczYzEuMzksMC40OSwyLjU5LDEuMjIsMy42LDIuMTljMS44NywxLjc4LDIuODQsMy45NiwyLjkzLDYuNTRoLTRjLTAuMDYtMC43NS0wLjIyLTEuNDUtMC40Ny0yLjExCgkJYy0wLjI2LTAuNjYtMC42LTEuMjMtMS4wMy0xLjcyYy0wLjU4LTAuNjYtMS4zMS0xLjE3LTIuMjItMS41NWMtMC45LTAuMzctMS45Ni0wLjU2LTMuMTctMC41NmMtMS4wOSwwLTIuMSwwLjE3LTMuMDQsMC40OQoJCWMtMC45MywwLjMzLTEuNzMsMC44Ny0yLjM5LDEuNjFjLTAuNCwwLjQ2LTAuNzEsMC45NS0wLjkzLDEuNDhjLTAuMjEsMC41My0wLjMyLDEuMTQtMC4zMiwxLjgzYzAsMC42OSwwLjEzLDEuMjgsMC4zOSwxLjc4CgkJYzAuMjYsMC41LDAuNiwwLjkyLDEuMDMsMS4yN3MwLjkyLDAuNjIsMS40NiwwLjgyYzAuNTQsMC4yLDEuMSwwLjM0LDEuNjgsMC40M2MwLjg2LDAuMTEsMS43MSwwLjI0LDIuNTYsMC4zNwoJCWMwLjg1LDAuMTMsMS42OSwwLjI3LDIuNTIsMC40MWMyLjU1LDAuMzcsNC42MSwxLjMsNi4xNiwyLjc3QzY3MS4zMywyODIuMzEsNjcyLjExLDI4NC4yNiw2NzIuMTEsMjg2Ljd6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNjk3LjU2LDI4NC4yMWMwLDEuODktMC4yOCwzLjY1LTAuODQsNS4yN2MtMC41NiwxLjYyLTEuMzksMi45Ni0yLjQ4LDQuMDJjLTAuNzIsMC42Ni0xLjU3LDEuMTktMi41NiwxLjU5CgkJcy0yLjEzLDAuNi0zLjQyLDAuNmMtMC42LDAtMS4yMS0wLjA3LTEuODMtMC4yMXMtMS4yMS0wLjM0LTEuNzktMC42cy0xLjEtMC41OC0xLjU3LTAuOTdzLTAuODUtMC44Mi0xLjE0LTEuMzF2MTEuODNoLTMuNjZ2LTMxLjA1CgkJaDMuMjNsMC4yNiwyLjg0YzAuNjMtMS4wOSwxLjU2LTEuOTMsMi44LTIuNTJjMS4yMy0wLjU5LDIuNDctMC44OCwzLjctMC44OGMxLjM1LDAsMi41MywwLjIxLDMuNTUsMC42MgoJCWMxLjAyLDAuNDIsMS44OSwxLDIuNjEsMS43NGMxLjAzLDEuMDYsMS44MiwyLjM4LDIuMzUsMy45NkM2OTcuMjksMjgwLjcxLDY5Ny41NiwyODIuNCw2OTcuNTYsMjg0LjIxeiBNNjkzLjgxLDI4NC4yNQoJCWMwLTEtMC4wOS0yLTAuMjgtMi45OWMtMC4xOS0wLjk5LTAuNTEtMS44OC0wLjk3LTIuNjljLTAuNDYtMC44LTEuMDktMS40NS0xLjg5LTEuOTRjLTAuOC0wLjQ5LTEuODEtMC43My0zLjAxLTAuNzMKCQljLTAuOCwwLTEuNDksMC4xNC0yLjA1LDAuNDFjLTAuNTYsMC4yNy0xLjA1LDAuNjEtMS40OSwxLjAxYy0wLjkyLDAuOC0xLjU1LDEuODEtMS44OSwzLjAzYy0wLjM0LDEuMjItMC41MiwyLjUyLTAuNTIsMy44OQoJCXMwLjE3LDIuNjcsMC41MiwzLjg5YzAuMzQsMS4yMiwwLjk4LDIuMjMsMS44OSwzLjAzYzAuNDMsMC40LDAuOTMsMC43NCwxLjQ5LDEuMDFjMC41NiwwLjI3LDEuMjQsMC40MSwyLjA1LDAuNDEKCQljMS4yMSwwLDIuMjEtMC4yNCwzLjAxLTAuNzNjMC44LTAuNDksMS40My0xLjEzLDEuODktMS45NGMwLjQ2LTAuOCwwLjc4LTEuNywwLjk3LTIuNjlDNjkzLjcyLDI4Ni4yNSw2OTMuODEsMjg1LjI1LDY5My44MSwyODQuMjUKCQl6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNzAzLjYzLDI2OC4zNHYtNC4zaDQuMjZ2NC4zSDcwMy42M3ogTTcwMy44OSwyOTUuMDl2LTIxLjc2aDMuNzV2MjEuNzZINzAzLjg5eiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTczMy4xNywyODUuNDFoLTE1LjQyYzAsMSwwLjE5LDIsMC41NiwyLjk5YzAuMzcsMC45OSwwLjg5LDEuODEsMS41NSwyLjQ3YzEuMDMsMS4wMywyLjM3LDEuNTUsNCwxLjU1CgkJYzEuNzgsMCwzLjEzLTAuNDcsNC4wNS0xLjQyYzAuMzItMC4zMiwwLjU3LTAuNjUsMC43OC0wLjk5YzAuMi0wLjM0LDAuMzctMC44LDAuNTItMS4zOGgzLjU3Yy0wLjE0LDEuMDktMC41MiwyLjExLTEuMTIsMy4wNQoJCWMtMC42LDAuOTUtMS4zNSwxLjcyLTIuMjQsMi4zMmMtMC43OCwwLjUyLTEuNjQsMC45Mi0yLjU4LDEuMnMtMS45NCwwLjQzLTIuOTcsMC40M2MtMS41NSwwLTIuOTQtMC4yOS00LjE2LTAuODgKCQljLTEuMjItMC41OS0yLjI1LTEuMzgtMy4wOC0yLjM5Yy0wLjkyLTEuMDYtMS42LTIuMjktMi4wNC0zLjY4Yy0wLjQ1LTEuMzktMC42Ny0yLjg2LTAuNjctNC40MWMwLTEuMzIsMC4xMy0yLjU2LDAuMzktMy43MgoJCXMwLjY5LTIuMjQsMS4yOS0zLjI1YzAuNzgtMS4zMiwxLjg3LTIuNDEsMy4yNy0zLjI3YzEuNDEtMC44NiwzLjA2LTEuMjksNC45NS0xLjI5YzEuNDEsMCwyLjY2LDAuMjUsMy43NywwLjc1CgkJYzEuMSwwLjUsMi4wNiwxLjE4LDIuODYsMi4wNGMwLjg5LDAuOTgsMS41NywyLjEzLDIuMDQsMy40NnMwLjcxLDIuNzMsMC43MSw0LjE5TDczMy4xNywyODUuNDF6IE03MjkuNDcsMjgyLjI3CgkJYzAtMC44My0wLjEyLTEuNjMtMC4zNC0yLjQxYy0wLjIzLTAuNzctMC41Ni0xLjQ1LTAuOTktMi4wMmMtMC40Ni0wLjYtMS4wNS0xLjA4LTEuNzctMS40NGMtMC43Mi0wLjM2LTEuNTctMC41NC0yLjU0LTAuNTQKCQljLTEsMC0xLjg3LDAuMTktMi42MSwwLjU2Yy0wLjczLDAuMzctMS4zNSwwLjg2LTEuODUsMS40NmMtMC41LDAuNi0wLjg4LDEuMjgtMS4xMiwyLjA0Yy0wLjI0LDAuNzYtMC4zOCwxLjU0LTAuNDEsMi4zNEg3MjkuNDd6IgoJCS8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNzQ2LjM5LDI5NS4wOWMtMC4xNywwLjA2LTAuMzksMC4xLTAuNjUsMC4xM2MtMC40MywwLjA5LTEuMDgsMC4xMy0xLjk0LDAuMTNjLTEuNjEsMC0yLjc3LTAuNDYtMy40OS0xLjM4CgkJYy0wLjcyLTAuOTItMS4wOC0yLjI0LTEuMDgtMy45NnYtMjUuOTdoMy42NnYyNS43NmMwLDAuNzUsMC4xNCwxLjMsMC40MywxLjY4YzAuMjksMC4zNywwLjgsMC41NiwxLjU1LDAuNTZoMS4yMQoJCWMwLjExLDAsMC4yMS0wLjAxLDAuMy0wLjA0VjI5NS4wOXoiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik03NzAuMTYsMjk0Ljg3Yy0wLjQsMC4yLTAuNzksMC4zNC0xLjE2LDAuNDFzLTAuNzksMC4xMS0xLjI1LDAuMTFjLTAuOTgsMC0xLjc0LTAuMzItMi4zLTAuOTcKCQljLTAuNTYtMC42NS0wLjg0LTEuNDMtMC44NC0yLjM0aC0wLjA5Yy0wLjYzLDEuMDktMS41NywxLjk2LTIuODIsMi42Yy0xLjI1LDAuNjQtMi42NSwwLjk3LTQuMiwwLjk3Yy0xLjI2LDAtMi4zNi0wLjE5LTMuMjktMC41OAoJCWMtMC45My0wLjM5LTEuNzEtMC45LTIuMzMtMS41M2MtMC42Mi0wLjYzLTEuMDgtMS4zNS0xLjQtMi4xNWMtMC4zMi0wLjgtMC40Ny0xLjYyLTAuNDctMi40NWMwLTAuNjksMC4xMi0xLjQyLDAuMzctMi4xOQoJCWMwLjI0LTAuNzcsMC42Ny0xLjQ4LDEuMjctMi4xM2MwLjYtMC42NCwxLjQtMS4yLDIuMzktMS42NmMwLjk5LTAuNDYsMi4yMy0wLjczLDMuNzItMC44Mmw2LjYzLTAuMzl2LTEuNTkKCQljMC0wLjU0LTAuMDYtMS4xMi0wLjE5LTEuNzJjLTAuMTMtMC42LTAuNDQtMS4xMy0wLjkzLTEuNTljLTAuMzctMC4zNC0wLjg0LTAuNjItMS40LTAuODJjLTAuNTYtMC4yLTEuMjktMC4zLTIuMTctMC4zCgkJYy0xLDAtMS44MiwwLjEyLTIuNDUsMC4zN2MtMC42MywwLjI0LTEuMTMsMC41NS0xLjUxLDAuOTJjLTAuNzIsMC43Mi0xLjA4LDEuNTktMS4wOCwyLjYyaC0zLjU3YzAuMDMtMSwwLjIxLTEuODcsMC41NC0yLjYKCQljMC4zMy0wLjczLDAuNzgtMS4zOCwxLjM2LTEuOTZjMC43NS0wLjc3LDEuNzItMS4zNSwyLjkxLTEuNzRjMS4xOS0wLjM5LDIuNDYtMC41OCwzLjgxLTAuNThjMi4xMiwwLDMuOCwwLjM5LDUuMDQsMS4xOAoJCWMxLjIzLDAuNzksMi4xMSwxLjc5LDIuNjMsMi45OWMwLjQzLDEsMC42NSwyLjEyLDAuNjUsMy4zNXYxMC41NGMwLDAuNTcsMC4xMSwwLjk2LDAuMzIsMS4xNmMwLjIyLDAuMiwwLjUxLDAuMywwLjg4LDAuM2gwLjMKCQljMC4xMSwwLDAuMjItMC4wMSwwLjMtMC4wNGwwLjM0LTAuMDlWMjk0Ljg3eiBNNzY0LjM5LDI4NC41OWwtNS44NiwwLjM0Yy0wLjU1LDAuMDMtMS4xMSwwLjEyLTEuNjgsMC4yOHMtMS4wOSwwLjM5LTEuNTUsMC42OQoJCXMtMC44MywwLjctMS4xMiwxLjE4Yy0wLjI5LDAuNDktMC40MywxLjA4LTAuNDMsMS43NmMwLDAuOTgsMC4zMywxLjg0LDAuOTksMi42YzAuNjYsMC43NiwxLjc3LDEuMTQsMy4zMiwxLjE0CgkJYzAuODMsMCwxLjY0LTAuMTQsMi40My0wLjQzYzAuNzktMC4yOSwxLjQ3LTAuNzMsMi4wNS0xLjMzYzAuNjYtMC42NiwxLjEzLTEuNDIsMS40Mi0yLjI4YzAuMjktMC44NiwwLjQzLTEuNzUsMC40My0yLjY3VjI4NC41OXoiCgkJLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik03ODkuOTIsMjk1LjA5di0xMy44YzAtMS42My0wLjM3LTIuOTEtMS4xLTMuODNjLTAuNzMtMC45Mi0xLjk2LTEuMzgtMy42OC0xLjM4Yy0xLjA2LDAtMiwwLjMxLTIuOCwwLjkyCgkJcy0xLjQ1LDEuNDMtMS45NCwyLjQzYy0wLjM3LDAuOC0wLjYsMS43Mi0wLjY3LDIuNzVjLTAuMDcsMS4wMy0wLjExLDEuOTYtMC4xMSwyLjc5djEwLjExaC0zLjY2di0yMS43NmgzLjE5bDAuMywzLjI3CgkJYzAuMjktMC42MywwLjY3LTEuMTgsMS4xNi0xLjY2czEuMDMtMC44NywxLjY0LTEuMThzMS4yMy0wLjU2LDEuODktMC43M2MwLjY2LTAuMTcsMS4yOS0wLjI2LDEuODktMC4yNmMyLjUsMCw0LjM4LDAuNyw1LjY0LDIuMTEKCQljMS4yNiwxLjQxLDEuODksMy4zNywxLjg5LDUuODl2MTQuMzJINzg5LjkyeiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTgwOC4xOCwyOTUuMDljLTAuMTcsMC4wNi0wLjM5LDAuMS0wLjY1LDAuMTNjLTAuNDMsMC4wOS0xLjA4LDAuMTMtMS45NCwwLjEzYy0xLjYxLDAtMi43Ny0wLjQ2LTMuNDktMS4zOAoJCWMtMC43Mi0wLjkyLTEuMDgtMi4yNC0xLjA4LTMuOTZ2LTI1Ljk3aDMuNjZ2MjUuNzZjMCwwLjc1LDAuMTQsMS4zLDAuNDMsMS42OGMwLjI5LDAuMzcsMC44LDAuNTYsMS41NSwwLjU2aDEuMjEKCQljMC4xMSwwLDAuMjEtMC4wMSwwLjMtMC4wNFYyOTUuMDl6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNODMxLjk1LDI5NC44N2MtMC40LDAuMi0wLjc5LDAuMzQtMS4xNiwwLjQxcy0wLjc5LDAuMTEtMS4yNSwwLjExYy0wLjk4LDAtMS43NC0wLjMyLTIuMy0wLjk3CgkJYy0wLjU2LTAuNjUtMC44NC0xLjQzLTAuODQtMi4zNGgtMC4wOWMtMC42MywxLjA5LTEuNTcsMS45Ni0yLjgyLDIuNmMtMS4yNSwwLjY0LTIuNjUsMC45Ny00LjIsMC45N2MtMS4yNiwwLTIuMzYtMC4xOS0zLjI5LTAuNTgKCQljLTAuOTMtMC4zOS0xLjcxLTAuOS0yLjMzLTEuNTNjLTAuNjItMC42My0xLjA4LTEuMzUtMS40LTIuMTVjLTAuMzItMC44LTAuNDctMS42Mi0wLjQ3LTIuNDVjMC0wLjY5LDAuMTItMS40MiwwLjM3LTIuMTkKCQljMC4yNC0wLjc3LDAuNjctMS40OCwxLjI3LTIuMTNjMC42LTAuNjQsMS40LTEuMiwyLjM5LTEuNjZjMC45OS0wLjQ2LDIuMjMtMC43MywzLjcyLTAuODJsNi42My0wLjM5di0xLjU5CgkJYzAtMC41NC0wLjA2LTEuMTItMC4xOS0xLjcyYy0wLjEzLTAuNi0wLjQ0LTEuMTMtMC45My0xLjU5Yy0wLjM3LTAuMzQtMC44NC0wLjYyLTEuNC0wLjgyYy0wLjU2LTAuMi0xLjI5LTAuMy0yLjE3LTAuMwoJCWMtMSwwLTEuODIsMC4xMi0yLjQ1LDAuMzdjLTAuNjMsMC4yNC0xLjEzLDAuNTUtMS41MSwwLjkyYy0wLjcyLDAuNzItMS4wOCwxLjU5LTEuMDgsMi42MmgtMy41N2MwLjAzLTEsMC4yMS0xLjg3LDAuNTQtMi42CgkJYzAuMzMtMC43MywwLjc4LTEuMzgsMS4zNi0xLjk2YzAuNzUtMC43NywxLjcyLTEuMzUsMi45MS0xLjc0YzEuMTktMC4zOSwyLjQ2LTAuNTgsMy44MS0wLjU4YzIuMTIsMCwzLjgsMC4zOSw1LjA0LDEuMTgKCQljMS4yMywwLjc5LDIuMTEsMS43OSwyLjYzLDIuOTljMC40MywxLDAuNjUsMi4xMiwwLjY1LDMuMzV2MTAuNTRjMCwwLjU3LDAuMTEsMC45NiwwLjMyLDEuMTZjMC4yMiwwLjIsMC41MSwwLjMsMC44OCwwLjNoMC4zCgkJYzAuMTEsMCwwLjIyLTAuMDEsMC4zLTAuMDRsMC4zNC0wLjA5VjI5NC44N3ogTTgyNi4xOCwyODQuNTlsLTUuODYsMC4zNGMtMC41NSwwLjAzLTEuMTEsMC4xMi0xLjY4LDAuMjhzLTEuMDksMC4zOS0xLjU1LDAuNjkKCQlzLTAuODMsMC43LTEuMTIsMS4xOGMtMC4yOSwwLjQ5LTAuNDMsMS4wOC0wLjQzLDEuNzZjMCwwLjk4LDAuMzMsMS44NCwwLjk5LDIuNmMwLjY2LDAuNzYsMS43NywxLjE0LDMuMzIsMS4xNAoJCWMwLjgzLDAsMS42NC0wLjE0LDIuNDMtMC40M2MwLjc5LTAuMjksMS40Ny0wLjczLDIuMDUtMS4zM2MwLjY2LTAuNjYsMS4xMy0xLjQyLDEuNDItMi4yOGMwLjI5LTAuODYsMC40My0xLjc1LDAuNDMtMi42N1YyODQuNTl6IgoJCS8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNODU2LjM3LDI5OC4zMWMwLDAuOTUtMC4xOCwxLjc5LTAuNTQsMi41MmMtMC4zNiwwLjczLTAuOCwxLjM1LTEuMzEsMS44N2MtMC41MiwwLjUyLTEuMTMsMC45NC0xLjgzLDEuMjcKCQljLTAuNywwLjMzLTEuNDQsMC41OS0yLjIyLDAuNzdzLTEuNTYsMC4zMi0yLjM3LDAuMzlzLTEuNTksMC4xMS0yLjM3LDAuMTFjLTAuNzIsMC0xLjQ2LTAuMDQtMi4yMi0wLjExCgkJYy0wLjc2LTAuMDctMS41LTAuMi0yLjIyLTAuMzljLTAuNzItMC4xOS0xLjQxLTAuNDQtMi4wNy0wLjc3Yy0wLjY2LTAuMzMtMS4yNS0wLjc1LTEuNzctMS4yN2MtMC40Ni0wLjQ2LTAuODMtMS0xLjEyLTEuNjMKCQljLTAuMjktMC42My0wLjQzLTEuMzgtMC40My0yLjI0YzAtMS4xNSwwLjMtMi4xMywwLjktMi45NWMwLjYtMC44MiwxLjMzLTEuNDQsMi4yLTEuODdjLTAuNzUtMC4yOS0xLjM2LTAuNzYtMS44My0xLjQyCgkJYy0wLjQ3LTAuNjYtMC43MS0xLjQtMC43MS0yLjI0YzAtMC45NywwLjI3LTEuODIsMC44Mi0yLjU0YzAuNTQtMC43MiwxLjIzLTEuMjgsMi4wNy0xLjY4Yy0wLjgtMC43Mi0xLjQyLTEuNTgtMS44NS0yLjU4CgkJYy0wLjQzLTEtMC42NS0yLjAyLTAuNjUtMy4wNWMwLTEuMiwwLjE5LTIuMjIsMC41Ni0zLjA1YzAuMzctMC44MywwLjg4LTEuNTgsMS41MS0yLjI0YzAuNzUtMC43NywxLjY0LTEuMzgsMi42OS0xLjgxCgkJczIuMy0wLjY1LDMuNzctMC42NWMxLjAzLDAsMS45NiwwLjEyLDIuNzgsMC4zNHMxLjU2LDAuNTQsMi4yMiwwLjk1YzAuMzctMC45NywwLjk1LTEuNzMsMS43NC0yLjI2YzAuNzktMC41MywxLjctMC44LDIuNzMtMC44CgkJYzAuMTcsMCwwLjM1LDAuMDEsMC41NCwwLjAyYzAuMTksMC4wMSwwLjM3LDAuMDQsMC41NCwwLjA2djIuOTdjLTAuMTEtMC4wMy0wLjI0LTAuMDQtMC4zOS0wLjA0aC0wLjQzCgkJYy0wLjcyLDAtMS4zMSwwLjE4LTEuNzksMC41NHMtMC43NywwLjg0LTAuODgsMS40NGMwLjQ2LDAuNTcsMC44MSwxLjIzLDEuMDUsMS45NmMwLjI0LDAuNzMsMC4zNywxLjU4LDAuMzcsMi41NgoJCWMwLDEuMDMtMC4xOCwxLjk5LTAuNTQsMi44OGMtMC4zNiwwLjg5LTAuODQsMS42Ni0xLjQ0LDIuMzJjLTAuNzIsMC43Ny0xLjYxLDEuNC0yLjY5LDEuODdjLTEuMDgsMC40Ny0yLjM1LDAuNzEtMy44MSwwLjcxCgkJYy0wLjc1LDAtMS4zNy0wLjA0LTEuODctMC4xM2MtMC41LTAuMDktMS4xLTAuMjQtMS43OS0wLjQ3Yy0wLjQsMC4xNC0wLjgxLDAuMzctMS4yMywwLjY5cy0wLjYyLDAuNzMtMC42MiwxLjI1CgkJYzAsMC40OSwwLjExLDAuODcsMC4zMiwxLjE0YzAuMjIsMC4yNywwLjQ4LDAuNDksMC44LDAuNjRjMC4zMiwwLjE2LDAuNjcsMC4yNiwxLjA1LDAuM2MwLjM5LDAuMDQsMC43NSwwLjA3LDEuMSwwLjA3aDQuMzEKCQljMS4yOSwwLDIuNiwwLjE2LDMuOTIsMC40N3MyLjQxLDAuOTIsMy4yNywxLjgxYzAuNTIsMC41MiwwLjkzLDEuMTMsMS4yNSwxLjgzQzg1Ni4yMSwyOTYuNTgsODU2LjM3LDI5Ny4zOSw4NTYuMzcsMjk4LjMxegoJCSBNODUyLjc5LDI5OC4zMWMwLTAuOC0wLjE4LTEuNDMtMC41NC0xLjg5Yy0wLjM2LTAuNDYtMC44Mi0wLjgtMS4zOC0xLjAzcy0xLjE4LTAuMzctMS44NS0wLjQzYy0wLjY3LTAuMDYtMS4zNC0wLjA5LTItMC4wOWgtNS4wNAoJCWMtMC43NSwwLjIzLTEuMzksMC42NS0xLjk0LDEuMjdjLTAuNTUsMC42Mi0wLjgyLDEuMzQtMC44MiwyLjE3YzAsMC45MiwwLjMsMS42OCwwLjksMi4yOGMwLjM0LDAuMzQsMC43NSwwLjYyLDEuMjMsMC44MgoJCWMwLjQ3LDAuMiwwLjk3LDAuMzUsMS40OSwwLjQ1czEuMDQsMC4xNywxLjU3LDAuMTljMC41MywwLjAzLDEuMDQsMC4wNCwxLjUzLDAuMDRjMC40NiwwLDAuOTYtMC4wMSwxLjUxLTAuMDQKCQljMC41NS0wLjAzLDEuMDktMC4xLDEuNjQtMC4yMWMwLjU0LTAuMTIsMS4wNi0wLjI3LDEuNTUtMC40N2MwLjQ5LTAuMiwwLjktMC40NywxLjI1LTAuODIKCQlDODUyLjQ5LDI5OS45NSw4NTIuNzksMjk5LjIsODUyLjc5LDI5OC4zMXogTTg1MC4zLDI4MC41MWMwLTEuMzgtMC40NC0yLjUyLTEuMzEtMy40MmMtMC44OC0wLjktMi4wOS0xLjM1LTMuNjQtMS4zNQoJCWMtMS40OSwwLTIuNjksMC40NS0zLjYsMS4zNWMtMC45LDAuOS0xLjM2LDIuMDQtMS4zNiwzLjQyczAuNDQsMi41MywxLjMxLDMuNDZjMC44OCwwLjkzLDIuMDksMS40LDMuNjQsMS40CgkJYzEuNDksMCwyLjY5LTAuNDcsMy42LTEuNFM4NTAuMywyODEuODksODUwLjMsMjgwLjUxeiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTg3OC4zMywyODUuNDFoLTE1LjQyYzAsMSwwLjE5LDIsMC41NiwyLjk5YzAuMzcsMC45OSwwLjg5LDEuODEsMS41NSwyLjQ3YzEuMDMsMS4wMywyLjM3LDEuNTUsNCwxLjU1CgkJYzEuNzgsMCwzLjEzLTAuNDcsNC4wNS0xLjQyYzAuMzItMC4zMiwwLjU3LTAuNjUsMC43OC0wLjk5YzAuMi0wLjM0LDAuMzctMC44LDAuNTItMS4zOGgzLjU3Yy0wLjE0LDEuMDktMC41MiwyLjExLTEuMTIsMy4wNQoJCWMtMC42LDAuOTUtMS4zNSwxLjcyLTIuMjQsMi4zMmMtMC43OCwwLjUyLTEuNjQsMC45Mi0yLjU4LDEuMnMtMS45NCwwLjQzLTIuOTcsMC40M2MtMS41NSwwLTIuOTQtMC4yOS00LjE2LTAuODgKCQljLTEuMjItMC41OS0yLjI1LTEuMzgtMy4wOC0yLjM5Yy0wLjkyLTEuMDYtMS42LTIuMjktMi4wNC0zLjY4Yy0wLjQ1LTEuMzktMC42Ny0yLjg2LTAuNjctNC40MWMwLTEuMzIsMC4xMy0yLjU2LDAuMzktMy43MgoJCXMwLjY5LTIuMjQsMS4yOS0zLjI1YzAuNzgtMS4zMiwxLjg3LTIuNDEsMy4yNy0zLjI3YzEuNDEtMC44NiwzLjA2LTEuMjksNC45NS0xLjI5YzEuNDEsMCwyLjY2LDAuMjUsMy43NywwLjc1CgkJYzEuMSwwLjUsMi4wNiwxLjE4LDIuODYsMi4wNGMwLjg5LDAuOTgsMS41NywyLjEzLDIuMDQsMy40NnMwLjcxLDIuNzMsMC43MSw0LjE5TDg3OC4zMywyODUuNDF6IE04NzQuNjMsMjgyLjI3CgkJYzAtMC44My0wLjEyLTEuNjMtMC4zNC0yLjQxYy0wLjIzLTAuNzctMC41Ni0xLjQ1LTAuOTktMi4wMmMtMC40Ni0wLjYtMS4wNS0xLjA4LTEuNzctMS40NGMtMC43Mi0wLjM2LTEuNTctMC41NC0yLjU0LTAuNTQKCQljLTEsMC0xLjg3LDAuMTktMi42MSwwLjU2Yy0wLjczLDAuMzctMS4zNSwwLjg2LTEuODUsMS40NmMtMC41LDAuNi0wLjg4LDEuMjgtMS4xMiwyLjA0Yy0wLjI0LDAuNzYtMC4zOCwxLjU0LTAuNDEsMi4zNEg4NzQuNjN6IgoJCS8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNODk4LjQ4LDI5NS4wOXYtMTMuOGMwLTEuNjMtMC4zNy0yLjkxLTEuMS0zLjgzYy0wLjczLTAuOTItMS45Ni0xLjM4LTMuNjgtMS4zOGMtMS4wNiwwLTIsMC4zMS0yLjgsMC45MgoJCXMtMS40NSwxLjQzLTEuOTQsMi40M2MtMC4zNywwLjgtMC42LDEuNzItMC42NywyLjc1Yy0wLjA3LDEuMDMtMC4xMSwxLjk2LTAuMTEsMi43OXYxMC4xMWgtMy42NnYtMjEuNzZoMy4xOWwwLjMsMy4yNwoJCWMwLjI5LTAuNjMsMC42Ny0xLjE4LDEuMTYtMS42NnMxLjAzLTAuODcsMS42NC0xLjE4czEuMjMtMC41NiwxLjg5LTAuNzNjMC42Ni0wLjE3LDEuMjktMC4yNiwxLjg5LTAuMjZjMi41LDAsNC4zOCwwLjcsNS42NCwyLjExCgkJYzEuMjYsMS40MSwxLjg5LDMuMzcsMS44OSw1Ljg5djE0LjMySDg5OC40OHoiLz4KPC9nPgo8Zz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00NjYuMDUsMTM0LjEzYzAsNi45Ni0xLjMxLDEyLjk5LTMuOTMsMTguMWMtMi42Miw1LjEtNS45NCw5LjY3LTkuOTQsMTMuNjljLTUuNyw1LjU3LTEyLjY4LDkuNzEtMjAuOTIsMTIuNDEKCQljLTguMjUsMi43LTE2Ljc2LDQuMDYtMjUuNTUsNC4wNmMtMTkuODgsMC0zNS41My01LjI2LTQ2LjkzLTE1Ljc4Yy01LjI0LTQuOTUtOS40OC0xMC43OS0xMi43MS0xNy41MgoJCWMtMy4yNC02LjczLTQuODYtMTQuMDQtNC44Ni0yMS45MmgyMS41YzAsNC45NSwxLjA4LDkuNzEsMy4yNCwxNC4yN2MyLjE2LDQuNTYsNC45Myw4LjQ3LDguMzIsMTEuNzJjMy43LDMuNTYsOC40LDYuMTUsMTQuMSw3Ljc3CgkJYzUuNywxLjYyLDExLjQ4LDIuNDQsMTcuMzQsMi40NGM2LjMyLDAsMTIuMDYtMC43LDE3LjIyLTIuMDljNS4xNi0xLjM5LDkuNTktMy44NiwxMy4yOS03LjQyYzIuNjItMi4zMiw0LjY2LTQuOTksNi4xMy04CgkJYzEuNDYtMy4wMiwyLjItNi43NiwyLjItMTEuMjVjMC02LjUtMi4xNi0xMi4xNC02LjQ3LTE2Ljk0Yy00LjMyLTQuNzktMTEuMzMtNy45Ni0yMS4wNC05LjUxbC0yNS44OS0zLjk0CgkJYy02LjE3LTAuOTMtMTEuOTEtMi40Ny0xNy4yMi00LjY0Yy01LjMyLTIuMTYtOS45NC01LjA2LTEzLjg3LTguN2MtMy45My0zLjYzLTcuMDEtNy45Ni05LjI1LTEyLjk5CgkJYy0yLjI0LTUuMDItMy4zNS0xMC43OS0zLjM1LTE3LjI4YzAtNi4xOCwxLjI3LTEyLjEsMy44MS0xNy43NWMyLjU0LTUuNjQsNi4wNS0xMC41NiwxMC41Mi0xNC43MwoJCWMxMS41Ni0xMC44MiwyNS44OS0xNi4yNCw0My0xNi4yNGM4LjAxLDAsMTUuNzYsMS4zMiwyMy4yNCwzLjk0YzcuNDcsMi42MywxMy45MSw2LjU4LDE5LjMsMTEuODMKCQljMTAuMDIsOS41OSwxNS4yNiwyMS4zNCwxNS43MiwzNS4yNmgtMjEuNWMtMC4zMS00LjAyLTEuMTYtNy44MS0yLjU0LTExLjM3Yy0xLjM5LTMuNTYtMy4yNC02LjY1LTUuNTUtOS4yOAoJCWMtMy4wOC0zLjU2LTcuMDUtNi4zNC0xMS45MS04LjM1Yy00Ljg2LTIuMDEtMTAuNTItMy4wMi0xNi45OS0zLjAyYy01Ljg2LDAtMTEuMjksMC44OS0xNi4zLDIuNjdjLTUuMDEsMS43OC05LjI5LDQuNjgtMTIuODMsOC43CgkJYy0yLjE2LDIuNDgtMy44Miw1LjE0LTQuOTcsOGMtMS4xNiwyLjg2LTEuNzMsNi4xNS0xLjczLDkuODZzMC42OSw2LjkyLDIuMDgsOS42M2MxLjM5LDIuNzEsMy4yNCw0Ljk5LDUuNTUsNi44NAoJCWMyLjMxLDEuODYsNC45MywzLjMzLDcuODYsNC40MWMyLjkzLDEuMDgsNS45MywxLjg2LDkuMDIsMi4zMmM0LjYyLDAuNjIsOS4yMSwxLjI4LDEzLjc1LDEuOTdjNC41NCwwLjcsOS4wNSwxLjQzLDEzLjUzLDIuMgoJCWMxMy43MiwyLjAxLDI0Ljc0LDcsMzMuMDYsMTQuOTZDNDYxLjg5LDExMC40Myw0NjYuMDUsMTIwLjk5LDQ2Ni4wNSwxMzQuMTN6Ii8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTU0LjU5LDE3OS4zN2gtMjEuNUw0NzcuODQsMTQuODhoMjEuMjdsNDUuMzEsMTM4Ljk3bDQ0LjM5LTEzOC45N2gyMS4wNEw1NTQuNTksMTc5LjM3eiIvPgoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTc0NS4zMywxMzQuMTNjMCw2Ljk2LTEuMzEsMTIuOTktMy45MywxOC4xYy0yLjYyLDUuMS01Ljk0LDkuNjctOS45NCwxMy42OWMtNS43LDUuNTctMTIuNjgsOS43MS0yMC45MiwxMi40MQoJCWMtOC4yNSwyLjctMTYuNzYsNC4wNi0yNS41NSw0LjA2Yy0xOS44OCwwLTM1LjUzLTUuMjYtNDYuOTMtMTUuNzhjLTUuMjQtNC45NS05LjQ4LTEwLjc5LTEyLjcxLTE3LjUyCgkJYy0zLjI0LTYuNzMtNC44Ni0xNC4wNC00Ljg2LTIxLjkyaDIxLjVjMCw0Ljk1LDEuMDgsOS43MSwzLjI0LDE0LjI3YzIuMTYsNC41Niw0LjkzLDguNDcsOC4zMiwxMS43MmMzLjcsMy41Niw4LjQsNi4xNSwxNC4xLDcuNzcKCQljNS43LDEuNjIsMTEuNDgsMi40NCwxNy4zNCwyLjQ0YzYuMzIsMCwxMi4wNi0wLjcsMTcuMjItMi4wOWM1LjE2LTEuMzksOS41OS0zLjg2LDEzLjI5LTcuNDJjMi42Mi0yLjMyLDQuNjYtNC45OSw2LjEzLTgKCQljMS40Ni0zLjAyLDIuMi02Ljc2LDIuMi0xMS4yNWMwLTYuNS0yLjE2LTEyLjE0LTYuNDctMTYuOTRjLTQuMzItNC43OS0xMS4zMy03Ljk2LTIxLjA0LTkuNTFsLTI1Ljg5LTMuOTQKCQljLTYuMTctMC45My0xMS45MS0yLjQ3LTE3LjIyLTQuNjRjLTUuMzItMi4xNi05Ljk0LTUuMDYtMTMuODctOC43Yy0zLjkzLTMuNjMtNy4wMS03Ljk2LTkuMjUtMTIuOTkKCQljLTIuMjQtNS4wMi0zLjM1LTEwLjc5LTMuMzUtMTcuMjhjMC02LjE4LDEuMjctMTIuMSwzLjgxLTE3Ljc1YzIuNTQtNS42NCw2LjA1LTEwLjU2LDEwLjUyLTE0LjczCgkJYzExLjU2LTEwLjgyLDI1Ljg5LTE2LjI0LDQzLTE2LjI0YzguMDEsMCwxNS43NiwxLjMyLDIzLjI0LDMuOTRjNy40NywyLjYzLDEzLjkxLDYuNTgsMTkuMywxMS44MwoJCWMxMC4wMiw5LjU5LDE1LjI2LDIxLjM0LDE1LjcyLDM1LjI2aC0yMS41Yy0wLjMxLTQuMDItMS4xNi03LjgxLTIuNTQtMTEuMzdjLTEuMzktMy41Ni0zLjI0LTYuNjUtNS41NS05LjI4CgkJYy0zLjA4LTMuNTYtNy4wNS02LjM0LTExLjkxLTguMzVjLTQuODYtMi4wMS0xMC41Mi0zLjAyLTE2Ljk5LTMuMDJjLTUuODYsMC0xMS4yOSwwLjg5LTE2LjMsMi42N2MtNS4wMSwxLjc4LTkuMjksNC42OC0xMi44Myw4LjcKCQljLTIuMTYsMi40OC0zLjgyLDUuMTQtNC45Nyw4Yy0xLjE2LDIuODYtMS43Myw2LjE1LTEuNzMsOS44NnMwLjY5LDYuOTIsMi4wOCw5LjYzYzEuMzksMi43MSwzLjI0LDQuOTksNS41NSw2Ljg0CgkJYzIuMzEsMS44Niw0LjkzLDMuMzMsNy44Niw0LjQxYzIuOTMsMS4wOCw1LjkzLDEuODYsOS4wMiwyLjMyYzQuNjIsMC42Miw5LjIxLDEuMjgsMTMuNzUsMS45N2M0LjU0LDAuNyw5LjA1LDEuNDMsMTMuNTMsMi4yCgkJYzEzLjcyLDIuMDEsMjQuNzQsNywzMy4wNiwxNC45NkM3NDEuMTcsMTEwLjQzLDc0NS4zMywxMjAuOTksNzQ1LjMzLDEzNC4xM3oiLz4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik04OTIuNTksMTM0LjEzYzAsNi45Ni0xLjMxLDEyLjk5LTMuOTMsMTguMWMtMi42Miw1LjEtNS45NCw5LjY3LTkuOTQsMTMuNjljLTUuNyw1LjU3LTEyLjY4LDkuNzEtMjAuOTIsMTIuNDEKCQljLTguMjUsMi43LTE2Ljc2LDQuMDYtMjUuNTUsNC4wNmMtMTkuODgsMC0zNS41My01LjI2LTQ2LjkzLTE1Ljc4Yy01LjI0LTQuOTUtOS40OC0xMC43OS0xMi43MS0xNy41MgoJCWMtMy4yNC02LjczLTQuODYtMTQuMDQtNC44Ni0yMS45MmgyMS41YzAsNC45NSwxLjA4LDkuNzEsMy4yNCwxNC4yN2MyLjE2LDQuNTYsNC45Myw4LjQ3LDguMzIsMTEuNzJjMy43LDMuNTYsOC40LDYuMTUsMTQuMSw3Ljc3CgkJYzUuNywxLjYyLDExLjQ4LDIuNDQsMTcuMzQsMi40NGM2LjMyLDAsMTIuMDYtMC43LDE3LjIyLTIuMDljNS4xNi0xLjM5LDkuNTktMy44NiwxMy4yOS03LjQyYzIuNjItMi4zMiw0LjY2LTQuOTksNi4xMy04CgkJYzEuNDYtMy4wMiwyLjItNi43NiwyLjItMTEuMjVjMC02LjUtMi4xNi0xMi4xNC02LjQ3LTE2Ljk0Yy00LjMyLTQuNzktMTEuMzMtNy45Ni0yMS4wNC05LjUxbC0yNS44OS0zLjk0CgkJYy02LjE3LTAuOTMtMTEuOTEtMi40Ny0xNy4yMi00LjY0Yy01LjMyLTIuMTYtOS45NC01LjA2LTEzLjg3LTguN2MtMy45My0zLjYzLTcuMDEtNy45Ni05LjI1LTEyLjk5CgkJYy0yLjI0LTUuMDItMy4zNS0xMC43OS0zLjM1LTE3LjI4YzAtNi4xOCwxLjI3LTEyLjEsMy44MS0xNy43NWMyLjU0LTUuNjQsNi4wNS0xMC41NiwxMC41Mi0xNC43MwoJCWMxMS41Ni0xMC44MiwyNS44OS0xNi4yNCw0My0xNi4yNGM4LjAxLDAsMTUuNzYsMS4zMiwyMy4yNCwzLjk0YzcuNDcsMi42MywxMy45MSw2LjU4LDE5LjMsMTEuODMKCQljMTAuMDIsOS41OSwxNS4yNiwyMS4zNCwxNS43MiwzNS4yNmgtMjEuNWMtMC4zMS00LjAyLTEuMTYtNy44MS0yLjU0LTExLjM3Yy0xLjM5LTMuNTYtMy4yNC02LjY1LTUuNTUtOS4yOAoJCWMtMy4wOC0zLjU2LTcuMDUtNi4zNC0xMS45MS04LjM1Yy00Ljg2LTIuMDEtMTAuNTItMy4wMi0xNi45OS0zLjAyYy01Ljg2LDAtMTEuMjksMC44OS0xNi4zLDIuNjdjLTUuMDEsMS43OC05LjI5LDQuNjgtMTIuODMsOC43CgkJYy0yLjE2LDIuNDgtMy44Miw1LjE0LTQuOTcsOGMtMS4xNiwyLjg2LTEuNzMsNi4xNS0xLjczLDkuODZzMC42OSw2LjkyLDIuMDgsOS42M2MxLjM5LDIuNzEsMy4yNCw0Ljk5LDUuNTUsNi44NAoJCWMyLjMxLDEuODYsNC45MywzLjMzLDcuODYsNC40MWMyLjkzLDEuMDgsNS45MywxLjg2LDkuMDIsMi4zMmM0LjYyLDAuNjIsOS4yMSwxLjI4LDEzLjc1LDEuOTdjNC41NCwwLjcsOS4wNSwxLjQzLDEzLjUzLDIuMgoJCWMxMy43MiwyLjAxLDI0Ljc0LDcsMzMuMDYsMTQuOTZDODg4LjQzLDExMC40Myw4OTIuNTksMTIwLjk5LDg5Mi41OSwxMzQuMTN6Ii8+CjwvZz4KPHBhdGggY2xhc3M9InN0MSIgZD0iTTExMC4yMiwyMTIuOTEiLz4KPGc+Cgk8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjM1LjIxLDM0LjEzIDM1LjIxLDE1Ljg5IDM1LjIsMTUuODkgMzUuMiwxMi4xNSAxMy4yNywxMi4xNSAxMy4yNywzNC4xMyAxNC42NiwzNC4xMyAJIi8+Cgk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTQuMjMsMTIuMTV2My43NHYxOC4yNGgyMS45OHYxOS4wMkg1NC4yM3YyMS45SDM1LjIxdi0yMS45SDE0LjY2aC0xLjM5djI0Mi40NmgyODMuNDZWMTIuMTVINTQuMjN6CgkJIE0yNjMsOTUuODR2MTgyLjMxaC0xMy45OXYtODUuMzdoLTU5LjYzdjg1LjM3aC0xMy45OVYxNTYuNGgtMC4wOHYtMS45OGMtMjEuOTMsMTAuMjItMzQuNjgsMzIuMzYtNDcuOTIsNTUuMzcKCQljLTkuNDQsMTYuNDEtMTkuMjEsMzMuMzgtMzIuNTcsNDUuOTFjLTE0LjM3LDEzLjQ4LTMxLjExLDIwLjA4LTUxLjAzLDIwLjA4Yy0xLjcyLDAtMy40Ny0wLjA1LTUuMjQtMC4xNWwwLjgzLTE0Ljk4CgkJYzQwLjE1LDIuMjIsNTYuMjktMjUuODQsNzUtNTguMzVjMTQuNjQtMjUuNDQsMzAuNzItNTMuMzgsNjAuOTItNjQuMThWOTUuODRIMTY0LjdsNTIuOTItNTcuMjRsNTIuOTIsNTcuMjRIMjYzeiIvPgoJPHBvbHlnb24gY2xhc3M9InN0MCIgcG9pbnRzPSIxODkuMzgsMTgyLjk3IDI0OS4wMSwxODIuOTcgMjQ5LjAxLDE1Ny41OCAxODkuMzgsMTU2Ljg3IAkiLz4KPC9nPgo8L3N2Zz4K" alt="SVSS" style="height:38px;width:auto;object-fit:contain">
+  </div>
+  </div>
+  <div class="nav-links">
+    <a id="nav-home" class="active" onclick="showPage('home')">Home</a>
+    <a id="nav-mitglieder" onclick="showPage('mitglieder')">Mitglieder</a>
+    <a id="nav-news" onclick="showPage('home');setTimeout(()=>document.getElementById('news-anchor').scrollIntoView({behavior:'smooth'}),100)">Aktuelles</a>
+    <a id="nav-beitreten" onclick="showPage('home');setTimeout(()=>document.getElementById('anmeldung-anchor').scrollIntoView({behavior:'smooth'}),100)">Beitreten</a>
+    <a id="nav-portal" onclick="openPortal()" style="display:none;align-items:center;gap:6px">Mein Portal</a>
+    <a class="nav-cta" id="nav-login-btn" onclick="openLoginModal()">Mitglieder-Login</a>
+  </div>
+</nav>
+
+<!-- ══════════════ HOME PAGE ══════════════ -->
+<div id="page-home" class="page active">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-pattern"></div>
+    <div class="hero-left">
+      <div class="hero-eyebrow">Schweizerische Vereinigung</div>
+      <h1 id="site-hero-title">Sichere Spielpl&auml;tze.<br><em>F&uuml;r alle Kinder.</em></h1>
+      <p class="hero-lead" id="site-hero-lead">Die SVSS vereint Fachpersonen, die sich f&uuml;r sichere, kindgerechte und qualitativ hochwertige Spiel- und Freizeitanlagen in der ganzen Schweiz einsetzen.</p>
+      <div class="hero-actions">
+        <button class="btn-primary" id="site-hero-btn" onclick="showPage('mitglieder')">Fachperson finden &#8594;</button>
+        <span class="btn-ghost" onclick="document.getElementById('ziele-anchor').scrollIntoView({behavior:'smooth'})">&#220;ber die SVSS &#8594;</span>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-stats" id="site-hero-stats">
+        <div class="stat-card"><div class="stat-num">52</div><div class="stat-label">Mitgliedfirmen schweizweit</div></div>
+        <div class="stat-card accent"><div class="stat-num">26</div><div class="stat-label">Kantone abgedeckt</div></div>
+        <div class="stat-card"><div class="stat-num">EN</div><div class="stat-label">1176 / 1177 zertifiziert</div></div>
+        <div class="stat-card"><div class="stat-num">15+</div><div class="stat-label">Jahre Verbandsarbeit</div></div>
+        <div class="stat-card wide"><div class="stat-num">&laquo;Sicherheit ist kein Zufall &ndash; sie ist unsere Leidenschaft.&raquo;</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHOTO STRIP -->
+  <div class="photo-strip" id="site-photo-strip">
+    <div style="background-image:url('https://images.unsplash.com/photo-1576502200916-3808e07386a5?w=600&q=80')"></div>
+    <div style="background-image:url('https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=600&q=80')"></div>
+    <div style="background-image:url('https://images.unsplash.com/photo-1575783970733-1aaedde1db74?w=600&q=80')"></div>
+    <div style="background-image:url('https://images.unsplash.com/photo-1551966775-a4ddc8df052b?w=600&q=80')"></div>
+  </div>
+
+  <!-- IMPRESSIONEN -->
+  <section class="impressions-section">
+    <div class="impressions-grid">
+      <div class="span2 row2" style="background-image:url('https://images.unsplash.com/photo-1575783970733-1aaedde1db74?w=900&q=85')"></div>
+      <div class="span2" style="background-image:url('https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=600&q=85')"></div>
+      <div class="span2" style="background-image:url('https://images.unsplash.com/photo-1560969184-10fe8719e047?w=600&q=85')"></div>
+      <div class="span3" style="background-image:url('https://images.unsplash.com/photo-1518611012118-696072aa579a?w=900&q=85')"></div>
+      <div style="background-image:url('https://images.unsplash.com/photo-1526391072176-97a45c320a36?w=400&q=85')"></div>
+    </div>
+  </section>
+
+  <!-- LOGIN BAR — dynamisch -->
+  <div class="login-bar" id="login-bar-guest">
+    <p>Sind Sie SVSS-Mitglied? Zugang zu internen Dokumenten, Events und Ihrem Firmenprofil.</p>
+    <a onclick="openLoginModal()">Mitglieder-Login &#8594;</a>
+  </div>
+  <div class="login-bar" id="login-bar-member" style="display:none">
+    <p>Angemeldet als <strong id="bar-username" style="color:#fff"></strong> &nbsp;&middot;&nbsp; <span id="bar-company" style="color:rgba(255,255,255,.75)"></span></p>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="lbtn" onclick="openPortal()">Mein Portal &#8594;</button>
+      <button class="lbtn lbtn-out" onclick="doLogout()">Abmelden</button>
+    </div>
+  </div>
+
+  <!-- ZIELE -->
+  <section class="ziele-bg" id="ziele-anchor">
+    <div class="section-label">&#220;ber die SVSS</div>
+    <h2 class="section-title" id="site-ziele-title">Unser Zweck &amp; <em>unsere Ziele</em></h2>
+    <p class="section-lead" id="site-ziele-lead">Die SVSS sieht sich als Fachvereinigung, die zusammen mit ihren Mitgliedern das Thema Spielwert, Gestaltung, &#214;kologie, Bauweise und Inspektion unter dem Aspekt der erforderlichen Sicherheit behandelt.</p>
+    <div class="ziele-grid">
+      <div>
+        <div class="section-label" style="margin-bottom:1rem">Vorstand</div>
+        <div id="site-vorstand-list">
+        <div class="vorstand-card"><div class="vorstand-avatar av-1">AH</div><div class="vorstand-role">Pr&#228;sident</div><div class="vorstand-name">Andreas Hochstrasser</div><div class="vorstand-firma">Spielplatz Zone AG</div><a href="http://spielplatzzone.ch" target="_blank">spielplatzzone.ch</a></div>
+        <div class="vorstand-card"><div class="vorstand-avatar av-2">TG</div><div class="vorstand-role">Vorstandsmitglied</div><div class="vorstand-name">Thomas Gerster</div><div class="vorstand-firma">GTSM Magglinen AG</div><a href="http://gtsm.ch" target="_blank">gtsm.ch</a></div>
+        <div class="vorstand-card"><div class="vorstand-avatar av-3">YB</div><div class="vorstand-role">Vorstandsmitglied</div><div class="vorstand-name">Yvonne Bindbeutel</div><div class="vorstand-firma">Spielklusion</div><a href="http://spielklusion.com" target="_blank">spielklusion.com</a></div>
+        <div class="vorstand-card"><div class="vorstand-avatar av-4">RB</div><div class="vorstand-role">Web &amp; Social Media</div><div class="vorstand-name">Raphael von B&uuml;ren</div><div class="vorstand-firma">PSP &ndash; Spielplatzsicherheit</div><a href="http://psp.live" target="_blank">psp.live</a></div>
+      </div></div>
+      <div class="ziele-items" id="site-ziele-items">
+        <div class="ziele-item"><div class="ziele-num">01</div><div><h3>Sicherheitsniveau garantieren</h3><p>Ein geeignetes und bed&uuml;rfnisgerechtes Sicherheitsniveau f&uuml;r Spielplatz- und Freizeitanlagen in der ganzen Schweiz garantieren und kontinuierlich weiterentwickeln.</p></div></div>
+        <div class="ziele-item"><div class="ziele-num">02</div><div><h3>Wissen aufbauen &amp; erhalten</h3><p>Schulungen, Fachgespr&auml;che und Publikationen, um das Fachwissen der Spielplatzpr&uuml;fer auf einem adäquaten Stand zu bringen und dauerhaft zu sichern.</p></div></div>
+        <div class="ziele-item"><div class="ziele-num">03</div><div><h3>Normen &amp; Standards vertreten</h3><p>Abst&uuml;tzung auf EN 1176 / EN 1177, gesetzliche Vorgaben und Unfallstatistiken. Bildung von Arbeitsgruppen zu aktuellen Themen der Spielplatzsicherheit.</p></div></div>
+        <div class="ziele-item"><div class="ziele-num">04</div><div><h3>Ganzheitliche Betrachtung</h3><p>Spielwert, Gestaltung, &#214;kologie, Bauweise, Entwicklungsstufen und Inklusion stets unter dem Aspekt der erforderlichen Sicherheit f&uuml;r alle Kinder.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MITGLIEDER VORSCHAU -->
+  <section class="member-preview-section">
+    <div class="section-label">Unser Netzwerk</div>
+    <h2 class="section-title">52 Fachfirmen in <em>der ganzen Schweiz</em></h2>
+    <p class="section-lead">Von der Inspektion &uuml;ber Planung und Bau bis zur Wartung &mdash; alle SVSS-Mitglieder sind zertifizierte Fachpersonen.</p>
+    <div class="member-preview-grid" id="preview-grid"></div>
+    <div class="preview-footer">
+      <button class="view-all-btn" onclick="showPage('mitglieder')">Alle 52 Mitglieder anzeigen &#8594;</button>
+      <span class="member-count-label">inkl. Filter nach T&auml;tigkeitsbereich und Suche</span>
+    </div>
+  </section>
+
+  <!-- NEWS -->
+  <section id="news-anchor">
+    <div class="section-label">Aktuelles</div>
+    <h2 class="section-title">News &amp; <em>Veranstaltungen</em></h2>
+    <div class="news-grid">
+      <div>
+        <div id="site-news-list"><div class="news-item"><div><div class="news-day">08</div><div class="news-month">Apr</div></div><div><div class="news-cat">Normen</div><div class="news-title">Neue Normenrevision EN 1176 tritt ab 2027 in Kraft</div><div class="news-excerpt">Der Vorstand informiert: Die &uuml;berarbeitete EN 1176 tritt per Januar 2027 in Kraft. Details werden an der Jahresversammlung im Mai vorgestellt.</div></div></div>
+        <div class="news-item"><div><div class="news-day">15</div><div class="news-month">Mrz</div></div><div><div class="news-cat">Mitglieder</div><div class="news-title">Willkommen: 3 neue Mitgliedsfirmen</div><div class="news-excerpt">Die SVSS w&auml;chst weiter: Drei neue Fachfirmen sind dem Verband beigetreten und ab sofort im Mitgliederverzeichnis sichtbar.</div></div></div>
+        <div class="news-item"><div><div class="news-day">10</div><div class="news-month">Feb</div></div><div><div class="news-cat">Weiterbildung</div><div class="news-title">Kurs &laquo;Operative Inspektion&raquo; &mdash; Anmeldung offen</div><div class="news-excerpt">Der Kurs zur operativen Inspektion nach EN 1176 wird am 3. Juni online durchgef&uuml;hrt. F&uuml;r Mitglieder kostenlos.</div></div></div>
+        <div class="news-item"><div><div class="news-day">02</div><div class="news-month">Feb</div></div><div><div class="news-cat">Verband</div><div class="news-title">Mitgliederbeitr&auml;ge 2026 &mdash; Rechnungen versandt</div><div class="news-excerpt">Die Jahresrechnungen wurden per E-Mail und Post versandt. Zahlungsfrist: 28. Februar 2026.</div></div></div>
+      </div></div>
+      <div>
+        <div class="events-card">
+          <div class="events-card-title">N&auml;chste Veranstaltungen</div>
+          <div class="ev-item"><div><div class="ev-day">12</div><div class="ev-mo">Mai</div></div><div><div class="ev-title">Jahresversammlung 2026</div><div class="ev-loc">Bern, Kornhauskeller</div></div></div>
+          <div class="ev-item"><div><div class="ev-day">03</div><div class="ev-mo">Jun</div></div><div><div class="ev-title">Weiterbildung EN 1176 (online)</div><div class="ev-loc">Zoom &middot; 13:30&ndash;17:00</div></div></div>
+          <div class="ev-item"><div><div class="ev-day">18</div><div class="ev-mo">Sep</div></div><div><div class="ev-title">Fachtagung Spielplatzsicherheit</div><div class="ev-loc">Luzern, Hotel Seegarten</div></div></div>
+        </div>
+        <div class="wb-card"><h4>Kurs: Operative Inspektion</h4><div class="wb-date">03. Juni 2026 &middot; Online</div><p>Grundlagen der Spielplatzinspektion nach EN 1176. F&uuml;r Mitglieder kostenlos, Externe CHF 190.&ndash;</p><button class="btn-sm-green" onclick="showPage('home');setTimeout(()=>document.getElementById('anmeldung-anchor').scrollIntoView({behavior:'smooth'}),100)">Jetzt anmelden</button></div>
+        <div class="wb-card" style="margin-top:10px"><h4>Kurs: Inklusive Spielraumgestaltung</h4><div class="wb-date">22. Oktober 2026 &middot; Bern</div><p>Gestaltung barrierefreier Spielanlagen f&uuml;r alle Kinder.</p><button class="btn-sm-green btn-sm-outline">Mehr erfahren</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANMELDUNG — dynamisch -->
+  <section style="background:var(--sand)" id="anmeldung-anchor">
+    <div class="section-label">Mitglied werden</div>
+    <h2 class="section-title">Werden Sie Teil <em>unseres Netzwerks</em></h2>
+
+    <!-- Eingeloggt-Ansicht -->
+    <div id="anmeldung-loggedin" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center">
+        <div>
+          <p style="font-size:1.05rem;color:var(--text-soft);line-height:1.75;font-weight:300;margin-bottom:1.5rem">Sie sind als SVSS-Mitglied angemeldet. Verwalten Sie Ihr Firmenprofil, laden Sie Bilder hoch und bearbeiten Sie Ihre Inhalte direkt im Mitgliederportal.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1.5rem">
+            <button onclick="openPortal()" style="background:var(--green-dark);color:#fff;padding:12px 28px;border-radius:var(--radius);font-size:14px;font-weight:500;border:none;cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--green-mid)'" onmouseout="this.style.background='var(--green-dark)'">Mein Portal &ouml;ffnen &#8594;</button>
+            <button onclick="doLogout()" style="background:transparent;color:var(--text-soft);padding:12px 20px;border-radius:var(--radius);font-size:14px;border:1px solid var(--sand-dark);cursor:pointer">Abmelden</button>
+          </div>
+          <div style="padding:1.25rem;background:var(--green-light);border-radius:var(--radius-lg);border:1px solid var(--green-pale)"><p style="font-size:13px;color:var(--text-soft);line-height:1.65;font-weight:300"><strong style="font-weight:500;color:var(--text)">Statuten &amp; Dokumente</strong><br><a href="https://shop3.webschmied.ch/mt-content/uploads/2026/01/statuten_svss.pdf" target="_blank" style="color:var(--green-mid)">Statuten herunterladen</a> &middot; <a href="https://shop3.webschmied.ch/mt-content/uploads/2026/01/handelsregisterauszug_svss.pdf" target="_blank" style="color:var(--green-mid)">Handelsregisterauszug</a></p></div>
+        </div>
+        <div class="portal-card">
+          <div class="portal-card-title">Ihr Mitgliederbereich</div>
+          <div class="portal-link" onclick="openPortal()"><span>&#128100;</span> Mein Profil bearbeiten</div>
+          <div class="portal-link" onclick="openPortal()"><span>&#128221;</span> Inhalte bearbeiten</div>
+          <div class="portal-link" onclick="openPortal()"><span>&#128247;</span> Bilder hochladen</div>
+          <div class="portal-link" onclick="openPortal()"><span>&#128065;</span> Profilvorschau</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gast-Ansicht (Standard) -->
+    <div id="anmeldung-guest">
+      <div class="anmeldung-grid">
+        <div>
+          <p class="section-lead" style="margin-bottom:2rem">Als SVSS-Mitglied profitieren Sie von Fachwissen, Netzwerk, Weiterbildungen und einem kostenlosen Inserat im Mitgliederverzeichnis.</p>
+          <div class="tier"><div><div class="tier-name">Einzelmitglied</div><div class="tier-desc">F&uuml;r selbst&auml;ndige Fachpersonen</div></div><div style="text-align:right"><div class="tier-price">150.&ndash;</div><div class="tier-period">CHF / Jahr</div></div></div>
+          <div class="tier featured"><div><div class="tier-name">Firmenmitglied</div><div class="tier-desc">F&uuml;r KMU &mdash; inkl. Verzeichniseintrag</div></div><div style="text-align:right"><div class="tier-price">350.&ndash;</div><div class="tier-period">CHF / Jahr</div></div></div>
+          <div class="tier"><div><div class="tier-name">F&ouml;rdermitglied</div><div class="tier-desc">Gemeinden, Schulen, Verb&auml;nde</div></div><div style="text-align:right"><div class="tier-price">200.&ndash;</div><div class="tier-period">CHF / Jahr</div></div></div>
+          <div style="margin-top:1.5rem;padding:1.25rem;background:var(--green-light);border-radius:var(--radius-lg);border:1px solid var(--green-pale)"><p style="font-size:13px;color:var(--text-soft);line-height:1.65;font-weight:300"><strong style="font-weight:500;color:var(--text)">Statuten &amp; Dokumente</strong><br><a href="https://shop3.webschmied.ch/mt-content/uploads/2026/01/statuten_svss.pdf" target="_blank" style="color:var(--green-mid)">Statuten herunterladen</a> &middot; <a href="https://shop3.webschmied.ch/mt-content/uploads/2026/01/handelsregisterauszug_svss.pdf" target="_blank" style="color:var(--green-mid)">Handelsregisterauszug</a></p></div>
+        </div>
+        <div>
+          <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:1.5rem">Kontakt / Beitrittsanfrage</div>
+          <div class="form-row"><div class="fg"><label>Vorname</label><input type="text" placeholder="Anna"></div><div class="fg"><label>Nachname</label><input type="text" placeholder="M&uuml;ller"></div></div>
+          <div class="fg"><label>Firma</label><input type="text" placeholder="Muster AG"></div>
+          <div class="fg"><label>E-Mail</label><input type="email" placeholder="a.mueller@firma.ch"></div>
+          <div class="fg"><label>Anliegen</label><select><option>Firmenmitglied werden</option><option>Einzelmitglied werden</option><option>F&ouml;rdermitglied werden</option><option>Allgemeine Anfrage</option><option>Weiterbildung anfragen</option></select></div>
+          <div class="fg"><label>Nachricht</label><textarea rows="4" placeholder="Ihr Anliegen&hellip;"></textarea></div>
+          <button class="form-submit">Anfrage senden</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER HOME -->
+  <footer>
+    <div class="footer-grid">
+      <div><div class="footer-brand">SVSS</div><p class="footer-tagline">Schweizerische Vereinigung f&uuml;r die Sicherheit von Spielanlagen. Sicherheit ist kein Zufall &ndash; sie ist unsere Leidenschaft.</p></div>
+      <div><div class="footer-heading">Navigation</div><div class="footer-links"><a onclick="showPage('home')">Startseite</a><a onclick="showPage('mitglieder')">Mitgliederverzeichnis</a><a onclick="showPage('home');setTimeout(()=>document.getElementById('news-anchor').scrollIntoView({behavior:'smooth'}),100)">Aktuelles</a><a onclick="showPage('home');setTimeout(()=>document.getElementById('anmeldung-anchor').scrollIntoView({behavior:'smooth'}),100)">Mitglied werden</a></div></div>
+      <div><div class="footer-heading">Rechtliches</div><div class="footer-links"><a href="#">Impressum</a><a href="#">Datenschutz</a><a href="https://shop3.webschmied.ch/mt-content/uploads/2026/01/statuten_svss.pdf" target="_blank">Statuten</a><a href="https://shop3.webschmied.ch/mt-content/uploads/2026/01/handelsregisterauszug_svss.pdf" target="_blank">Handelsregister</a></div></div>
+      <div><div class="footer-heading">Kontakt</div><p>Richtistrasse 15<br>8304 Wallisellen<br>+41 44 877 61 66<br><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="85f6f3f6f6c5f6f5ece0e9f5e9e4f1fff6ece6ede0f7ede0ecf1a8f6e6edf2e0ecffabe6ed">[email&#160;protected]</a></p></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; 2026 SVSS &ndash; Schweizerische Vereinigung f&uuml;r Spielplatzsicherheit</span><span>spielplatzsicherheit-schweiz.ch</span></div>
+  </footer>
+</div>
+
+<!-- ══════════════ MEMBERS PAGE ══════════════ -->
+<div id="page-mitglieder" class="page">
+  <div class="members-hero">
+    <span class="members-hero-eyebrow">Schweizerische Vereinigung f&uuml;r Spielplatzsicherheit</span>
+    <h1>Unsere <em>Mitglieder</em></h1>
+    <p class="members-hero-lead">Zertifizierte Fachfirmen f&uuml;r Spielplatzsicherheit in der ganzen Schweiz &mdash; von der Inspektion &uuml;ber Planung und Bau bis zur Wartung.</p>
+    <div class="members-hero-stats">
+      <div><div class="mh-stat-num">52</div><div class="mh-stat-label">Mitgliedsfirmen</div></div>
+      <div><div class="mh-stat-num">26</div><div class="mh-stat-label">Kantone</div></div>
+      <div><div class="mh-stat-num">EN 1176</div><div class="mh-stat-label">Zertifiziert</div></div>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <div class="filter-inner">
+      <div class="search-wrap">
+        <svg class="s-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l3 3"/></svg>
+        <input type="text" id="msearch" placeholder="Firma suchen&hellip;" oninput="doFilter()">
+      </div>
+      <div class="pills">
+        <button class="pill on" onclick="setTag('',this)">Alle</button>
+        <button class="pill" onclick="setTag('Inspektion',this)">Inspektion</button>
+        <button class="pill" onclick="setTag('Prüfung',this)">Prüfung</button>
+        <button class="pill" onclick="setTag('Planung',this)">Planung</button>
+        <button class="pill" onclick="setTag('Produktion',this)">Produktion</button>
+        <button class="pill" onclick="setTag('Montage',this)">Montage</button>
+        <button class="pill" onclick="setTag('Unterhalt',this)">Unterhalt</button>
+        <button class="pill" onclick="setTag('Fallschutz',this)">Fallschutz</button>
+        <button class="pill" onclick="setTag('Schulung',this)">Schulung</button>
+      </div>
+    </div>
+  </div>
+  <div class="count-bar"><p id="mcount">52 Mitglieder</p></div>
+  <div class="grid-section">
+    <div class="members-grid" id="mgrid">
+      <div class="category-label">Spielplatzpr&uuml;fung &amp; Inspektion</div>
+      <div class="mc" data-uid="psp" data-tags="Inspektion,Prüfung,Schulung" onclick="openMemberProfile('psp','PSP - Spielplatzsicherheit')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://cdn.prod.website-files.com/67f92758c1ae09d703725f00/67ff5ea44756d842fa02e3ce_playsafepro_logo-rgb_xs-3.svg" alt="PSP" onerror="this.classList.add('errored')"><span class="fallback">PSP &ndash; Spielplatzsicherheit</span></div><div class="mc-body"><div class="mc-name">PSP &ndash; Spielplatzsicherheit</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Prüfung</span><span class="mc-tag">Schulung</span></div><div class="mc-loc">Kreuzlingen</div></div></div>
+      <div class="mc" data-tags="Inspektion,Prüfung" onclick="openMemberProfile('spielplatz-zone-ag','Spielplatz Zone AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/spielplatzzone.ch" alt="Spielplatz Zone AG" onerror="this.classList.add('errored')"><span class="fallback">Spielplatz Zone AG</span></div><div class="mc-body"><div class="mc-name">Spielplatz Zone AG</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Prüfung</span></div><div class="mc-loc">Buchs ZH</div></div></div>
+      <div class="mc" data-tags="Inspektion,Prüfung" onclick="openMemberProfile('giuadora-ag','giuadora AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://cdn.prod.website-files.com/67f92758c1ae09d703725f00/67f92c47b731b4bf4681d063_ce2153c7a91b2e80bfbc30b720498c0e_giuadora-logo.svg" alt="giuadora AG" onerror="this.classList.add('errored')"><span class="fallback">giuadora AG</span></div><div class="mc-body"><div class="mc-name">giuadora AG</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Prüfung</span></div><div class="mc-loc">Kreuzlingen</div></div></div>
+      <div class="mc" data-uid="creaplay" data-tags="Inspektion,Prüfung" onclick="openMemberProfile('creaplay','creaplay ag')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/creaplay.ch" alt="creaplay ag" onerror="this.classList.add('errored')"><span class="fallback">creaplay ag</span></div><div class="mc-body"><div class="mc-name">creaplay ag</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Prüfung</span></div><div class="mc-loc">Dagmersellen</div></div></div>
+      <div class="mc" data-uid="herzig" data-tags="Inspektion,Prüfung" onclick="openMemberProfile('herzig','HERZIG-Expertisen GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/herzig-expertisen.ch" alt="HERZIG" onerror="this.classList.add('errored')"><span class="fallback">HERZIG-Expertisen GmbH</span></div><div class="mc-body"><div class="mc-name">HERZIG-Expertisen GmbH</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Prüfung</span></div><div class="mc-loc">Madiswil</div></div></div>
+      <div class="mc" data-uid="spiko" data-tags="Inspektion,Prüfung" onclick="openMemberProfile('spiko','Spiko GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/spiko.ch" alt="Spiko" onerror="this.classList.add('errored')"><span class="fallback">Spiko GmbH</span></div><div class="mc-body"><div class="mc-name">Spiko GmbH</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Prüfung</span></div><div class="mc-loc">Pf&auml;ffikon</div></div></div>
+      <div class="mc" data-uid="spkswiss" data-tags="Inspektion,Prüfung,Schulung" onclick="openMemberProfile('spkswiss','SPK Swiss AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/spk-swiss.ch" alt="SPK Swiss AG" onerror="this.classList.add('errored')"><span class="fallback">SPK Swiss AG</span></div><div class="mc-body"><div class="mc-name">SPK Swiss AG</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Schulung</span></div><div class="mc-loc">Luzern</div></div></div>
+      <div class="mc" data-tags="Inspektion,Prüfung" onclick="openMemberProfile('qs-spielplatz-sicherheit-ag','QS Spielplatz Sicherheit AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/qs-spielplatz.ch" alt="QS" onerror="this.classList.add('errored')"><span class="fallback">QS Spielplatz Sicherheit AG</span></div><div class="mc-body"><div class="mc-name">QS Spielplatz Sicherheit AG</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Prüfung</span></div><div class="mc-loc">Rotkreuz</div></div></div>
+      <div class="mc" data-uid="checksafety" data-tags="Inspektion,Prüfung" onclick="openMemberProfile('checksafety','Check Safety SA')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/checksafety.ch" alt="Check Safety" onerror="this.classList.add('errored')"><span class="fallback">Check Safety SA</span></div><div class="mc-body"><div class="mc-name">Check Safety SA</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Prüfung</span></div><div class="mc-loc">Fribourg</div></div></div>
+      <div class="mc" data-tags="Inspektion,Prüfung" onclick="openMemberProfile('gep-gestion-etude-expertise-sa','GeP Gestion Etude Expertise SA')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/gep-sa.ch" alt="GeP SA" onerror="this.classList.add('errored')"><span class="fallback">GeP Gestion Etude Expertise SA</span></div><div class="mc-body"><div class="mc-name">GeP Gestion Etude Expertise SA</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Prüfung</span></div><div class="mc-loc">Le Mont-sur-Lausanne</div></div></div>
+      <div class="mc" data-tags="Inspektion,Prüfung,Schulung" onclick="openMemberProfile('swiss-safety-center-ag','Swiss Safety Center AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/swisssafetycenter.ch" alt="Swiss Safety Center" onerror="this.classList.add('errored')"><span class="fallback">Swiss Safety Center AG</span></div><div class="mc-body"><div class="mc-name">Swiss Safety Center AG</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Schulung</span></div><div class="mc-loc">Wallisellen</div></div></div>
+      <div class="mc" data-tags="Inspektion,Prüfung,Unterhalt" onclick="openMemberProfile('wipfli-spielplatz-unterhalt-gmbh','Wipfli Spielplatz-Unterhalt GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/wipfli-spielplatz.ch" alt="Wipfli" onerror="this.classList.add('errored')"><span class="fallback">Wipfli Spielplatz-Unterhalt GmbH</span></div><div class="mc-body"><div class="mc-name">Wipfli Spielplatz-Unterhalt GmbH</div><div class="mc-tags"><span class="mc-tag">Inspektion</span><span class="mc-tag">Unterhalt</span></div><div class="mc-loc">Z&uuml;rich</div></div></div>
+      <div class="category-label">Produktion &amp; Lieferung</div>
+      <div class="mc" data-uid="gtsm" data-tags="Produktion,Inspektion" onclick="openMemberProfile('gtsm','GTSM Magglingen')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/gtsm.ch" alt="GTSM" onerror="this.classList.add('errored')"><span class="fallback">GTSM Magglingen</span></div><div class="mc-body"><div class="mc-name">GTSM Magglingen</div><div class="mc-tags"><span class="mc-tag">Produktion</span><span class="mc-tag">Inspektion</span></div><div class="mc-loc">Magglingen</div></div></div>
+      <div class="mc" data-uid="eibe" data-tags="Produktion" onclick="openMemberProfile('eibe','eibe AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/eibe.ch" alt="eibe AG" onerror="this.classList.add('errored')"><span class="fallback">eibe AG</span></div><div class="mc-body"><div class="mc-name">eibe AG</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Wallisellen</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('b-rli-spiel--und-sportger-te-ag','Bürli Spiel- und Sportgeräte AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/buerli.ch" alt="B&uuml;rli" onerror="this.classList.add('errored')"><span class="fallback">B&uuml;rli Spiel- und Sportger&auml;te AG</span></div><div class="mc-body"><div class="mc-name">B&uuml;rli Spiel- und Sportger&auml;te AG</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">St. Erhard</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('kinderland-neeser-ag','Kinderland NEESER AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/kinderland-neeser.ch" alt="Kinderland" onerror="this.classList.add('errored')"><span class="fallback">Kinderland NEESER AG</span></div><div class="mc-body"><div class="mc-name">Kinderland NEESER AG</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Reiden</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('besag-ag','Besag AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/besag.ch" alt="Besag" onerror="this.classList.add('errored')"><span class="fallback">Besag AG</span></div><div class="mc-body"><div class="mc-name">Besag AG</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Dagmersellen</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('moveart-gmbh','moveART GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/moveart.ch" alt="moveART" onerror="this.classList.add('errored')"><span class="fallback">moveART GmbH</span></div><div class="mc-body"><div class="mc-name">moveART GmbH</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Zug</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('proxylon-sarl','PROXYLON SARL')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/proxylon.com" alt="PROXYLON" onerror="this.classList.add('errored')"><span class="fallback">PROXYLON SARL</span></div><div class="mc-body"><div class="mc-name">PROXYLON SARL</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Le Landeron</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('opt-ag','opt AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/opt-ag.ch" alt="opt AG" onerror="this.classList.add('errored')"><span class="fallback">opt AG</span></div><div class="mc-body"><div class="mc-name">opt AG</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Baar</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('fuchs-thun-ag','Fuchs Thun AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/fuchsthun.ch" alt="Fuchs Thun" onerror="this.classList.add('errored')"><span class="fallback">Fuchs Thun AG</span></div><div class="mc-body"><div class="mc-name">Fuchs Thun AG</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Thun</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('baumberger-hansj-rg-gmbh','Baumberger Hansjürg GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/baumberger-gmbh.ch" alt="Baumberger" onerror="this.classList.add('errored')"><span class="fallback">Baumberger Hansj&uuml;rg GmbH</span></div><div class="mc-body"><div class="mc-name">Baumberger Hansj&uuml;rg GmbH</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Wimmis</div></div></div>
+      <div class="mc" data-tags="Produktion,Montage" onclick="openMemberProfile('motors-nger-gmbh','motorsänger gmbh')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/motorsaenger.ch" alt="motors&auml;nger" onerror="this.classList.add('errored')"><span class="fallback">motors&auml;nger gmbh</span></div><div class="mc-body"><div class="mc-name">motors&auml;nger gmbh</div><div class="mc-tags"><span class="mc-tag">Produktion</span><span class="mc-tag">Montage</span></div><div class="mc-loc">M&auml;nnedorf</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('holzpur-ag','HOLZPUR AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/holzpur.ch" alt="HOLZPUR" onerror="this.classList.add('errored')"><span class="fallback">HOLZPUR AG</span></div><div class="mc-body"><div class="mc-name">HOLZPUR AG</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Neunkirch</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('kukuk-schweiz-gmbh','KuKuk Schweiz GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/kukuk.ch" alt="KuKuk" onerror="this.classList.add('errored')"><span class="fallback">KuKuk Schweiz GmbH</span></div><div class="mc-body"><div class="mc-name">KuKuk Schweiz GmbH</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Arlesheim</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('carve-anstalt','Carve Anstalt')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/carve.nl" alt="Carve" onerror="this.classList.add('errored')"><span class="fallback">Carve Anstalt</span></div><div class="mc-body"><div class="mc-name">Carve Anstalt</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Nendeln LI</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('rudolf-spielplatz-ag','Rudolf Spielplatz AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/rudolf-spielplatz.ch" alt="Rudolf" onerror="this.classList.add('errored')"><span class="fallback">Rudolf Spielplatz AG</span></div><div class="mc-body"><div class="mc-name">Rudolf Spielplatz AG</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Sommeri</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('spielgarten-gmbh','Spielgarten GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/spielgarten.ch" alt="Spielgarten" onerror="this.classList.add('errored')"><span class="fallback">Spielgarten GmbH</span></div><div class="mc-body"><div class="mc-name">Spielgarten GmbH</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">D&auml;gerlen</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('krummholz-gmbh','Krummholz GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/krummholz.ch" alt="Krummholz" onerror="this.classList.add('errored')"><span class="fallback">Krummholz GmbH</span></div><div class="mc-body"><div class="mc-name">Krummholz GmbH</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Bern</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('seilerei-berger-gmbh','Seilerei Berger GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/seilerei-berger.ch" alt="Seilerei Berger" onerror="this.classList.add('errored')"><span class="fallback">Seilerei Berger GmbH</span></div><div class="mc-body"><div class="mc-name">Seilerei Berger GmbH</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Laupersdorf</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('spiel-mit-raum-gmbh','spiel mit raum GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/spielmitraum.ch" alt="spiel mit raum" onerror="this.classList.add('errored')"><span class="fallback">spiel mit raum GmbH</span></div><div class="mc-body"><div class="mc-name">spiel mit raum GmbH</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Ossingen</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('oeko-handels-ag','Oeko-Handels AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/oeko-handels.ch" alt="Oeko-Handels" onerror="this.classList.add('errored')"><span class="fallback">Oeko-Handels AG</span></div><div class="mc-body"><div class="mc-name">Oeko-Handels AG</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Rickenbach</div></div></div>
+      <div class="mc" data-tags="Produktion,Planung" onclick="openMemberProfile('atelier-schelb-partner-ag','atelier schelb+partner ag')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/schelb-partner.ch" alt="atelier schelb" onerror="this.classList.add('errored')"><span class="fallback">atelier schelb+partner ag</span></div><div class="mc-body"><div class="mc-name">atelier schelb+partner ag</div><div class="mc-tags"><span class="mc-tag">Produktion</span><span class="mc-tag">Planung</span></div><div class="mc-loc">Winterthur</div></div></div>
+      <div class="category-label">Planung &amp; Gestaltung</div>
+      <div class="mc" data-uid="spielklusion" data-tags="Planung" onclick="openMemberProfile('spielklusion','Spielklusion')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/spielklusion.com" alt="Spielklusion" onerror="this.classList.add('errored')"><span class="fallback">Spielklusion</span></div><div class="mc-body"><div class="mc-name">Spielklusion</div><div class="mc-tags"><span class="mc-tag">Planung</span></div><div class="mc-loc">Oberarth</div></div></div>
+      <div class="mc" data-tags="Planung" onclick="openMemberProfile('spielraum','Spielraum')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/spielraum.ch" alt="Spielraum" onerror="this.classList.add('errored')"><span class="fallback">Spielraum</span></div><div class="mc-body"><div class="mc-name">Spielraum</div><div class="mc-tags"><span class="mc-tag">Planung</span></div><div class="mc-loc">Bern</div></div></div>
+      <div class="mc" data-tags="Planung" onclick="openMemberProfile('playground-design-gmbh','Playground design GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/playground-design.ch" alt="Playground design" onerror="this.classList.add('errored')"><span class="fallback">Playground design GmbH</span></div><div class="mc-body"><div class="mc-name">Playground design GmbH</div><div class="mc-tags"><span class="mc-tag">Planung</span></div><div class="mc-loc">M&ouml;nchaltdorf</div></div></div>
+      <div class="mc" data-tags="Planung,Montage" onclick="openMemberProfile('g-ldi-ag-garten--und-sportplatzbau','Göldi AG Garten- und Sportplatzbau')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/goeldi-ag.ch" alt="G&ouml;ldi AG" onerror="this.classList.add('errored')"><span class="fallback">G&ouml;ldi AG</span></div><div class="mc-body"><div class="mc-name">G&ouml;ldi AG Garten- und Sportplatzbau</div><div class="mc-tags"><span class="mc-tag">Planung</span><span class="mc-tag">Montage</span></div><div class="mc-loc">Winterthur</div></div></div>
+      <div class="category-label">Montage &amp; Gartenbau</div>
+      <div class="mc" data-tags="Montage" onclick="openMemberProfile('realsport-sa','Realsport SA')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/realsport.ch" alt="Realsport" onerror="this.classList.add('errored')"><span class="fallback">Realsport SA</span></div><div class="mc-body"><div class="mc-name">Realsport SA</div><div class="mc-tags"><span class="mc-tag">Montage</span></div><div class="mc-loc">Romandie</div></div></div>
+      <div class="mc" data-tags="Montage" onclick="openMemberProfile('zingg-gartengestaltung-ag','zingg gartengestaltung ag')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/zingg-gartengestaltung.ch" alt="zingg" onerror="this.classList.add('errored')"><span class="fallback">zingg gartengestaltung ag</span></div><div class="mc-body"><div class="mc-name">zingg gartengestaltung ag</div><div class="mc-tags"><span class="mc-tag">Montage</span></div><div class="mc-loc">Felsberg</div></div></div>
+      <div class="category-label">Fallschutzbeläge</div>
+      <div class="mc" data-tags="Fallschutz" onclick="openMemberProfile('fs-fallschutzbelag-ag','FS Fallschutzbelag AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/fs-fallschutz.ch" alt="FS Fallschutz" onerror="this.classList.add('errored')"><span class="fallback">FS Fallschutzbelag AG</span></div><div class="mc-body"><div class="mc-name">FS Fallschutzbelag AG</div><div class="mc-tags"><span class="mc-tag">Fallschutz</span></div><div class="mc-loc">Bern</div></div></div>
+      <div class="mc" data-tags="Fallschutz" onclick="openMemberProfile('gemfloor-ag','Gemfloor AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/gemfloor.ch" alt="Gemfloor" onerror="this.classList.add('errored')"><span class="fallback">Gemfloor AG</span></div><div class="mc-body"><div class="mc-name">Gemfloor AG</div><div class="mc-tags"><span class="mc-tag">Fallschutz</span></div><div class="mc-loc">Liebefeld</div></div></div>
+      <div class="mc" data-tags="Fallschutz" onclick="openMemberProfile('walo-bertschinger-ag','Walo Bertschinger AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/walo.ch" alt="Walo" onerror="this.classList.add('errored')"><span class="fallback">Walo Bertschinger AG</span></div><div class="mc-body"><div class="mc-name">Walo Bertschinger AG</div><div class="mc-tags"><span class="mc-tag">Fallschutz</span></div><div class="mc-loc">Dietikon</div></div></div>
+      <div class="mc" data-tags="Fallschutz" onclick="openMemberProfile('childsplay-gmbh','ChildsPlay GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/childsplay.ch" alt="ChildsPlay" onerror="this.classList.add('errored')"><span class="fallback">ChildsPlay GmbH</span></div><div class="mc-body"><div class="mc-name">ChildsPlay GmbH</div><div class="mc-tags"><span class="mc-tag">Fallschutz</span></div><div class="mc-loc">Knonau</div></div></div>
+      <div class="mc" data-tags="Fallschutz" onclick="openMemberProfile('ricoter-erdaufbereitung-ag','RICOTER Erdaufbereitung AG')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/ricoter.ch" alt="RICOTER" onerror="this.classList.add('errored')"><span class="fallback">RICOTER Erdaufbereitung AG</span></div><div class="mc-body"><div class="mc-name">RICOTER Erdaufbereitung AG</div><div class="mc-tags"><span class="mc-tag">Fallschutz</span></div><div class="mc-loc">Aarberg</div></div></div>
+      <div class="category-label">Unterhalt</div>
+      <div class="mc" data-tags="Unterhalt" onclick="openMemberProfile('ludocrea-ch-gmbh','LudoCrea.ch GmbH')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/ludocrea.ch" alt="LudoCrea" onerror="this.classList.add('errored')"><span class="fallback">LudoCrea.ch GmbH</span></div><div class="mc-body"><div class="mc-name">LudoCrea.ch GmbH</div><div class="mc-tags"><span class="mc-tag">Unterhalt</span></div><div class="mc-loc">Giswil</div></div></div>
+      <div class="mc" data-tags="Unterhalt,Produktion" onclick="openMemberProfile('zawa-sagl','Zawa Sagl')" style="cursor:pointer"><div class="mc-logo"><img referrerpolicy="no-referrer" src="https://logo.clearbit.com/zawa.ch" alt="Zawa" onerror="this.classList.add('errored')"><span class="fallback">Zawa Sagl</span></div><div class="mc-body"><div class="mc-name">Zawa Sagl</div><div class="mc-tags"><span class="mc-tag">Unterhalt</span><span class="mc-tag">Produktion</span></div><div class="mc-loc">Origlio</div></div></div>
+      <div class="category-label">St&auml;dte, Gemeinden &amp; weitere</div>
+      <div class="mc" data-tags="Inspektion" onclick="openMemberProfile('einwohnergemeinde-baar','Einwohnergemeinde Baar')" style="cursor:pointer"><div class="mc-logo"><span class="fallback" style="display:block;font-size:12px;text-align:center;color:var(--green-mid)">Gemeinde Baar</span></div><div class="mc-body"><div class="mc-name">Einwohnergemeinde Baar</div><div class="mc-tags"><span class="mc-tag">Inspektion</span></div><div class="mc-loc">Baar</div></div></div>
+      <div class="mc" data-tags="Inspektion" onclick="openMemberProfile('gemeindeverwaltung-birsfelden','Gemeindeverwaltung Birsfelden')" style="cursor:pointer"><div class="mc-logo"><span class="fallback" style="display:block;font-size:12px;text-align:center;color:var(--green-mid)">Gemeinde Birsfelden</span></div><div class="mc-body"><div class="mc-name">Gemeindeverwaltung Birsfelden</div><div class="mc-tags"><span class="mc-tag">Inspektion</span></div><div class="mc-loc">Birsfelden</div></div></div>
+      <div class="mc" data-tags="Inspektion" onclick="openMemberProfile('stadt-winterthur','Stadt Winterthur')" style="cursor:pointer"><div class="mc-logo"><span class="fallback" style="display:block;font-size:12px;text-align:center;color:var(--green-mid)">Stadt Winterthur</span></div><div class="mc-body"><div class="mc-name">Stadt Winterthur</div><div class="mc-tags"><span class="mc-tag">Inspektion</span></div><div class="mc-loc">Winterthur</div></div></div>
+      <div class="mc" data-tags="Schulung,Planung" onclick="openMemberProfile('gartenbauschule-oeschberg','Gartenbauschule OESCHBERG')" style="cursor:pointer"><div class="mc-logo"><span class="fallback" style="display:block;font-size:11px;text-align:center;color:var(--green-mid)">Gartenbauschule OESCHBERG</span></div><div class="mc-body"><div class="mc-name">Gartenbauschule OESCHBERG</div><div class="mc-tags"><span class="mc-tag">Schulung</span></div><div class="mc-loc">Koppigen</div></div></div>
+      <div class="mc" data-tags="Produktion" onclick="openMemberProfile('murimoos-werken-und-wohnen','Murimoos werken und wohnen')" style="cursor:pointer"><div class="mc-logo"><span class="fallback" style="display:block;font-size:12px;text-align:center;color:var(--green-mid)">Murimoos</span></div><div class="mc-body"><div class="mc-name">Murimoos werken und wohnen</div><div class="mc-tags"><span class="mc-tag">Produktion</span></div><div class="mc-loc">Murimoos</div></div></div>
+      <div class="no-results" id="mno" style="display:none">Keine Mitglieder gefunden.</div>
+    </div>
+  </div>
+  <footer>
+    <div class="footer-grid">
+      <div><div class="footer-brand">SVSS</div><p class="footer-tagline">Schweizerische Vereinigung f&uuml;r die Sicherheit von Spielanlagen.</p></div>
+      <div><div class="footer-heading">Navigation</div><div class="footer-links"><a onclick="showPage('home')">Startseite</a><a onclick="showPage('mitglieder')">Mitgliederverzeichnis</a><a onclick="showPage('home');setTimeout(()=>document.getElementById('news-anchor').scrollIntoView({behavior:'smooth'}),100)">Aktuelles</a></div></div>
+      <div><div class="footer-heading">Rechtliches</div><div class="footer-links"><a href="#">Impressum</a><a href="#">Datenschutz</a><a href="https://shop3.webschmied.ch/mt-content/uploads/2026/01/statuten_svss.pdf" target="_blank">Statuten</a></div></div>
+      <div><div class="footer-heading">Kontakt</div><p>Richtistrasse 15<br>8304 Wallisellen<br>+41 44 877 61 66</p></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; 2026 SVSS</span><span>spielplatzsicherheit-schweiz.ch</span></div>
+  </footer>
+</div>
+
+
+
+<!-- ══════════════ MEMBER PROFILE PAGE ══════════════ -->
+<div id="page-member" class="page">
+  <!-- Hero dynamisch befüllt -->
+  <div class="mp-hero" id="mp-hero">
+    <button class="mp-back" onclick="showPage('mitglieder')">&#8592; Zurück zum Verzeichnis</button>
+    <div id="mp-logo-wrap" class="mp-logo-wrap"><div class="mp-logo-initials" id="mp-initials">??</div></div>
+    <div class="mp-name" id="mp-name">Mitglied</div>
+    <div class="mp-tags" id="mp-tags"></div>
+    <div class="mp-contact-bar" id="mp-contact"></div>
+  </div>
+  <!-- Body dynamisch befüllt -->
+  <div class="mp-body" id="mp-body">
+    <div class="mp-empty">
+      <p style="color:var(--text-muted);font-size:14px">Profil wird geladen&#8230;</p>
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+
+// ═══════════════════════════════════════════════════════
+//  SUPABASE CLIENT (inline, kein NPM nötig)
+// ═══════════════════════════════════════════════════════
+const SUPA_URL = 'https://tcxpydpeqlymtwqwoxnc.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjeHB5ZHBlcWx5bXR3cXdveG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjcyOTIsImV4cCI6MjA5MTUwMzI5Mn0.XIjwKNxNhuP6e_uvxs_qFv0hhwtbEDqM0uXDfZ8yBTo';
+
+function supaHeaders(extra) {
+  return Object.assign({
+    'apikey': SUPA_KEY,
+    'Authorization': 'Bearer ' + SUPA_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  }, extra || {});
+}
+
+// Generic REST helpers
+async function supaSelect(table, query) {
+  const params = new URLSearchParams(query || {});
+  const r = await fetch(SUPA_URL + '/rest/v1/' + table + '?' + params, {
+    headers: supaHeaders({'Accept': 'application/json'})
+  });
+  if(!r.ok) throw new Error('supaSelect ' + table + ': ' + r.status);
+  return r.json();
+}
+
+async function supaUpsert(table, data) {
+  const r = await fetch(SUPA_URL + '/rest/v1/' + table, {
+    method: 'POST',
+    headers: supaHeaders({'Prefer': 'resolution=merge-duplicates,return=representation'}),
+    body: JSON.stringify(data)
+  });
+  if(!r.ok) {
+    const err = await r.text();
+    throw new Error('supaUpsert ' + table + ': ' + err);
+  }
+  return r.json();
+}
+
+async function supaDelete(table, uid) {
+  const r = await fetch(SUPA_URL + '/rest/v1/' + table + '?uid=eq.' + encodeURIComponent(uid), {
+    method: 'DELETE',
+    headers: supaHeaders()
+  });
+  if(!r.ok) throw new Error('supaDelete ' + table + ': ' + r.status);
+}
+
+// Storage upload
+async function supaUploadImage(path, base64Data, contentType) {
+  // base64Data = data:image/jpeg;base64,XXXX
+  const base64 = base64Data.split(',')[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+  const blob = new Blob([bytes], {type: contentType || 'image/jpeg'});
+
+  const r = await fetch(SUPA_URL + '/storage/v1/object/svss-images/' + path, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': contentType || 'image/jpeg',
+      'x-upsert': 'true'
+    },
+    body: blob
+  });
+  if(!r.ok) throw new Error('supaUpload: ' + r.status + ' ' + await r.text());
+  return SUPA_URL + '/storage/v1/object/public/svss-images/' + path;
+}
+
+// Upload any base64 image and get public URL
+async function supaUploadBase64(uid, filename, base64Data) {
+  const ext = base64Data.match(/data:image\/([^;]+)/)?.[1] || 'jpg';
+  const path = uid + '/' + Date.now() + '-' + filename.replace(/[^a-z0-9.-]/gi,'_') + '.' + ext;
+  const contentType = 'image/' + ext;
+  return supaUploadImage(path, base64Data, contentType);
+}
+
+// ─ MEMBERS ─
+async function supaGetMembers() {
+  const rows = await supaSelect('members', {});
+  const m = {};
+  rows.forEach(r => m[r.uid] = {pw: r.pw, display: r.display, role: r.role});
+  return m;
+}
+
+async function supaSaveMembers(members) {
+  const rows = Object.entries(members).map(([uid, m]) => ({uid, pw: m.pw, display: m.display, role: m.role}));
+  return supaUpsert('members', rows);
+}
+
+// ─ PROFILES ─
+async function supaGetProfile(uid) {
+  const rows = await supaSelect('profiles', {'uid': 'eq.' + uid});
+  return rows[0] || {};
+}
+
+async function supaGetProfiles() {
+  const rows = await supaSelect('profiles', {});
+  const p = {};
+  rows.forEach(r => { const {uid, updated_at, ...rest} = r; p[uid] = rest; });
+  return p;
+}
+
+async function supaSaveProfile(uid, data) {
+  // Upload any base64 images to Storage first
+  const toSave = Object.assign({}, data);
+
+  // Handle logo (may be base64 or URL)
+  if(toSave.logo && toSave.logo.startsWith('data:')) {
+    try { toSave.logo = await supaUploadBase64(uid, 'logo', toSave.logo); } catch(e) {}
+  }
+
+  return supaUpsert('profiles', Object.assign({uid}, toSave));
+}
+
+// ─ SITE CONTENT ─
+async function supaGetSiteContent() {
+  const rows = await supaSelect('site_content', {});
+  const c = {};
+  rows.forEach(r => c[r.key] = r.value);
+  return c;
+}
+
+async function supaGetSiteKey(key) {
+  const rows = await supaSelect('site_content', {'key': 'eq.' + key});
+  return rows[0] ? rows[0].value : null;
+}
+
+async function supaSaveSiteContent(updates) {
+  // updates = { hero: {...}, fotos: [...], ... }
+  // Upload any base64 images first
+  const processed = {};
+
+  for(const [key, val] of Object.entries(updates)) {
+    if(key === 'fotos' && Array.isArray(val)) {
+      const uploaded = [];
+      for(const item of val) {
+        if(item && item.src && item.src.startsWith('data:')) {
+          try {
+            const url = await supaUploadBase64('site', 'foto-' + uploaded.length, item.src);
+            uploaded.push({src: url, name: item.name || 'foto'});
+          } catch(e) { uploaded.push(item); }
+        } else { uploaded.push(item); }
+      }
+      processed[key] = uploaded;
+    } else if(key === 'vorstand' && Array.isArray(val)) {
+      const uploaded = [];
+      for(const [i, v] of val.entries()) {
+        if(v.photo && v.photo.startsWith('data:')) {
+          try {
+            const url = await supaUploadBase64('site', 'vorstand-' + i, v.photo);
+            uploaded.push(Object.assign({}, v, {photo: url}));
+          } catch(e) { uploaded.push(v); }
+        } else { uploaded.push(v); }
+      }
+      processed[key] = uploaded;
+    } else if(key === 'news' && Array.isArray(val)) {
+      const uploaded = [];
+      for(const [i, n] of val.entries()) {
+        if(n.img && n.img.startsWith('data:')) {
+          try {
+            const url = await supaUploadBase64('site', 'news-' + i, n.img);
+            uploaded.push(Object.assign({}, n, {img: url}));
+          } catch(e) { uploaded.push(n); }
+        } else { uploaded.push(n); }
+      }
+      processed[key] = uploaded;
+    } else {
+      processed[key] = val;
+    }
+  }
+
+  const rows = Object.entries(processed).map(([key, value]) => ({key, value}));
+  return supaUpsert('site_content', rows);
+}
+
+// ─ IMAGE POOL ─
+async function supaGetImagePool(uid) {
+  const rows = await supaSelect('image_pool', {'uid': 'eq.' + uid, 'order': 'created_at.desc'});
+  // Return with full public URLs
+  return rows.map(r => ({
+    src: r.storage_path.startsWith('http') ? r.storage_path : SUPA_URL + '/storage/v1/object/public/svss-images/' + r.storage_path,
+    name: r.name,
+    source: r.source,
+    id: r.id
+  }));
+}
+
+async function supaAddToImagePool(uid, base64Data, filename, source) {
+  const url = await supaUploadBase64(uid, filename, base64Data);
+  await supaUpsert('image_pool', [{uid, name: filename, source: source||'upload', storage_path: url, scope: 'profile'}]);
+  return url;
+}
+
+async function supaDeleteFromImagePool(id, storagePath) {
+  await fetch(SUPA_URL + '/rest/v1/image_pool?id=eq.' + id, {
+    method: 'DELETE', headers: supaHeaders()
+  });
+}
+
+// ─ SESSION (bleibt sessionStorage — ist ok) ─
+const SESSION_KEY = 'svss_session';
+function getSession(){
+  try{
+    const raw = localStorage.getItem(SESSION_KEY);
+    if(!raw) return null;
+    const s = JSON.parse(raw);
+    // Expire after 8 hours
+    if(s._ts && Date.now() - s._ts > 8*60*60*1000){ localStorage.removeItem(SESSION_KEY); return null; }
+    return s;
+  }catch{return null;}
+}
+function setSession(uid,display,role){ localStorage.setItem(SESSION_KEY, JSON.stringify({uid,display,role,_ts:Date.now()})); }
+function clearSession(){ localStorage.removeItem(SESSION_KEY); }
+
+// ── AUTH ──
+const SVSS_SESSION = 'svss_session';
+const SVSS_MEMBERS = 'svss_members';
+function getMembers(){try{return JSON.parse(localStorage.getItem(SVSS_MEMBERS))||{};}catch{return{};}}
+function getSession(){try{return JSON.parse(sessionStorage.getItem(SVSS_SESSION));}catch{return null;}}
+function setSession(uid,display,role){sessionStorage.setItem(SVSS_SESSION,JSON.stringify({uid,display,role}));}
+function clearSession(){sessionStorage.removeItem(SVSS_SESSION);}
+
+function seedMembers(){
+  if(localStorage.getItem(SVSS_MEMBERS))return;
+  const d={
+    admin:{pw:'svss2026admin',display:'SVSS Admin',role:'admin'},
+    psp:{pw:'psp2026',display:'PSP – Spielplatzsicherheit',role:'member'},
+    gtsm:{pw:'gtsm2026',display:'GTSM Magglingen',role:'member'},
+    spielklusion:{pw:'spiel2026',display:'Spielklusion',role:'member'},
+    eibe:{pw:'eibe2026',display:'eibe AG',role:'member'},
+    creaplay:{pw:'crea2026',display:'creaplay ag',role:'member'},
+    herzig:{pw:'herzig2026',display:'HERZIG-Expertisen GmbH',role:'member'},
+    spiko:{pw:'spiko2026',display:'Spiko GmbH',role:'member'},
+    spkswiss:{pw:'spk2026',display:'SPK Swiss AG',role:'member'},
+    checksafety:{pw:'check2026',display:'Check Safety SA',role:'member'}
+  };
+  localStorage.setItem(SVSS_MEMBERS,JSON.stringify(d));
+}
+
+// ── MODAL ──
+function openLoginModal(){
+  const m=document.getElementById('login-modal');
+  m.style.display='flex';
+  document.getElementById('modal-err').style.display='none';
+  document.getElementById('modal-user').value='';
+  document.getElementById('modal-pw').value='';
+  setTimeout(()=>document.getElementById('modal-user').focus(),50);
+}
+function closeLoginModal(){
+  document.getElementById('login-modal').style.display='none';
+}
+document.getElementById('login-modal').addEventListener('click',function(e){
+  if(e.target===this)closeLoginModal();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLoginModal();});
+
+// ── LOGIN / LOGOUT ──
+async function doLogin(){
+  const uid=document.getElementById('modal-user').value.trim().toLowerCase();
+  const pw=document.getElementById('modal-pw').value;
+  const btn=document.querySelector('#login-modal button[onclick="doLogin()"]');
+  if(btn){btn.textContent='Prüfe…';btn.disabled=true;}
+  try {
+    const members = await supaGetMembers();
+    // cache locally
+    localStorage.setItem('svss_members', JSON.stringify(members));
+    const member=members[uid];
+    if(!member||member.pw!==pw){
+      const err=document.getElementById('modal-err');
+      err.textContent='Benutzername oder Passwort falsch.';
+      err.style.display='block';
+      if(btn){btn.textContent='Anmelden \u2192';btn.disabled=false;}
+      return;
+    }
+    setSession(uid,member.display,member.role);
+    closeLoginModal();
+    applyAuthState();
+  } catch(e) {
+    // offline fallback
+    const members=getLocalMembers();
+    const member=members[uid];
+    if(!member||member.pw!==pw){
+      const err=document.getElementById('modal-err');
+      err.textContent='Benutzername oder Passwort falsch.';
+      err.style.display='block';
+    } else {
+      setSession(uid,member.display,member.role);
+      closeLoginModal();
+      applyAuthState();
+    }
+  }
+  if(btn){btn.textContent='Anmelden \u2192';btn.disabled=false;}
+}
+document.getElementById('modal-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('modal-user').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('modal-pw').focus();});
+
+function doLogout(){
+  clearSession();
+  applyAuthState();
+}
+function openPortal(){
+  window.open('svss-portal.html','_blank');
+}
+
+// ── AUTH STATE ──
+function applyAuthState(){
+  const s=getSession();
+  // Immer Modal schliessen
+  document.getElementById('login-modal').style.display='none';
+  // Login-Bar
+  document.getElementById('login-bar-guest').style.display  = s ? 'none' : 'flex';
+  document.getElementById('login-bar-member').style.display = s ? 'flex' : 'none';
+  // Anmeldesektion
+  document.getElementById('anmeldung-guest').style.display    = s ? 'none'  : 'block';
+  document.getElementById('anmeldung-loggedin').style.display = s ? 'block' : 'none';
+  // Nav
+  document.getElementById('nav-beitreten').style.display = s ? 'none' : 'flex';
+  const btn=document.getElementById('nav-login-btn');
+  const portalLink=document.getElementById('nav-portal');
+  if(s){
+    btn.textContent='Abmelden';
+    btn.onclick=doLogout;
+    document.getElementById('bar-username').textContent=s.uid;
+    document.getElementById('bar-company').textContent=s.display;
+    if(portalLink) portalLink.style.display='flex';
+  } else {
+    btn.textContent='Mitglieder-Login';
+    btn.onclick=openLoginModal;
+    if(portalLink) portalLink.style.display='none';
+  }
+}
+
+// ── PAGES ──
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  if(id !== 'member'){
+    const nav=document.getElementById('nav-'+id);
+    if(nav)nav.classList.add('active');
+  } else {
+    const nav=document.getElementById('nav-mitglieder');
+    if(nav)nav.classList.add('active');
+  }
+  // Refresh portal data every time Mitglieder page is shown
+  if(id === 'mitglieder') enrichMemberCards();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── MEMBER FILTER ──
+let activeTag='';
+function setTag(tag,el){
+  activeTag=tag;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  doFilter();
+}
+function doFilter(){
+  const q=(document.getElementById('msearch')?.value||'').toLowerCase();
+  const cards=document.querySelectorAll('#mgrid .mc');
+  let n=0;
+  cards.forEach(c=>{
+    const tags=c.dataset.tags||'';
+    const txt=c.innerText.toLowerCase();
+    const ok=(!activeTag||tags.includes(activeTag))&&(!q||txt.includes(q));
+    c.classList.toggle('hidden',!ok);
+    if(ok)n++;
+  });
+  const el=document.getElementById('mcount');
+  if(el)el.textContent=n+(n===1?' Mitglied':' Mitglieder');
+  const no=document.getElementById('mno');
+  if(no)no.style.display=n===0?'block':'none';
+}
+
+// ── LOGO FALLBACK ──
+function tryLogoFallback(img){
+  const srcs=JSON.parse(img.dataset.srcs||'[]');
+  let idx=parseInt(img.dataset.idx||'0')+1;
+  img.dataset.idx=idx;
+  if(idx<srcs.length){img.src=srcs[idx];}
+  else{img.classList.add('hidden');const fb=document.getElementById('svss-nav-fallback');if(fb)fb.style.display='block';}
+}
+
+// ── PREVIEW GRID ──
+const LOGO_SRCS=[
+  {src:'https://cdn.prod.website-files.com/67f92758c1ae09d703725f00/67ff5ea44756d842fa02e3ce_playsafepro_logo-rgb_xs-3.svg',name:'PSP',uid:'psp'},
+  {src:'https://logo.clearbit.com/spielplatzzone.ch',name:'Spielplatz Zone AG'},
+  {src:'https://logo.clearbit.com/creaplay.ch',name:'creaplay ag',uid:'creaplay'},
+  {src:'https://logo.clearbit.com/herzig-expertisen.ch',name:'HERZIG-Expertisen',uid:'herzig'},
+  {src:'https://logo.clearbit.com/spiko.ch',name:'Spiko GmbH',uid:'spiko'},
+  {src:'https://logo.clearbit.com/spk-swiss.ch',name:'SPK Swiss AG',uid:'spkswiss'},
+  {src:'https://logo.clearbit.com/qs-spielplatz.ch',name:'QS Spielplatz Sicherheit'},
+  {src:'https://logo.clearbit.com/checksafety.ch',name:'Check Safety SA',uid:'checksafety'},
+  {src:'https://logo.clearbit.com/gep-sa.ch',name:'GeP SA'},
+  {src:'https://logo.clearbit.com/swisssafetycenter.ch',name:'Swiss Safety Center'},
+  {src:'https://logo.clearbit.com/wipfli-spielplatz.ch',name:'Wipfli'},
+  {src:'https://logo.clearbit.com/gtsm.ch',name:'GTSM Magglingen',uid:'gtsm'},
+  {src:'https://logo.clearbit.com/eibe.ch',name:'eibe AG',uid:'eibe'},
+  {src:'https://logo.clearbit.com/buerli.ch',name:'Bürli AG'},
+  {src:'https://logo.clearbit.com/kinderland-neeser.ch',name:'Kinderland NEESER'},
+  {src:'https://logo.clearbit.com/besag.ch',name:'Besag AG'},
+  {src:'https://logo.clearbit.com/moveart.ch',name:'moveART GmbH'},
+  {src:'https://logo.clearbit.com/proxylon.com',name:'PROXYLON SARL'},
+  {src:'https://logo.clearbit.com/opt-ag.ch',name:'opt AG'},
+  {src:'https://logo.clearbit.com/fuchsthun.ch',name:'Fuchs Thun AG'},
+  {src:'https://logo.clearbit.com/holzpur.ch',name:'HOLZPUR AG'},
+  {src:'https://logo.clearbit.com/kukuk.ch',name:'KuKuk Schweiz'},
+  {src:'https://logo.clearbit.com/carve.nl',name:'Carve Anstalt'},
+  {src:'https://logo.clearbit.com/rudolf-spielplatz.ch',name:'Rudolf Spielplatz'},
+  {src:'https://logo.clearbit.com/spielgarten.ch',name:'Spielgarten GmbH'},
+  {src:'https://logo.clearbit.com/krummholz.ch',name:'Krummholz GmbH'},
+  {src:'https://logo.clearbit.com/spielmitraum.ch',name:'spiel mit raum'},
+  {src:'https://logo.clearbit.com/spielklusion.com',name:'Spielklusion',uid:'spielklusion'},
+  {src:'https://logo.clearbit.com/spielraum.ch',name:'Spielraum'},
+  {src:'https://logo.clearbit.com/playground-design.ch',name:'Playground design'},
+  {src:'https://logo.clearbit.com/goeldi-ag.ch',name:'Göldi AG'},
+  {src:'https://logo.clearbit.com/realsport.ch',name:'Realsport SA'},
+  {src:'https://logo.clearbit.com/fs-fallschutz.ch',name:'FS Fallschutzbelag'},
+  {src:'https://logo.clearbit.com/gemfloor.ch',name:'Gemfloor AG'},
+  {src:'https://logo.clearbit.com/walo.ch',name:'Walo Bertschinger'},
+  {src:'https://logo.clearbit.com/ludocrea.ch',name:'LudoCrea.ch'},
+  {src:'https://logo.clearbit.com/zawa.ch',name:'Zawa Sagl'},
+];
+function buildPreviewGrid(){
+  const grid=document.getElementById('preview-grid');
+  if(!grid)return;
+  LOGO_SRCS.forEach(function(m){
+    const tile=document.createElement('div');
+    tile.className='member-logo-tile';
+    tile.title=m.name;
+    tile.dataset.uid = m.uid || '';
+    tile.onclick=function(){showPage('mitglieder');};
+    const img=document.createElement('img');
+    img.src=m.src;img.alt=m.name;
+    img.onerror=function(){this.classList.add('errored');};
+    const fb=document.createElement('span');
+    fb.className='tile-fallback';fb.textContent=m.name;
+    tile.appendChild(img);tile.appendChild(fb);
+    grid.appendChild(tile);
+  });
+}
+
+
+// ── MEMBER PROFILE ──
+// IndexedDB reader (same DB as portal)
+const MP_DB_NAME  = 'svss_images_db';
+const MP_DB_STORE = 'images';
+let _mpDb = null;
+
+function mpOpenDB(){
+  return new Promise((res, rej) => {
+    if(_mpDb){ res(_mpDb); return; }
+    const req = indexedDB.open(MP_DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      if(!e.target.result.objectStoreNames.contains(MP_DB_STORE))
+        e.target.result.createObjectStore(MP_DB_STORE);
+    };
+    req.onsuccess = e => { _mpDb = e.target.result; res(_mpDb); };
+    req.onerror   = e => rej(e.target.error);
+  });
+}
+function mpGetImages(uid){
+  return mpOpenDB().then(db => new Promise((res, rej) => {
+    const tx  = db.transaction(MP_DB_STORE, 'readonly');
+    const req = tx.objectStore(MP_DB_STORE).get('img_' + uid);
+    req.onsuccess = e => res(e.target.result || []);
+    req.onerror   = e => rej(e.target.error);
+  }));
+}
+
+// Read profile from localStorage (same key as portal)
+function mpGetProfile(uid){
+  try {
+    const profiles = JSON.parse(localStorage.getItem('svss_profiles')) || {};
+    return profiles[uid] || null;
+  } catch { return null; }
+}
+
+// Open member profile page
+function openMemberProfile(uid, fallbackName){
+  showPage('member');
+  renderMemberProfile(uid, fallbackName);
+}
+
+function renderMemberProfile(uid, fallbackName){
+  const body = document.getElementById('mp-body');
+  body.innerHTML = '<div class="mp-empty"><p>Profil wird geladen&#8230;</p></div>';
+
+  const p = mpGetProfile(uid);
+
+  // Build hero
+  const name = (p && p.name) ? p.name : fallbackName;
+  document.getElementById('mp-name').textContent = name;
+
+  // Edit button for own profile (logged-in members)
+  const existingEdit = document.getElementById('mp-edit-btn');
+  if(existingEdit) existingEdit.remove();
+  const session = getSession();
+  if(session && session.uid === uid){
+    const editBtn = document.createElement('a');
+    editBtn.id = 'mp-edit-btn';
+    editBtn.href = 'svss-portal.html';
+    editBtn.target = '_blank';
+    editBtn.textContent = '✏ Profil bearbeiten';
+    editBtn.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:rgba(255,255,255,.8);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:6px 14px;border-radius:var(--radius);text-decoration:none;margin-bottom:1.25rem;transition:background .15s;position:absolute;top:1.25rem;right:2rem';
+    document.getElementById('mp-hero').appendChild(editBtn);
+  }
+  document.getElementById('mp-initials').textContent = name.substring(0,2).toUpperCase();
+
+  // Logo
+  const logoWrap = document.getElementById('mp-logo-wrap');
+  if(p && p.logo){
+    const _img = document.createElement('img');
+    _img.src = p.logo; _img.alt = name;
+    _img.style.cssText = 'max-width:100%;max-height:76px;object-fit:contain';
+    _img.onerror = function(){ this.style.display='none'; if(this.nextSibling) this.nextSibling.style.display='block'; };
+    const _fb = document.createElement('div');
+    _fb.className = 'mp-logo-initials'; _fb.style.display = 'none';
+    _fb.textContent = name.substring(0,2).toUpperCase();
+    logoWrap.innerHTML = ''; logoWrap.appendChild(_img); logoWrap.appendChild(_fb);
+  } else {
+    logoWrap.innerHTML = '<div class="mp-logo-initials">' + name.substring(0,2).toUpperCase() + '</div>';
+  }
+
+  // Tags
+  const tags = (p && p.tags) ? p.tags : [];
+  document.getElementById('mp-tags').innerHTML = tags.map(t => '<span class="mp-tag">' + t + '</span>').join('');
+
+  // Contact bar
+  const contactItems = [];
+  if(p && p.phone) contactItems.push(p.phone);
+  if(p && p.email) contactItems.push('<a href="mailto:' + p.email + '">' + p.email + '</a>');
+  if(p && p.web){
+    const url = p.web.startsWith('http') ? p.web : 'https://' + p.web;
+    contactItems.push('<a href="' + url + '" target="_blank">' + p.web + '</a>');
+  }
+  if(p && p.address){
+    const fullAddr = [p.address, [p.plz, p.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    if(fullAddr) contactItems.push(fullAddr);
+  }
+  document.getElementById('mp-contact').innerHTML = contactItems.join(' &nbsp;&middot;&nbsp; ');
+
+  // Load images async, then build body
+  mpGetImages(uid).then(function(images){
+    buildMemberBody(uid, p, images, name);
+  }).catch(function(){
+    buildMemberBody(uid, p, [], name);
+  });
+}
+
+// Static fallback gallery images per member (Unsplash, free to use)
+const MEMBER_FALLBACK_IMAGES = {"psp": ["https://images.unsplash.com/photo-1575783970733-1aaedde1db74?w=600&q=80", "https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=600&q=80", "https://images.unsplash.com/photo-1560969184-10fe8719e047?w=600&q=80"], "gtsm": ["https://images.unsplash.com/photo-1518611012118-696072aa579a?w=600&q=80", "https://images.unsplash.com/photo-1526391072176-97a45c320a36?w=600&q=80", "https://images.unsplash.com/photo-1551966775-a4ddc8df052b?w=600&q=80"], "eibe": ["https://images.unsplash.com/photo-1576502200916-3808e07386a5?w=600&q=80", "https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=600&q=80", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80"], "spielklusion": ["https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=600&q=80", "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=600&q=80"], "creaplay": ["https://images.unsplash.com/photo-1553356084-58ef4a67b2a7?w=600&q=80", "https://images.unsplash.com/photo-1560969184-10fe8719e047?w=600&q=80"]};
+
+function buildMemberBody(uid, p, images, name){
+  const body = document.getElementById('mp-body');
+
+  // No profile at all
+  if(!p || (!p.name && !p.content && !p.short && images.length === 0)){
+    body.innerHTML = '<div class="mp-empty">'
+      + '<h3>' + name + '</h3>'
+      + '<p>Dieses Mitglied hat sein Profil noch nicht ausgef&uuml;llt.</p>'
+      + '<p style="margin-top:.5rem;font-size:13px">Sind Sie dieses Mitglied? <a href="svss-portal.html" target="_blank" style="color:var(--green-mid)">Jetzt einloggen und Profil bearbeiten &rarr;</a></p>'
+      + '</div>';
+    return;
+  }
+
+  let html = '';
+
+  // Short description
+  if(p.short){
+    html += '<div class="mp-section"><div class="mp-short">' + p.short + '</div></div>';
+  }
+
+  // Main content (rich text from editor)
+  if(p.content && p.content.replace(/<[^>]+>/g,'').trim().length > 0){
+    html += '<div class="mp-section"><h2>&Uuml;ber uns</h2><div class="mp-content">' + p.content + '</div></div>';
+  }
+
+  // Contact info grid
+  const infoItems = [];
+  if(p.contact) infoItems.push({label:'Kontaktperson', val: p.contact});
+  if(p.phone)   infoItems.push({label:'Telefon', val: p.phone});
+  if(p.email)   infoItems.push({label:'E-Mail', val: '<a href="mailto:'+p.email+'">'+p.email+'</a>'});
+  if(p.web){
+    const url = p.web.startsWith('http') ? p.web : 'https://' + p.web;
+    infoItems.push({label:'Website', val: '<a href="'+url+'" target="_blank">'+p.web+'</a>'});
+  }
+  if(p.address || p.plz || p.ort){
+    const street = p.address || '';
+    const cityLine = [p.plz, p.ort].filter(Boolean).join(' ');
+    const fullAddr = [street, cityLine].filter(Boolean).join('<br>');
+    if(fullAddr) infoItems.push({label:'Adresse', val: fullAddr});
+  }
+  if(infoItems.length > 0){
+    html += '<div class="mp-section"><h2>Kontakt &amp; Angaben</h2><div class="mp-info-grid">'
+      + infoItems.map(i => '<div class="mp-info-item"><div class="mp-info-label">'+i.label+'</div><div class="mp-info-value">'+i.val+'</div></div>').join('')
+      + '</div></div>';
+  }
+
+  // Gallery — portal uploads first, then fallback images
+  const fallbackImgs = MEMBER_FALLBACK_IMAGES[uid] || [];
+  const galleryImgs  = images.length > 0 ? images : [];
+  const allGallery   = galleryImgs.length > 0 ? galleryImgs : null;
+  const fallbackHtml = fallbackImgs.length > 0
+    ? fallbackImgs.map(function(src){ return '<img src="'+src+'" alt="Spielplatz" loading="lazy">'; }).join('')
+    : '';
+
+  if(allGallery && allGallery.length > 0){
+    html += '<div class="mp-section"><h2>Bildergalerie</h2><div class="mp-gallery">'
+      + allGallery.map(function(img){ return '<img src="'+img.src+'" alt="'+img.name+'" loading="lazy">'; }).join('')
+      + '</div></div>';
+  } else if(fallbackHtml){
+    html += '<div class="mp-section"><h2>Bildergalerie</h2><div class="mp-gallery">'
+      + fallbackHtml
+      + '</div></div>';
+  }
+
+  // CTA
+  const emailHref = (p.email) ? 'mailto:' + p.email : 'mailto:svss@spielplatzsicherheit-schweiz.ch';
+  html += '<div class="mp-cta">'
+    + '<p>M&ouml;chten Sie mit ' + name + ' in Kontakt treten?<br>Schreiben Sie direkt eine Nachricht.</p>'
+    + '<a href="' + emailHref + '">Kontakt aufnehmen &rarr;</a>'
+    + '</div>';
+
+  body.innerHTML = html;
+}
+
+
+// ── ENRICH CARDS FROM PORTAL PROFILES ──
+async function enrichMemberCards(){
+  let profiles = {};
+  try {
+    profiles = await supaGetProfiles();
+  } catch(e) {
+    // fallback localStorage
+    try { profiles = JSON.parse(localStorage.getItem('svss_profiles')) || {}; } catch(e2){}
+  }
+  // Always run even if no profiles yet — future calls will pick up new data
+
+  // Update member grid cards
+  document.querySelectorAll('#mgrid [data-uid]').forEach(function(card){
+    const uid  = card.dataset.uid;
+    const p    = profiles[uid];
+    if(!p) return;
+
+    // Update logo
+    if(p.logo){
+      const logoWrap = card.querySelector('.mc-logo');
+      if(logoWrap){
+        const img = logoWrap.querySelector('img');
+        if(img){
+          img.src = p.logo;
+          img.onerror = function(){ this.style.display='none'; };
+          img.style.display = '';
+        } else {
+          // No img yet — inject one
+          const _ni=document.createElement('img');
+          _ni.src=p.logo; _ni.style.cssText='max-width:100%;max-height:66px;object-fit:contain';
+          _ni.onerror=function(){this.style.display='none';};
+          const _nf=document.createElement('span');_nf.className='fallback';_nf.textContent=card.dataset.name||'';
+          logoWrap.innerHTML='';logoWrap.appendChild(_ni);logoWrap.appendChild(_nf);
+        }
+      }
+    }
+
+    // Update tags
+    if(p.tags && p.tags.length){
+      const tagsWrap = card.querySelector('.mc-tags');
+      if(tagsWrap){
+        tagsWrap.innerHTML = p.tags.map(function(t){
+          return '<span class="mc-tag">'+t+'</span>';
+        }).join('');
+      }
+      // Also update data-tags for filter
+      card.dataset.tags = p.tags.join(',');
+    }
+
+    // Update short description if present
+    if(p.short){
+      const desc = card.querySelector('.mc-desc');
+      if(desc) desc.textContent = p.short;
+    }
+
+    // Update location if present
+    if(p.ort || p.address){
+      const loc = card.querySelector('.mc-loc');
+      if(loc) loc.textContent = [p.plz, p.ort].filter(Boolean).join(' ') || p.address || '';
+    }
+  });
+
+  // Also update preview grid tiles
+  document.querySelectorAll('.member-logo-tile[data-uid]').forEach(function(tile){
+    const uid = tile.dataset.uid;
+    const p   = profiles[uid];
+    if(!p || !p.logo) return;
+    const img = tile.querySelector('img');
+    if(img){ img.src = p.logo; img.onerror = function(){ this.classList.add('errored'); }; }
+  });
+}
+
+
+// ── APPLY SITE CONTENT FROM ADMIN EDITOR ──
+async function applySiteContent(){
+  let c = {};
+  try {
+    c = await supaGetSiteContent();
+    // Also update localStorage cache
+    localStorage.setItem('svss_site_content', JSON.stringify(c));
+  } catch(e) {
+    // fallback localStorage
+    try { c = JSON.parse(localStorage.getItem('svss_site_content')) || {}; } catch(e2){}
+  }
+
+  // Load images from IndexedDB and then render
+  const SE_IMG_DB = 'svss_site_images_db';
+  const SE_IMG_STORE = 'site_images';
+  function idbGet(key, cb){
+    try {
+      const req = indexedDB.open(SE_IMG_DB, 1);
+      req.onsuccess = function(e){
+        const db = e.target.result;
+        const r = db.transaction(SE_IMG_STORE,'readonly').objectStore(SE_IMG_STORE).get(key);
+        r.onsuccess = function(ev){ cb(ev.target.result || null); };
+        r.onerror   = function(){ cb(null); };
+      };
+      req.onerror = function(){ cb(null); };
+    } catch(e){ cb(null); }
+  }
+
+  idbGet('fotos', function(dbFotos){
+    if(dbFotos) c.fotos = dbFotos;
+    idbGet('vorstand_photos', function(dbPhotos){
+      if(dbPhotos && c.vorstand){
+        c.vorstand = c.vorstand.map(function(v, i){
+          if(v.photo && v.photo.startsWith('__idb__:')){
+            return Object.assign({}, v, {photo: dbPhotos[i] || ''});
+          }
+          return v;
+        });
+      }
+      _doApplySiteContent(c);
+    });
+  });
+}
+
+function _doApplySiteContent(c){
+
+  // Hero
+  if(c.hero){
+    const h = c.hero;
+    const titleEl = document.getElementById('site-hero-title');
+    if(titleEl && h.title1) titleEl.innerHTML = h.title1 + '<br><em>' + h.title2 + '</em>';
+    const leadEl = document.getElementById('site-hero-lead');
+    if(leadEl && h.lead) leadEl.textContent = h.lead;
+    const btnEl = document.getElementById('site-hero-btn');
+    if(btnEl && h.btn) btnEl.textContent = h.btn;
+  }
+
+  // Stats
+  if(c.stats && c.stats.length){
+    const wrap = document.getElementById('site-hero-stats');
+    if(wrap){
+      // Keep last wide card (quote), replace first 4
+      const cards = wrap.querySelectorAll('.stat-card:not(.wide)');
+      c.stats.forEach(function(s, i){
+        if(cards[i]){
+          const num = cards[i].querySelector('.stat-num');
+          const lbl = cards[i].querySelector('.stat-label');
+          if(num) num.textContent = s.num;
+          if(lbl) lbl.textContent = s.label;
+        }
+      });
+    }
+  }
+
+  // Photo strip
+  if(c.fotos && c.fotos.length){
+    const strip = document.getElementById('site-photo-strip');
+    if(strip){
+      const divs = strip.querySelectorAll('div');
+      c.fotos.forEach(function(item, i){
+        if(divs[i]){
+          const url = typeof item === 'string' ? item : (item && item.src ? item.src : null);
+          if(url) divs[i].style.backgroundImage = "url('" + url + "')";
+        }
+      });
+    }
+  }
+
+  // Ziele title + lead
+  if(c.ziele){
+    const zt = document.getElementById('site-ziele-title');
+    if(zt && c.ziele.title) zt.innerHTML = c.ziele.title;
+    const zl = document.getElementById('site-ziele-lead');
+    if(zl && c.ziele.lead) zl.textContent = c.ziele.lead;
+
+    // Ziele items
+    if(c.ziele.items && c.ziele.items.length){
+      const wrap = document.getElementById('site-ziele-items');
+      if(wrap){
+        wrap.innerHTML = '';
+        c.ziele.items.forEach(function(item, i){
+          const div = document.createElement('div');
+          div.className = 'ziele-item';
+          div.innerHTML = '<div class="ziele-num">0'+(i+1)+'</div>'
+            + '<div><h3>'+item.title+'</h3><p>'+item.text+'</p></div>';
+          wrap.appendChild(div);
+        });
+      }
+    }
+  }
+
+  // Vorstand
+  if(c.vorstand && c.vorstand.length){
+    const wrap = document.getElementById('site-vorstand-list');
+    if(wrap){
+      const avColors = ['av-1','av-2','av-3','av-4'];
+      wrap.innerHTML = '';
+      c.vorstand.forEach(function(v){
+        const vdiv = document.createElement('div');
+        vdiv.className = 'vorstand-card';
+        const vav = document.createElement('div');
+        vav.className = 'vorstand-avatar';
+        vav.style.background = v.color;
+        if(v.photo){
+          vav.style.padding='0'; vav.style.overflow='hidden';
+          const vimg = document.createElement('img');
+          vimg.src = v.photo;
+          vimg.style.cssText = 'width:100%;height:100%;object-fit:cover';
+          vimg.onerror = function(){ vav.textContent = v.initials; };
+          vav.appendChild(vimg);
+        } else { vav.textContent = v.initials; }
+        vdiv.appendChild(vav);
+        vdiv.innerHTML += '<div class="vorstand-role">'+v.role+'</div>'
+          + '<div class="vorstand-name">'+v.name+'</div>'
+          + '<div class="vorstand-firma">'+v.firma+'</div>'
+          + (v.web ? '<a href="https://'+v.web+'" target="_blank">'+v.web+'</a>' : '');
+        wrap.appendChild(vdiv);
+      });
+  }
+
+  // News
+  if(c.news && c.news.length){
+    const wrap = document.getElementById('site-news-list');
+    if(wrap){
+      wrap.innerHTML = '';
+      c.news.forEach(function(n){
+        const div = document.createElement('div');
+        div.className = 'news-item';
+        div.innerHTML = '<div><div class="news-day">'+n.day+'</div><div class="news-month">'+n.month+'</div></div>'
+          + '<div><div class="news-cat">'+n.cat+'</div>'
+          + '<div class="news-title">'+n.title+'</div>'
+          + '<div class="news-excerpt">'+n.text+'</div></div>';
+        if(n.img){
+          const imgEl = document.createElement('img');
+          imgEl.src = n.img;
+          imgEl.style.cssText = 'width:100%;max-height:180px;object-fit:cover;border-radius:var(--radius);margin-top:8px;grid-column:1/-1';
+          div.querySelector('div:last-child').appendChild(imgEl);
+        }
+        wrap.appendChild(div);
+      });
+    }
+  }
+}
+
+}
+
+// ── INIT ──
+(async function(){
+  await seedMembers();
+  applyAuthState();
+  buildPreviewGrid();
+  await enrichMemberCards();
+  await applySiteContent();
+})();
+
+</script>
 </body>
 </html>
