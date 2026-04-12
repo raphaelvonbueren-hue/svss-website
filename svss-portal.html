@@ -1515,92 +1515,68 @@ function compressImage(dataUrl, maxWidth, maxHeight, quality){
     img.src = dataUrl;
   });
 }
-function seSaveContent(data){
+async function seSaveContent(data){
+  toast('Speichert…', 'ok');
   const c = seGetContent();
-  const textData = {};
-  const uploadPromises = [];
+  const toSave = {};
 
-  Object.keys(data).forEach(function(key){
-    const val = data[key];
+  for(const [key, val] of Object.entries(data)){
     if(key === 'fotos' && Array.isArray(val)){
-      // Upload each foto to Supabase Storage
-      const uploadedFotos = val.map(function(item){ return item; }); // will update async
-      textData.fotos = '__supa__'; // placeholder
-      uploadPromises.push(
-        Promise.all(val.map(async function(item, i){
-          if(item && item.src && item.src.startsWith('data:')){
-            try {
-              const url = await supaUploadBase64('site', 'foto-'+i+'-'+Date.now(), item.src);
-              return {src: url, name: item.name || 'foto'};
-            } catch(e) { return item; }
-          }
-          return item;
-        })).then(function(uploaded){
-          scImgSet('fotos', uploaded);
-          // Also update supabase site_content
-          return supaUpsert('site_content', [{key:'fotos', value: uploaded}]).catch(function(){});
-        })
-      );
+      // Upload each foto to Supabase Storage first
+      const uploaded = [];
+      for(let i=0; i<val.length; i++){
+        const item = val[i];
+        if(item && item.src && item.src.startsWith('data:')){
+          try {
+            const url = await supaUploadBase64('site', 'foto-'+i, item.src);
+            uploaded.push({src: url, name: item.name||'foto'});
+          } catch(e){ uploaded.push(item); }
+        } else { uploaded.push(item); }
+      }
+      toSave.fotos = uploaded;
+      scImgSet('fotos', uploaded);
     } else if(key === 'vorstand' && Array.isArray(val)){
-      const uploadVorstand = val.map(async function(v, i){
+      const uploaded = [];
+      for(let i=0; i<val.length; i++){
+        const v = val[i];
         if(v.photo && v.photo.startsWith('data:')){
           try {
-            const url = await supaUploadBase64('site', 'vorstand-'+i+'-'+Date.now(), v.photo);
-            return Object.assign({}, v, {photo: url});
-          } catch(e) { return v; }
-        }
-        return v;
-      });
-      uploadPromises.push(
-        Promise.all(uploadVorstand).then(function(uploaded){
-          scImgSet('vorstand_photos_meta', uploaded);
-          textData.vorstand = uploaded;
-          return supaUpsert('site_content', [{key:'vorstand', value: uploaded}]).catch(function(){});
-        })
-      );
-      // Store clean version for localStorage (no base64)
-      textData.vorstand = val.map(function(v){ 
-        return v.photo && v.photo.startsWith('data:') ? Object.assign({}, v, {photo: '__uploading__'}) : v;
-      });
+            const url = await supaUploadBase64('site', 'vorstand-'+i, v.photo);
+            uploaded.push(Object.assign({}, v, {photo: url}));
+          } catch(e){ uploaded.push(v); }
+        } else { uploaded.push(v); }
+      }
+      toSave.vorstand = uploaded;
+      scImgSet('vorstand_photos_meta', uploaded);
     } else if(key === 'news' && Array.isArray(val)){
-      const newsUp = val.map(async function(n, i){
+      const uploaded = [];
+      for(let i=0; i<val.length; i++){
+        const n = val[i];
         if(n.img && n.img.startsWith('data:')){
           try {
-            const url = await supaUploadBase64('site', 'news-'+i+'-'+Date.now(), n.img);
-            return Object.assign({}, n, {img: url});
-          } catch(e) { return n; }
-        }
-        return n;
-      });
-      uploadPromises.push(
-        Promise.all(newsUp).then(function(uploaded){
-          scImgSet('news_meta', uploaded);
-          return supaUpsert('site_content', [{key:'news', value: uploaded}]).catch(function(){});
-        })
-      );
-      textData.news = val.map(function(n){
-        return n.img && n.img.startsWith('data:') ? Object.assign({}, n, {img: '__uploading__'}) : n;
-      });
+            const url = await supaUploadBase64('site', 'news-'+i, n.img);
+            uploaded.push(Object.assign({}, n, {img: url}));
+          } catch(e){ uploaded.push(n); }
+        } else { uploaded.push(n); }
+      }
+      toSave.news = uploaded;
+      scImgSet('news_meta', uploaded);
     } else {
-      textData[key] = val;
-      // Also save text to Supabase
-      supaUpsert('site_content', [{key: key, value: val}]).catch(function(){});
+      toSave[key] = val;
     }
-  });
+  }
 
-  // Save text to localStorage immediately
-  Object.assign(c, textData);
+  // Save all text to localStorage
+  Object.assign(c, toSave);
   try { localStorage.setItem(SE_KEY, JSON.stringify(c)); } catch(e){}
 
-  if(uploadPromises.length > 0){
-    toast('Bilder werden hochgeladen…', 'ok');
-    Promise.all(uploadPromises).then(function(){
-      toast('Gespeichert \u2713 (Bilder in Supabase)', 'ok');
-    }).catch(function(e){
-      toast('Lokal gespeichert (Supabase: '+e.message+')', 'ok');
-    });
-  } else {
-    toast('Gespeichert \u2713', 'ok');
+  // Save everything to Supabase
+  try {
+    const rows = Object.entries(toSave).map(([k,v]) => ({key:k, value:v}));
+    await supaUpsert('site_content', rows);
+    toast('Gespeichert ✓', 'ok');
+  } catch(e){
+    toast('Lokal gespeichert (Supabase offline)', 'ok');
   }
 }
 // Load full content including images from IndexedDB
