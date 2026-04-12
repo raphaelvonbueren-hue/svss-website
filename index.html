@@ -508,12 +508,12 @@ footer p{font-size:13px;line-height:2;font-weight:300}
 
   <!-- IMPRESSIONEN -->
   <section class="impressions-section">
-    <div class="impressions-grid">
-      <div class="span2 row2" style="background:#1a3a2a"></div>
-      <div class="span2" style="background:#1a3a2a"></div>
-      <div class="span2" style="background:#1a3a2a"></div>
-      <div class="span3" style="background:#1a3a2a"></div>
-      <div style="background:#1a3a2a"></div>
+    <div class="impressions-grid" id="impressions-grid">
+      <div class="span2 row2" id="imp-0" style="background:#1a3a2a"></div>
+      <div class="span2" id="imp-1" style="background:#1a3a2a"></div>
+      <div class="span2" id="imp-2" style="background:#1a3a2a"></div>
+      <div class="span3" id="imp-3" style="background:#1a3a2a"></div>
+      <div id="imp-4" style="background:#1a3a2a"></div>
     </div>
   </section>
 
@@ -1542,17 +1542,36 @@ function _doApplySiteContent(c){
     }
   }
 
-  // Photo strip
+  // Photo strip + impressions grid
   if(c.fotos && c.fotos.length){
+    // Photo strip (top)
     const strip = document.getElementById('site-photo-strip');
     if(strip){
       const divs = strip.querySelectorAll('div');
       c.fotos.forEach(function(item, i){
         if(divs[i]){
           const url = typeof item === 'string' ? item : (item && item.src ? item.src : null);
-          if(url) divs[i].style.backgroundImage = "url('" + url + "')";
+          if(url){
+            divs[i].style.backgroundImage = "url('" + url + "')";
+            divs[i].style.backgroundSize = 'cover';
+            divs[i].style.backgroundPosition = 'center';
+          }
         }
       });
+    }
+    // Impressions grid (below hero) — fill with same fotos, cycling
+    for(var ii=0; ii<5; ii++){
+      var impDiv = document.getElementById('imp-'+ii);
+      if(impDiv && c.fotos.length > 0){
+        var item = c.fotos[ii % c.fotos.length];
+        var url = typeof item === 'string' ? item : (item && item.src ? item.src : null);
+        if(url){
+          impDiv.style.backgroundImage = "url('" + url + "')";
+          impDiv.style.backgroundSize = 'cover';
+          impDiv.style.backgroundPosition = 'center';
+          impDiv.style.background = '';
+        }
+      }
     }
   }
 
