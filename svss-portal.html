@@ -874,7 +874,7 @@ function getLocalProfile(uid){ try { const p=JSON.parse(localStorage.getItem('sv
 // ═══════════════════════════════════════════════════════
 //  LOGIN / LOGOUT (Supabase)
 // ═══════════════════════════════════════════════════════
-async function doLogin(){
+async async function doLogin(){
   const uid    = document.getElementById('login-user').value.trim().toLowerCase();
   const pw     = document.getElementById('login-pw').value;
   const errEl  = document.getElementById('login-err');
@@ -886,12 +886,12 @@ async function doLogin(){
     if(!member || member.pw !== pw){
       errEl.textContent = 'Benutzername oder Passwort falsch.';
       errEl.classList.remove('hidden');
+      if(btnEl){ btnEl.textContent='Anmelden →'; btnEl.disabled=false; }
       return;
     }
     setSession(uid, member.display, member.role);
     openApp();
   } catch(e) {
-    // Fallback to localStorage if offline
     const lsMembers = getLocalMembers();
     const member = lsMembers[uid];
     if(!member || member.pw !== pw){
@@ -919,9 +919,16 @@ function doLogout(){
 function openApp(){
   const s = SESSION;
   showView('app');
-  document.getElementById('nav-username').textContent = s.display;
+  document.getElementById('nav-username').textContent = s.display || s.uid || 'Angemeldet';
   document.getElementById('dash-sub').textContent = 'Willkommen zur\u00fcck, ' + s.display + '.';
-  if(s.role === 'admin') document.getElementById('sb-admin-section').classList.remove('hidden');
+  // Show admin section
+  const isAdmin = s.role === 'admin' || s.uid === 'admin';
+  if(isAdmin){
+    const adminEl = document.getElementById('sb-admin-section');
+    if(adminEl) adminEl.classList.remove('hidden');
+    // Also update session role if missing
+    if(!s.role){ s.role='admin'; localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+  }
   showPanel('dashboard');
   loadProfil();
   loadInhalt();
