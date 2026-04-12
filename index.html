@@ -1123,18 +1123,18 @@ const LOGO_SRCS=[
 function buildPreviewGrid(){
   const grid=document.getElementById('preview-grid');
   if(!grid)return;
-  LOGO_SRCS.forEach(function(m){
+  // Use the 52 official members
+  const list = typeof SVSS_MEMBERS_52 !== 'undefined' ? SVSS_MEMBERS_52 : LOGO_SRCS;
+  list.forEach(function(m){
     const tile=document.createElement('div');
     tile.className='member-logo-tile';
-    tile.title=m.name;
+    const name = m.name || m.display || m.uid || '';
+    tile.title=name;
     tile.dataset.uid = m.uid || '';
     tile.onclick=function(){showPage('mitglieder');};
-    const img=document.createElement('img');
-    img.src=m.src;img.alt=m.name;
-    img.onerror=function(){this.classList.add('errored');};
     const fb=document.createElement('span');
-    fb.className='tile-fallback';fb.textContent=m.name;
-    tile.appendChild(img);tile.appendChild(fb);
+    fb.className='tile-fallback';fb.textContent=name;
+    tile.appendChild(fb);
     grid.appendChild(tile);
   });
 }
