@@ -476,7 +476,7 @@ footer p{font-size:13px;line-height:2;font-weight:300}
 <div id="page-home" class="page active">
 
   <!-- HERO -->
-  <section class="hero">
+  <section class="hero" style="background:var(--green-dark,#1a3a2a)">
     <div class="hero-pattern"></div>
     <div class="hero-left">
       <div class="hero-eyebrow">Schweizerische Vereinigung</div>
@@ -1654,12 +1654,14 @@ function _doApplySiteContent(c){
 }
 
 // ── INIT ──
+// Render immediately - don't wait for anything
+try { applySiteContent(); } catch(e) { console.error('applySiteContent:', e); }
+try { applyAuthState(); } catch(e) {}
+try { buildPreviewGrid(); } catch(e) {}
+// Async operations after page is visible
 (async function(){
-  await seedMembers();
-  applyAuthState();
-  buildPreviewGrid();
-  applySiteContent();
-  enrichMemberCards();
+  try { await seedMembers(); } catch(e) {}
+  try { await enrichMemberCards(); } catch(e) {}
 })();
 
 </script>
