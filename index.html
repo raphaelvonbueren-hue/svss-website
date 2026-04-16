@@ -1429,6 +1429,7 @@ function applySiteContent(){
   if(lsNews   && lsNews.length)   c.news     = lsNews;
 
   _doApplySiteContent(c);
+  _fotosDebug('localStorage', c.fotos);
 
   // 3. Also fetch from Supabase in background (catches updates from other browsers)
   supaGetSiteContent().then(function(supaC){
@@ -1439,7 +1440,56 @@ function applySiteContent(){
     if(supaC.news)    { try { localStorage.setItem('svss_sc_news_meta', JSON.stringify(supaC.news)); } catch(e){} }
     // Re-render with fresh data
     _doApplySiteContent(supaC);
-  }).catch(function(){});
+    _fotosDebug('Supabase', supaC.fotos);
+  }).catch(function(err){
+    _fotosDebug('Supabase FEHLER', {error: String(err)});
+  });
+}
+
+// Debug-Panel: bei ?debug=fotos in der URL zeigt es, was tatsächlich in c.fotos steckt.
+// Hilft beim Troubleshooting von "Bilder bleiben grün".
+function _fotosDebug(source, fotos){
+  try {
+    if(!/[?&]debug=fotos\b/.test(location.search)) return;
+    let panel = document.getElementById('_fotos-debug');
+    if(!panel){
+      panel = document.createElement('div');
+      panel.id = '_fotos-debug';
+      panel.style.cssText = 'position:fixed;bottom:10px;right:10px;max-width:480px;max-height:70vh;overflow:auto;background:#111;color:#9f9;font:12px/1.4 monospace;padding:12px 14px;border-radius:8px;z-index:99999;box-shadow:0 8px 30px rgba(0,0,0,.5)';
+      panel.innerHTML = '<strong style="color:#fff">Foto-Debug</strong> <span style="color:#aaa">(?debug=fotos)</span><hr style="border-color:#333;margin:6px 0">';
+      const close = document.createElement('button');
+      close.textContent = '×';
+      close.style.cssText = 'position:absolute;top:6px;right:10px;background:none;border:0;color:#fff;font-size:18px;cursor:pointer';
+      close.onclick = function(){ panel.remove(); };
+      panel.appendChild(close);
+      document.body.appendChild(panel);
+    }
+    const block = document.createElement('div');
+    block.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px dashed #444';
+    let summary = '<div style="color:#ff9">' + source + ':</div>';
+    if(!fotos){
+      summary += '<div style="color:#f88">  (keine fotos)</div>';
+    } else if(fotos.error){
+      summary += '<div style="color:#f88">  ' + fotos.error + '</div>';
+    } else if(!Array.isArray(fotos)){
+      summary += '<div style="color:#f88">  kein Array: ' + typeof fotos + '</div>';
+    } else {
+      summary += '<div>  ' + fotos.length + ' Einträge</div>';
+      fotos.forEach(function(f, i){
+        const url = typeof f === 'string' ? f : (f && f.src ? f.src : null);
+        if(!url){
+          summary += '<div style="color:#f88">  [' + i + '] LEER / ungültig</div>';
+        } else if(url.startsWith('data:')){
+          summary += '<div style="color:#fc9">  [' + i + '] base64 (' + Math.round(url.length/1024) + ' KB) — wurde NICHT zu Supabase hochgeladen!</div>';
+        } else {
+          const short = url.length > 70 ? url.slice(0, 45) + '…' + url.slice(-20) : url;
+          summary += '<div>  [' + i + '] <a href="' + url + '" target="_blank" style="color:#9cf">' + short + '</a></div>';
+        }
+      });
+    }
+    block.innerHTML = summary;
+    panel.appendChild(block);
+  } catch(e){ /* niemals den Haupt-Load crashen */ }
 }
 function _doApplySiteContent(c){
 
@@ -1473,33 +1523,42 @@ function _doApplySiteContent(c){
 
   // Photo strip + impressions grid
   if(c.fotos && c.fotos.length){
-    // Photo strip (top)
+    // Helper: extract a usable URL from a foto entry (string or {src})
+    // Skips base64 data URLs if a real URL is expected — but falls back to them
+    // if that's all we have. Returns null for invalid entries.
+    function fotoUrl(item){
+      if(typeof item === 'string') return item || null;
+      if(item && typeof item.src === 'string' && item.src.length > 0) return item.src;
+      return null;
+    }
+    // Helper: set a background image on a div, overriding any inline background
+    // color. Uses the longhand properties only — never the `background` shorthand —
+    // because writing to `style.background` would wipe backgroundImage too.
+    function setBgImage(el, url){
+      if(!el || !url) return;
+      el.style.backgroundImage    = "url('" + url + "')";
+      el.style.backgroundSize     = 'cover';
+      el.style.backgroundPosition = 'center';
+      el.style.backgroundRepeat   = 'no-repeat';
+      // Clear inline background-color left over from the HTML placeholder
+      // (e.g. style="background:#1a3a2a") without touching backgroundImage.
+      el.style.backgroundColor = 'transparent';
+    }
+
+    // Photo strip (top) — 4 tiles
     const strip = document.getElementById('site-photo-strip');
     if(strip){
       const divs = strip.querySelectorAll('div');
       c.fotos.forEach(function(item, i){
-        if(divs[i]){
-          const url = typeof item === 'string' ? item : (item && item.src ? item.src : null);
-          if(url){
-            divs[i].style.backgroundImage = "url('" + url + "')";
-            divs[i].style.backgroundSize = 'cover';
-            divs[i].style.backgroundPosition = 'center';
-          }
-        }
+        if(divs[i]) setBgImage(divs[i], fotoUrl(item));
       });
     }
-    // Impressions grid (below hero) — fill with same fotos, cycling
+    // Impressions grid (below hero) — 5 tiles, cycling through fotos
     for(var ii=0; ii<5; ii++){
       var impDiv = document.getElementById('imp-'+ii);
-      if(impDiv && c.fotos.length > 0){
+      if(impDiv){
         var item = c.fotos[ii % c.fotos.length];
-        var url = typeof item === 'string' ? item : (item && item.src ? item.src : null);
-        if(url){
-          impDiv.style.backgroundImage = "url('" + url + "')";
-          impDiv.style.backgroundSize = 'cover';
-          impDiv.style.backgroundPosition = 'center';
-          impDiv.style.background = '';
-        }
+        setBgImage(impDiv, fotoUrl(item));
       }
     }
   }
