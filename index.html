@@ -424,10 +424,10 @@ footer p{font-size:13px;line-height:2;font-weight:300}
 /* ── IMPRESSIONS GALLERY ── */
 .impressions-section{padding:0;overflow:hidden}
 .impressions-grid{display:grid;grid-template-columns:repeat(6,1fr);
-  grid-template-rows:200px 200px;gap:3px}
-.impressions-grid div{background-size:cover;background-position:center;
-  transition:transform .5s cubic-bezier(.4,0,.2,1),filter .5s;filter:brightness(.92)}
-.impressions-grid div:hover{transform:scale(1.04);filter:brightness(1.05);z-index:2}
+  grid-template-rows:200px 200px;gap:3px;grid-auto-flow:dense}
+.impressions-grid > div{background-size:cover;background-position:center;background-repeat:no-repeat;
+  transition:transform .5s cubic-bezier(.4,0,.2,1),filter .5s;filter:brightness(.92);min-height:0}
+.impressions-grid > div:hover{transform:scale(1.04);filter:brightness(1.05);z-index:2}
 .impressions-grid .span2{grid-column:span 2}
 .impressions-grid .span3{grid-column:span 3}
 .impressions-grid .row2{grid-row:span 2}
@@ -1553,14 +1553,92 @@ function _doApplySiteContent(c){
         if(divs[i]) setBgImage(divs[i], fotoUrl(item));
       });
     }
-    // Impressions grid (below hero) — 5 tiles, cycling through fotos
-    for(var ii=0; ii<5; ii++){
-      var impDiv = document.getElementById('imp-'+ii);
-      if(impDiv){
-        var item = c.fotos[ii % c.fotos.length];
-        setBgImage(impDiv, fotoUrl(item));
+    // Impressions grid (below hero) — 5 tiles, layout chosen per image orientation.
+    // We first measure each foto (width/height via naturalSize), then pick a
+    // 5-slot layout template that matches the mix of landscape/portrait/square.
+    (function renderImpressionsGrid(){
+      const urls = [];
+      for(var ii=0; ii<5; ii++){
+        const item = c.fotos[ii % c.fotos.length];
+        const url = fotoUrl(item);
+        if(url) urls.push(url);
       }
-    }
+      if(!urls.length) return;
+
+      // Measure all images in parallel
+      Promise.all(urls.map(function(u){
+        return new Promise(function(resolve){
+          const img = new Image();
+          img.onload  = function(){ resolve({url: u, w: img.naturalWidth, h: img.naturalHeight}); };
+          img.onerror = function(){ resolve({url: u, w: 4, h: 3}); }; // fallback: assume landscape
+          img.src = u;
+        });
+      })).then(function(measured){
+        // Classify each photo: landscape / square / portrait
+        function classify(m){
+          const r = m.w / Math.max(1, m.h);
+          if(r >= 1.35) return 'landscape';
+          if(r <= 0.85) return 'portrait';
+          return 'square';
+        }
+        const items = measured.map(function(m){ return {url: m.url, kind: classify(m), ratio: m.w/Math.max(1,m.h)}; });
+
+        // Pick a layout template based on how many landscape/portrait photos we have.
+        // Each template is 5 slots describing Grid classes for a 6-column grid.
+        // Total column usage per "row" should sum to 6; row2 means the tile spans both rows.
+        const counts = items.reduce(function(a, x){ a[x.kind] = (a[x.kind]||0) + 1; return a; }, {landscape:0, portrait:0, square:0});
+
+        // Templates — each has 5 slots. "want" tells us which kind of photo fits best.
+        // Templates are chosen so the visible area of every photo is maximized.
+        const TEMPLATES = {
+          // All/mostly landscape (default): 1 hero wide, 2 wide, 1 wide, 1 square
+          landscape: [
+            {cls:'span3 row2', want:'landscape'},  // big hero (3 cols × 2 rows)
+            {cls:'span3',      want:'landscape'},  // 3 cols × 1 row
+            {cls:'span2',      want:'landscape'},  // 2 cols × 1 row
+            {cls:'',           want:'square'},     // 1 col × 1 row
+            {cls:'',           want:'square'}      // 1 col × 1 row
+          ],
+          // Mix with at least one portrait: put portrait in the tall slot
+          mixed: [
+            {cls:'span2 row2', want:'portrait'},   // tall portrait slot (2 cols × 2 rows)
+            {cls:'span2',      want:'landscape'},
+            {cls:'span2',      want:'landscape'},
+            {cls:'span3',      want:'landscape'},
+            {cls:'',           want:'square'}
+          ],
+          // Multiple portraits: two tall slots
+          portraits: [
+            {cls:'span2 row2', want:'portrait'},
+            {cls:'span2 row2', want:'portrait'},
+            {cls:'span2',      want:'landscape'},
+            {cls:'span2',      want:'landscape'},
+            {cls:'span2',      want:'square'}      // will overflow to next row, fine
+          ]
+        };
+        let template = TEMPLATES.landscape;
+        if(counts.portrait >= 2)      template = TEMPLATES.portraits;
+        else if(counts.portrait >= 1) template = TEMPLATES.mixed;
+
+        // Greedy assignment: for each slot, pick the best remaining photo.
+        // "Best" = kind matches exactly; else any photo.
+        const remaining = items.slice();
+        const assignment = template.map(function(slot){
+          let idx = remaining.findIndex(function(p){ return p.kind === slot.want; });
+          if(idx === -1) idx = 0;
+          return remaining.splice(idx, 1)[0];
+        });
+
+        // Apply to DOM: rewrite classes and set backgrounds
+        for(var ii=0; ii<5; ii++){
+          const impDiv = document.getElementById('imp-'+ii);
+          if(!impDiv) continue;
+          // Reset to base classes, then add template classes
+          impDiv.className = ('impressions-tile ' + (template[ii].cls || '')).trim();
+          setBgImage(impDiv, assignment[ii] && assignment[ii].url);
+        }
+      });
+    })();
   }
 
   // Ziele title + lead
