@@ -837,12 +837,45 @@ async function supaUploadBase64(uid, filename, base64Data) {
 async function supaGetMembers() {
   const rows = await supaSelect('members', {});
   const m = {};
-  rows.forEach(r => m[r.uid] = {pw: r.pw, display: r.display, role: r.role});
+  rows.forEach(r => m[r.uid] = {
+    pw: r.pw, 
+    display: r.display || r.display_name, 
+    role: r.role,
+    email: r.email,
+    street: r.street,
+    zip: r.zip,
+    city: r.city,
+    phone: r.phone,
+    website: r.website,
+    logo_url: r.logo_url,
+    attributes: r.attributes || [],
+    board_member: r.board_member || false,
+    board_photo_url: r.board_photo_url,
+    board_position: r.board_position,
+    board_order: r.board_order || 999
+  });
   return m;
 }
 
 async function supaSaveMembers(members) {
-  const rows = Object.entries(members).map(([uid, m]) => ({uid, pw: m.pw, display: m.display, role: m.role}));
+  const rows = Object.entries(members).map(([uid, m]) => ({
+    uid, 
+    pw: m.pw, 
+    display: m.display,
+    role: m.role,
+    email: m.email,
+    street: m.street,
+    zip: m.zip,
+    city: m.city,
+    phone: m.phone,
+    website: m.website,
+    logo_url: m.logo_url,
+    attributes: m.attributes || [],
+    board_member: m.board_member || false,
+    board_photo_url: m.board_photo_url,
+    board_position: m.board_position,
+    board_order: m.board_order || 999
+  }));
   return supaUpsert('members', rows);
 }
 
@@ -1970,10 +2003,10 @@ try { localStorage.removeItem('svss_members'); } catch(e) {}
 try { applySiteContent(); } catch(e) { console.error('applySiteContent:', e); }
 try { applyAuthState(); } catch(e) {}
 try { buildPreviewGrid(); } catch(e) {}
-try { buildVorstandGrid(); } catch(e) {}
 // Async: load all members and build grid
 (async function(){
   try { await seedMembers(); } catch(e) {}
+  try { await buildVorstandGrid(); } catch(e) { console.error('vorstand error:', e); }
   try {
     const members = await supaGetMembers();
     const count = Object.keys(members).filter(function(uid){ 
