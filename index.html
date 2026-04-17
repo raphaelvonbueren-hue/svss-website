@@ -437,6 +437,23 @@ footer p{font-size:13px;line-height:2;font-weight:300}
 .mp-gallery img{width:100%;border-radius:var(--radius);aspect-ratio:4/3;object-fit:cover;
   transition:transform var(--transition),box-shadow var(--transition)}
 .mp-gallery img:hover{transform:scale(1.03);box-shadow:var(--shadow-md)}
+
+/* Karussell */
+.mp-carousel{position:relative;width:100%;overflow:hidden;border-radius:var(--radius-lg);background:var(--sand)}
+.mp-carousel-track{display:flex;transition:transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
+.mp-carousel-slide{min-width:100%;display:flex;align-items:center;justify-content:center}
+.mp-carousel-slide img{width:100%;height:auto;max-height:500px;object-fit:contain;border-radius:var(--radius-lg)}
+.mp-carousel-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.9);
+  border:none;width:48px;height:48px;border-radius:50%;font-size:20px;cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:all 0.2s;z-index:10;color:var(--text)}
+.mp-carousel-btn:hover{background:#fff;transform:translateY(-50%) scale(1.1);box-shadow:0 6px 20px rgba(0,0,0,0.2)}
+.mp-carousel-prev{left:1rem}
+.mp-carousel-next{right:1rem}
+.mp-carousel-dots{position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10}
+.mp-carousel-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.5);
+  cursor:pointer;transition:all 0.2s;border:1px solid rgba(0,0,0,0.1)}
+.mp-carousel-dot:hover{background:rgba(255,255,255,0.8);transform:scale(1.2)}
+.mp-carousel-dot.active{background:#fff;transform:scale(1.3)}
 .mp-info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
 .mp-info-item{background:var(--sand);border-radius:var(--radius-lg);padding:1rem 1.25rem;
   border:1px solid var(--sand-dark)}
@@ -1440,6 +1457,63 @@ async function renderMemberProfile(uid, fallbackName){
   });
 }
 
+// ── CAROUSEL ──
+let _carouselIndex = 0;
+let _carouselCount = 0;
+let _carouselTouchStart = 0;
+let _carouselTouchEnd = 0;
+
+function mpCarouselInit(){
+  const track = document.querySelector('.mp-carousel-track');
+  if(!track) return;
+  
+  _carouselCount = track.children.length;
+  _carouselIndex = 0;
+  
+  // Touch/Swipe support
+  track.addEventListener('touchstart', function(e){
+    _carouselTouchStart = e.touches[0].clientX;
+  }, {passive: true});
+  
+  track.addEventListener('touchend', function(e){
+    _carouselTouchEnd = e.changedTouches[0].clientX;
+    const diff = _carouselTouchStart - _carouselTouchEnd;
+    if(Math.abs(diff) > 50){ // Mindestens 50px swipe
+      if(diff > 0) mpCarouselNext();
+      else mpCarouselPrev();
+    }
+  }, {passive: true});
+  
+  mpCarouselUpdate();
+}
+
+function mpCarouselNext(){
+  _carouselIndex = (_carouselIndex + 1) % _carouselCount;
+  mpCarouselUpdate();
+}
+
+function mpCarouselPrev(){
+  _carouselIndex = (_carouselIndex - 1 + _carouselCount) % _carouselCount;
+  mpCarouselUpdate();
+}
+
+function mpCarouselGoto(index){
+  _carouselIndex = index;
+  mpCarouselUpdate();
+}
+
+function mpCarouselUpdate(){
+  const track = document.querySelector('.mp-carousel-track');
+  const dots = document.querySelectorAll('.mp-carousel-dot');
+  if(!track) return;
+  
+  track.style.transform = 'translateX(-' + (_carouselIndex * 100) + '%)';
+  
+  dots.forEach(function(dot, i){
+    dot.classList.toggle('active', i === _carouselIndex);
+  });
+}
+
 // Static fallback gallery images per member (Unsplash, free to use)
 const MEMBER_FALLBACK_IMAGES = {}
 
@@ -1498,8 +1572,20 @@ function buildMemberBody(uid, p, images, name){
     : '';
 
   if(allGallery && allGallery.length > 0){
-    html += '<div class="mp-section"><h2>Bildergalerie</h2><div class="mp-gallery">'
-      + allGallery.map(function(img){ return '<img src="'+img.src+'" alt="'+img.name+'" loading="lazy">'; }).join('')
+    html += '<div class="mp-section"><h2>Bildergalerie</h2>'
+      + '<div class="mp-carousel">'
+      + '<div class="mp-carousel-track">'
+      + allGallery.map(function(img, idx){ 
+          return '<div class="mp-carousel-slide"><img src="'+img.src+'" alt="'+(img.name||'Bild')+'" loading="lazy"></div>'; 
+        }).join('')
+      + '</div>'
+      + (allGallery.length > 1 ? 
+        '<button class="mp-carousel-btn mp-carousel-prev" onclick="mpCarouselPrev()">&larr;</button>'
+        + '<button class="mp-carousel-btn mp-carousel-next" onclick="mpCarouselNext()">&rarr;</button>'
+        + '<div class="mp-carousel-dots">'
+        + allGallery.map(function(img, idx){ return '<span class="mp-carousel-dot'+(idx===0?' active':'')+'" onclick="mpCarouselGoto('+idx+')"></span>'; }).join('')
+        + '</div>'
+        : '')
       + '</div></div>';
   } else if(fallbackHtml){
     html += '<div class="mp-section"><h2>Bildergalerie</h2><div class="mp-gallery">'
@@ -1515,6 +1601,9 @@ function buildMemberBody(uid, p, images, name){
     + '</div>';
 
   body.innerHTML = html;
+  
+  // Initialisiere Karussell wenn vorhanden
+  setTimeout(mpCarouselInit, 100);
 }
 
 
