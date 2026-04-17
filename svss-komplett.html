@@ -199,14 +199,6 @@ section{padding:96px 6vw}
   cursor:pointer;border:none;transition:transform var(--transition),box-shadow var(--transition);
   box-shadow:0 4px 16px rgba(0,0,0,.2);position:relative;z-index:100}
 .view-all-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
-
-/* ── VORSTAND ── */
-.vorstand-card{background:#fff;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);transition:transform var(--transition),box-shadow var(--transition)}
-.vorstand-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
-.vorstand-photo{width:100%;aspect-ratio:3/4;object-fit:cover;background:var(--sand)}
-.vorstand-info{padding:1.25rem}
-.vorstand-name{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;color:var(--green-dark);margin-bottom:.25rem}
-.vorstand-position{font-size:13px;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
 .member-count-label{font-size:13px;color:rgba(255,255,255,.45)}
 
 /* ── NEWS ── */
@@ -586,27 +578,14 @@ footer p{font-size:13px;line-height:2;font-weight:300}
       <div>
         <div class="section-label" style="margin-bottom:1rem">Vorstand</div>
         <div id="site-vorstand-list">
-        <div class="vorstand-card"><div class="vorstand-avatar av-1">AH</div><div class="vorstand-role">Pr&#228;sident</div><div class="vorstand-name">Andreas Hochstrasser</div><div class="vorstand-firma">Spielplatz Zone AG</div><a href="http://spielplatzzone.ch" target="_blank">spielplatzzone.ch</a></div>
-        <div class="vorstand-card"><div class="vorstand-avatar av-2">TG</div><div class="vorstand-role">Vorstandsmitglied</div><div class="vorstand-name">Thomas Gerster</div><div class="vorstand-firma">GTSM Magglinen AG</div><a href="http://gtsm.ch" target="_blank">gtsm.ch</a></div>
-        <div class="vorstand-card"><div class="vorstand-avatar av-3">YB</div><div class="vorstand-role">Vorstandsmitglied</div><div class="vorstand-name">Yvonne Bindbeutel</div><div class="vorstand-firma">Spielklusion</div><a href="http://spielklusion.com" target="_blank">spielklusion.com</a></div>
-        <div class="vorstand-card"><div class="vorstand-avatar av-4">RB</div><div class="vorstand-role">Web &amp; Social Media</div><div class="vorstand-name">Raphael von B&uuml;ren</div><div class="vorstand-firma">PSP &ndash; Spielplatzsicherheit</div><a href="http://psp.live" target="_blank">psp.live</a></div>
-      </div></div>
+          <!-- Wird dynamisch aus Supabase geladen -->
+        </div></div>
       <div class="ziele-items" id="site-ziele-items">
         <div class="ziele-item"><div class="ziele-num">01</div><div><h3>Sicherheitsniveau garantieren</h3><p>Ein geeignetes und bed&uuml;rfnisgerechtes Sicherheitsniveau f&uuml;r Spielplatz- und Freizeitanlagen in der ganzen Schweiz garantieren und kontinuierlich weiterentwickeln.</p></div></div>
         <div class="ziele-item"><div class="ziele-num">02</div><div><h3>Wissen aufbauen &amp; erhalten</h3><p>Schulungen, Fachgespr&auml;che und Publikationen, um das Fachwissen der Spielplatzpr&uuml;fer auf einem adäquaten Stand zu bringen und dauerhaft zu sichern.</p></div></div>
         <div class="ziele-item"><div class="ziele-num">03</div><div><h3>Normen &amp; Standards vertreten</h3><p>Abst&uuml;tzung auf EN 1176 / EN 1177, gesetzliche Vorgaben und Unfallstatistiken. Bildung von Arbeitsgruppen zu aktuellen Themen der Spielplatzsicherheit.</p></div></div>
         <div class="ziele-item"><div class="ziele-num">04</div><div><h3>Ganzheitliche Betrachtung</h3><p>Spielwert, Gestaltung, &#214;kologie, Bauweise, Entwicklungsstufen und Inklusion stets unter dem Aspekt der erforderlichen Sicherheit f&uuml;r alle Kinder.</p></div></div>
       </div>
-    </div>
-  </section>
-
-  <!-- VORSTAND -->
-  <section id="vorstand-section" style="padding:96px 6vw;background:var(--sand)">
-    <div class="section-label">Unser Vorstand</div>
-    <h2 class="section-title">Das Team <em>hinter dem SVSS</em></h2>
-    <p class="section-lead">Engagiert für sichere Spielplätze in der ganzen Schweiz.</p>
-    <div id="vorstand-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:24px;margin-top:3rem">
-      <!-- Wird dynamisch gefüllt -->
     </div>
   </section>
 
@@ -1244,10 +1223,10 @@ function buildPreviewGrid(){
   });
 }
 
-// Build Vorstand Section
+// Build Vorstand (in existing sidebar style)
 async function buildVorstandGrid(){
-  const grid = document.getElementById('vorstand-grid');
-  if(!grid) return;
+  const container = document.getElementById('site-vorstand-list');
+  if(!container) return;
   
   try {
     const members = await supaGetMembers();
@@ -1256,51 +1235,82 @@ async function buildVorstandGrid(){
       .sort(function(a, b){ return (a[1].board_order || 999) - (b[1].board_order || 999); });
     
     if(board.length === 0){
-      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:2rem">Noch keine Vorstandsmitglieder definiert.</p>';
+      container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:1rem">Keine Vorstandsmitglieder definiert.</p>';
       return;
     }
     
-    board.forEach(function([uid, m]){
+    const avatarGradients = [
+      'linear-gradient(135deg,var(--green-dark),var(--green-mid))',
+      'linear-gradient(135deg,var(--green-mid),var(--green-soft))',
+      'linear-gradient(135deg,var(--green-soft),#6ab88a)',
+      'linear-gradient(135deg,#3a5a6a,#4a7a8a)',
+      'linear-gradient(135deg,#8a5a3a,#aa7a5a)'
+    ];
+    
+    container.innerHTML = '';
+    board.forEach(function([uid, m], idx){
       const card = document.createElement('div');
       card.className = 'vorstand-card';
       
-      const photo = document.createElement('img');
-      photo.className = 'vorstand-photo';
-      photo.src = m.board_photo_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23f5f1e8" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="%234a4a44"%3E' + (m.display || uid).substring(0,2).toUpperCase() + '%3C/text%3E%3C/svg%3E';
-      photo.alt = m.display || uid;
-      photo.onerror = function(){ this.style.display = 'none'; };
-      card.appendChild(photo);
+      // Avatar mit Initialen oder Foto
+      if(m.board_photo_url){
+        const photo = document.createElement('img');
+        photo.src = m.board_photo_url;
+        photo.alt = m.display || uid;
+        photo.style.cssText = 'width:110px;height:110px;border-radius:50%;object-fit:cover;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+        photo.onerror = function(){ 
+          // Fallback zu Initialen
+          const av = document.createElement('div');
+          av.className = 'vorstand-avatar';
+          av.style.background = avatarGradients[idx % avatarGradients.length];
+          av.textContent = (m.display || uid).substring(0,2).toUpperCase();
+          this.parentNode.replaceChild(av, this);
+        };
+        card.appendChild(photo);
+      } else {
+        const av = document.createElement('div');
+        av.className = 'vorstand-avatar';
+        av.style.background = avatarGradients[idx % avatarGradients.length];
+        av.textContent = (m.display || uid).substring(0,2).toUpperCase();
+        card.appendChild(av);
+      }
       
-      const info = document.createElement('div');
-      info.className = 'vorstand-info';
+      // Role
+      const role = document.createElement('div');
+      role.className = 'vorstand-role';
+      role.textContent = m.board_position || 'Vorstandsmitglied';
+      card.appendChild(role);
       
+      // Name
       const name = document.createElement('div');
       name.className = 'vorstand-name';
       name.textContent = m.display || uid;
-      info.appendChild(name);
+      card.appendChild(name);
       
-      if(m.board_position){
-        const position = document.createElement('div');
-        position.className = 'vorstand-position';
-        position.textContent = m.board_position;
-        info.appendChild(position);
+      // Firma (optional)
+      if(m.city){
+        const firma = document.createElement('div');
+        firma.className = 'vorstand-firma';
+        firma.textContent = m.city;
+        card.appendChild(firma);
       }
       
-      if(m.email){
-        const email = document.createElement('a');
-        email.href = 'mailto:' + m.email;
-        email.style.cssText = 'display:block;margin-top:8px;font-size:12px;color:var(--text-muted);text-decoration:none';
-        email.textContent = m.email;
-        info.appendChild(email);
+      // Website
+      if(m.website){
+        const link = document.createElement('a');
+        link.href = m.website;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = m.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+        card.appendChild(link);
       }
       
-      card.appendChild(info);
-      grid.appendChild(card);
+      container.appendChild(card);
     });
     
   } catch(e) {
     console.error('Vorstand load error:', e);
-    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-muted)">Fehler beim Laden des Vorstands.</p>';
+    container.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Fehler beim Laden.</p>';
   }
 }
 
