@@ -599,7 +599,7 @@ footer p{font-size:13px;line-height:2;font-weight:300}
     <p class="section-lead">Von der Inspektion &uuml;ber Planung und Bau bis zur Wartung &mdash; alle SVSS-Mitglieder sind zertifizierte Fachpersonen.</p>
     <div class="member-preview-grid" id="preview-grid"></div>
     <div class="preview-footer">
-      <button class="view-all-btn" onclick="showPage('mitglieder')">Alle <span id="stat-member-count-btn">52</span> Mitglieder anzeigen &#8594;</button>
+      <button class="view-all-btn" onclick="console.log('Button clicked'); try { showPage('mitglieder'); console.log('showPage called successfully'); } catch(e) { console.error('ERROR:', e); }">Alle <span id="stat-member-count-btn">52</span> Mitglieder anzeigen &#8594;</button>
     </div>
   </section>
 
@@ -736,7 +736,7 @@ footer p{font-size:13px;line-height:2;font-weight:300}
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 
 // ═══════════════════════════════════════════════════════
 //  SUPABASE CLIENT (inline, kein NPM nötig)
