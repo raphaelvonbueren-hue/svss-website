@@ -262,6 +262,10 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M5 8h6"/></svg>
       Bildpool
     </div>
+    <div class="sidebar-item" id="sb-team" onclick="showPanel('team')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="2.5"/><path d="M3 13c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"/></svg>
+      Mein Team
+    </div>
     <div class="sidebar-item" id="sb-vorschau" onclick="showPanel('vorschau')">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
       Vorschau
@@ -269,6 +273,10 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
     <!-- Admin only -->
     <div id="sb-admin-section" class="hidden">
       <div class="sidebar-section">Administration</div>
+      <div class="sidebar-item" id="sb-personen" onclick="showPanel('personen')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="4" r="2"/><circle cx="11" cy="4" r="2"/><path d="M2 12c0-1.5 1.3-3 3-3s3 1.5 3 3M8 12c0-1.5 1.3-3 3-3s3 1.5 3 3"/></svg>
+        Personen verwalten
+      </div>
       <div class="sidebar-item" id="sb-admin" onclick="showPanel('admin')">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
         Mitglieder verwalten
@@ -587,6 +595,46 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
 
       </div>
 
+      <!-- MEIN TEAM (für alle Mitglieder) -->
+      <div id="panel-team" class="panel" style="display:none">
+        <p class="page-title">Mein Team</p>
+        <p class="page-sub">Personen Ihrer Firma verwalten — diese können vom Admin als Vorstand markiert werden.</p>
+
+        <div class="card" style="margin-bottom:1.5rem">
+          <div class="card-title">Person hinzufügen</div>
+          <div class="fg">
+            <label>Name</label>
+            <input id="new-person-name" type="text" placeholder="z.B. Thomas Gerster">
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label>Position/Funktion</label>
+              <input id="new-person-position" type="text" placeholder="z.B. Geschäftsführer">
+            </div>
+            <div class="fg">
+              <label>E-Mail</label>
+              <input id="new-person-email" type="email" placeholder="optional">
+            </div>
+          </div>
+          <div class="fg">
+            <label>Telefon</label>
+            <input id="new-person-phone" type="tel" placeholder="optional">
+          </div>
+          <div class="fg">
+            <label>Foto</label>
+            <input type="file" id="new-person-photo" accept="image/*">
+          </div>
+          <button class="btn btn-dark" onclick="addPerson()">+ Person hinzufügen</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Meine Personen</div>
+          <div id="team-list" style="display:flex;flex-direction:column;gap:12px;margin-top:1rem">
+            <div style="text-align:center;padding:2rem;color:var(--tm)">Lade...</div>
+          </div>
+        </div>
+      </div>
+
       <!-- ADMIN -->
       <div id="panel-admin" class="panel" style="display:none">
         <p class="page-title">Mitglieder verwalten</p>
@@ -657,6 +705,26 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
           </div>
         </div>
 
+      </div>
+
+      <!-- PERSONEN VERWALTEN (nur Admin) -->
+      <div id="panel-personen" class="panel" style="display:none">
+        <p class="page-title">Personen verwalten</p>
+        <p class="page-sub">Alle Personen aller Firmen — Vorstand markieren und Positionen zuweisen.</p>
+
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+            <div class="card-title" style="margin:0">Alle Personen</div>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="persons-search" placeholder="Suchen…" 
+                style="width:200px;font-size:13px" oninput="filterPersons(this.value)">
+              <button class="btn btn-ghost btn-sm" onclick="renderAllPersons()">&#8635; Aktualisieren</button>
+            </div>
+          </div>
+          <div id="all-persons-list" style="display:flex;flex-direction:column;gap:12px">
+            <div style="text-align:center;padding:2rem;color:var(--tm)">Lade...</div>
+          </div>
+        </div>
       </div>
 
       <!-- MODAL: Mitglied bearbeiten -->
@@ -751,6 +819,48 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
           <div class="modal-footer">
             <button class="btn btn-ghost" onclick="closeEditMemberModal()">Abbrechen</button>
             <button class="btn btn-dark" onclick="saveEditedMember()">Speichern</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: Person Vorstand-Einstellungen (nur Admin) -->
+      <div id="edit-person-board-modal" class="modal" style="display:none">
+        <div class="modal-content" style="max-width:500px">
+          <div class="modal-header">
+            <h3>Vorstand-Einstellungen</h3>
+            <span class="modal-close" onclick="closePersonBoardModal()">&times;</span>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="edit-person-id">
+            
+            <div style="background:var(--sand);padding:1rem;border-radius:var(--r);margin-bottom:1.5rem">
+              <div style="font-weight:500;margin-bottom:4px" id="person-board-name"></div>
+              <div style="font-size:12px;color:var(--tm)" id="person-board-firma"></div>
+            </div>
+
+            <div class="fg">
+              <label style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="edit-person-board" onchange="togglePersonBoardFields()">
+                <span>Im Vorstand anzeigen</span>
+              </label>
+            </div>
+
+            <div id="person-board-fields" style="display:none">
+              <div class="fg">
+                <label>Vorstandsposition</label>
+                <input id="edit-person-board-position" type="text" placeholder="z.B. Präsident, Kassier, Sekretär">
+              </div>
+
+              <div class="fg">
+                <label>Sortier-Reihenfolge <span style="font-weight:400;color:var(--tm)">(1 = zuerst, 999 = zuletzt)</span></label>
+                <input id="edit-person-board-order" type="number" min="1" max="999" value="999">
+              </div>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closePersonBoardModal()">Abbrechen</button>
+            <button class="btn btn-dark" onclick="savePersonBoard()">Speichern</button>
           </div>
         </div>
       </div>
@@ -878,6 +988,36 @@ async function supaSaveMembers(members) {
     board_order: m.board_order || 999
   }));
   return supaUpsert('members', rows);
+}
+
+// ─ PERSONS ─
+async function supaGetPersons(memberUid) {
+  const query = memberUid ? {'member_uid': 'eq.' + memberUid} : {};
+  return supaSelect('persons', query);
+}
+
+async function supaGetAllPersons() {
+  return supaSelect('persons', {});
+}
+
+async function supaSavePerson(person) {
+  // Upload photo if base64
+  if(person.photo_url && person.photo_url.startsWith('data:')) {
+    try {
+      person.photo_url = await supaUploadBase64(person.member_uid, 'person-' + Date.now(), person.photo_url);
+    } catch(e) {
+      console.error('Photo upload error:', e);
+    }
+  }
+  return supaUpsert('persons', [person]);
+}
+
+async function supaDeletePerson(id) {
+  const r = await fetch(SUPA_URL + '/rest/v1/persons?id=eq.' + encodeURIComponent(id), {
+    method: 'DELETE',
+    headers: supaHeaders()
+  });
+  if(!r.ok) throw new Error('Delete failed: ' + r.status);
 }
 
 // ─ PROFILES ─
@@ -1092,7 +1232,9 @@ function showPanel(name){
   if(name==='vorschau')     renderPreview();
   if(name==='admin')        renderAdminTable();
   if(name==='seiteneditor') seLoadTab('hero');
-  if(name==='bildpool') { bpTab('upload'); }
+  if(name==='bildpool')     { bpTab('upload'); }
+  if(name==='team')         renderTeam();
+  if(name==='personen')     renderAllPersons();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1710,6 +1852,219 @@ async function toggleAttribute(uid, attr){
     renderAdminTable();
   } catch(e) {
     console.error('Fehler beim Speichern:', e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  TEAM MANAGEMENT (für Mitglieder)
+// ═══════════════════════════════════════════════════════
+
+let _teamPersons = [];
+let _newPersonPhoto = null;
+
+async function renderTeam(){
+  const list = document.getElementById('team-list');
+  if(!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--tm)">Lade...</div>';
+  
+  const session = getSession();
+  if(!session) return;
+  
+  try {
+    _teamPersons = await supaGetPersons(session.uid);
+    if(_teamPersons.length === 0){
+      list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--tm)">Noch keine Personen hinzugefügt.</div>';
+      return;
+    }
+    
+    list.innerHTML = '';
+    _teamPersons.forEach(function(p){
+      const card = document.createElement('div');
+      card.style.cssText = 'border:1px solid var(--sd);border-radius:var(--r);padding:1rem;display:flex;gap:1rem;align-items:center;background:#fff';
+      
+      const photo = document.createElement('img');
+      photo.src = p.photo_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23e8e2d4" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="40" fill="%234a4a44"%3E' + p.name.substring(0,1) + '%3C/text%3E%3C/svg%3E';
+      photo.style.cssText = 'width:60px;height:60px;border-radius:50%;object-fit:cover';
+      card.appendChild(photo);
+      
+      const info = document.createElement('div');
+      info.style.flex = '1';
+      info.innerHTML = '<div style="font-weight:500;font-size:14px">' + p.name + '</div>' +
+        (p.position ? '<div style="font-size:12px;color:var(--tm);margin-top:2px">' + p.position + '</div>' : '') +
+        (p.board_member ? '<div style="margin-top:4px"><span class="badge badge-blue">Im Vorstand</span></div>' : '');
+      card.appendChild(info);
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn btn-sm';
+      deleteBtn.style.cssText = 'background:#fee2e2;color:#c0392b';
+      deleteBtn.textContent = 'Löschen';
+      deleteBtn.onclick = function(){ deletePerson(p.id); };
+      card.appendChild(deleteBtn);
+      
+      list.appendChild(card);
+    });
+  } catch(e) {
+    list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--err-tx)">Fehler: ' + e.message + '</div>';
+  }
+}
+
+async function addPerson(){
+  const name = document.getElementById('new-person-name').value.trim();
+  if(!name){ toast('Bitte Name eingeben', 'err'); return; }
+  
+  const session = getSession();
+  if(!session) return;
+  
+  const person = {
+    member_uid: session.uid,
+    name: name,
+    position: document.getElementById('new-person-position').value.trim(),
+    email: document.getElementById('new-person-email').value.trim(),
+    phone: document.getElementById('new-person-phone').value.trim(),
+    photo_url: _newPersonPhoto || null
+  };
+  
+  try {
+    await supaSavePerson(person);
+    toast('Person hinzugefügt ✓', 'ok');
+    document.getElementById('new-person-name').value = '';
+    document.getElementById('new-person-position').value = '';
+    document.getElementById('new-person-email').value = '';
+    document.getElementById('new-person-phone').value = '';
+    document.getElementById('new-person-photo').value = '';
+    _newPersonPhoto = null;
+    renderTeam();
+  } catch(e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+}
+
+async function deletePerson(id){
+  if(!confirm('Person wirklich löschen?')) return;
+  try {
+    await supaDeletePerson(id);
+    toast('Gelöscht ✓', 'ok');
+    renderTeam();
+  } catch(e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+}
+
+// Photo upload handler
+document.addEventListener('DOMContentLoaded', function(){
+  const photoInput = document.getElementById('new-person-photo');
+  if(photoInput){
+    photoInput.onchange = function(e){
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev){ _newPersonPhoto = ev.target.result; };
+      reader.readAsDataURL(file);
+    };
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+//  PERSONEN VERWALTEN (für Admins)
+// ═══════════════════════════════════════════════════════
+
+let _allPersons = [];
+let _allMembersMap = {};
+
+async function renderAllPersons(){
+  const list = document.getElementById('all-persons-list');
+  if(!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--tm)">Lade...</div>';
+  
+  try {
+    _allPersons = await supaGetAllPersons();
+    _allMembersMap = await supaGetMembers();
+    filterPersons('');
+  } catch(e) {
+    list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--err-tx)">Fehler: ' + e.message + '</div>';
+  }
+}
+
+function filterPersons(query){
+  const list = document.getElementById('all-persons-list');
+  if(!list) return;
+  
+  const q = query.toLowerCase();
+  const filtered = _allPersons.filter(function(p){
+    const firma = _allMembersMap[p.member_uid]?.display || '';
+    return p.name.toLowerCase().includes(q) || firma.toLowerCase().includes(q);
+  });
+  
+  if(filtered.length === 0){
+    list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--tm)">Keine Ergebnisse.</div>';
+    return;
+  }
+  
+  list.innerHTML = '';
+  filtered.forEach(function(p){
+    const firma = _allMembersMap[p.member_uid]?.display || p.member_uid;
+    
+    const card = document.createElement('div');
+    card.style.cssText = 'border:1px solid var(--sd);border-radius:var(--r);padding:1rem;display:flex;gap:1rem;align-items:center;background:#fff';
+    
+    const photo = document.createElement('img');
+    photo.src = p.photo_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23e8e2d4" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="40" fill="%234a4a44"%3E' + p.name.substring(0,1) + '%3C/text%3E%3C/svg%3E';
+    photo.style.cssText = 'width:60px;height:60px;border-radius:50%;object-fit:cover';
+    card.appendChild(photo);
+    
+    const info = document.createElement('div');
+    info.style.flex = '1';
+    info.innerHTML = '<div style="font-weight:500;font-size:14px">' + p.name + '</div>' +
+      '<div style="font-size:12px;color:var(--tm);margin-top:2px">' + firma + (p.position ? ' · ' + p.position : '') + '</div>' +
+      (p.board_member ? '<div style="margin-top:4px"><span class="badge badge-blue">' + (p.board_position || 'Vorstand') + '</span></div>' : '');
+    card.appendChild(info);
+    
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-ghost btn-sm';
+    editBtn.textContent = p.board_member ? '✎ Vorstand bearbeiten' : '+ Als Vorstand';
+    editBtn.onclick = function(){ openPersonBoardModal(p); };
+    card.appendChild(editBtn);
+    
+    list.appendChild(card);
+  });
+}
+
+function openPersonBoardModal(person){
+  document.getElementById('edit-person-id').value = person.id;
+  document.getElementById('person-board-name').textContent = person.name;
+  document.getElementById('person-board-firma').textContent = _allMembersMap[person.member_uid]?.display || person.member_uid;
+  document.getElementById('edit-person-board').checked = person.board_member || false;
+  document.getElementById('edit-person-board-position').value = person.board_position || '';
+  document.getElementById('edit-person-board-order').value = person.board_order || 999;
+  togglePersonBoardFields();
+  document.getElementById('edit-person-board-modal').style.display = 'flex';
+}
+
+function closePersonBoardModal(){
+  document.getElementById('edit-person-board-modal').style.display = 'none';
+}
+
+function togglePersonBoardFields(){
+  const checked = document.getElementById('edit-person-board').checked;
+  document.getElementById('person-board-fields').style.display = checked ? 'block' : 'none';
+}
+
+async function savePersonBoard(){
+  const id = document.getElementById('edit-person-id').value;
+  const person = _allPersons.find(function(p){ return p.id === id; });
+  if(!person) return;
+  
+  person.board_member = document.getElementById('edit-person-board').checked;
+  person.board_position = document.getElementById('edit-person-board-position').value.trim();
+  person.board_order = parseInt(document.getElementById('edit-person-board-order').value) || 999;
+  
+  try {
+    await supaSavePerson(person);
+    toast('Gespeichert ✓', 'ok');
+    closePersonBoardModal();
+    renderAllPersons();
+  } catch(e) {
+    toast('Fehler: ' + e.message, 'err');
   }
 }
 

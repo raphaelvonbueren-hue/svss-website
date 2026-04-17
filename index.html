@@ -1229,15 +1229,19 @@ async function buildVorstandGrid(){
   if(!container) return;
   
   try {
-    const members = await supaGetMembers();
-    const board = Object.entries(members)
-      .filter(function([uid, m]){ return m.board_member; })
-      .sort(function(a, b){ return (a[1].board_order || 999) - (b[1].board_order || 999); });
+    // Lade alle Personen die im Vorstand sind
+    const personsData = await supaSelect('persons', {});
+    const boardPersons = personsData
+      .filter(function(p){ return p.board_member; })
+      .sort(function(a, b){ return (a.board_order || 999) - (b.board_order || 999); });
     
-    if(board.length === 0){
+    if(boardPersons.length === 0){
       container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:1rem">Keine Vorstandsmitglieder definiert.</p>';
       return;
     }
+    
+    // Lade alle Mitglieder (Firmen) um Firmenname und Website anzuzeigen
+    const members = await supaGetMembers();
     
     const avatarGradients = [
       'linear-gradient(135deg,var(--green-dark),var(--green-mid))',
@@ -1248,22 +1252,23 @@ async function buildVorstandGrid(){
     ];
     
     container.innerHTML = '';
-    board.forEach(function([uid, m], idx){
+    boardPersons.forEach(function(person, idx){
+      const member = members[person.member_uid] || {};
       const card = document.createElement('div');
       card.className = 'vorstand-card';
       
-      // Avatar mit Initialen oder Foto
-      if(m.board_photo_url){
+      // Foto oder Avatar mit Initialen
+      if(person.photo_url){
         const photo = document.createElement('img');
-        photo.src = m.board_photo_url;
-        photo.alt = m.display || uid;
+        photo.src = person.photo_url;
+        photo.alt = person.name;
         photo.style.cssText = 'width:110px;height:110px;border-radius:50%;object-fit:cover;box-shadow:0 4px 16px rgba(0,0,0,.2)';
         photo.onerror = function(){ 
           // Fallback zu Initialen
           const av = document.createElement('div');
           av.className = 'vorstand-avatar';
           av.style.background = avatarGradients[idx % avatarGradients.length];
-          av.textContent = (m.display || uid).substring(0,2).toUpperCase();
+          av.textContent = person.name.substring(0,2).toUpperCase();
           this.parentNode.replaceChild(av, this);
         };
         card.appendChild(photo);
@@ -1271,37 +1276,35 @@ async function buildVorstandGrid(){
         const av = document.createElement('div');
         av.className = 'vorstand-avatar';
         av.style.background = avatarGradients[idx % avatarGradients.length];
-        av.textContent = (m.display || uid).substring(0,2).toUpperCase();
+        av.textContent = person.name.substring(0,2).toUpperCase();
         card.appendChild(av);
       }
       
-      // Role
+      // Vorstandsposition (z.B. Präsident)
       const role = document.createElement('div');
       role.className = 'vorstand-role';
-      role.textContent = m.board_position || 'Vorstandsmitglied';
+      role.textContent = person.board_position || 'Vorstandsmitglied';
       card.appendChild(role);
       
-      // Name
+      // Name der Person
       const name = document.createElement('div');
       name.className = 'vorstand-name';
-      name.textContent = m.display || uid;
+      name.textContent = person.name;
       card.appendChild(name);
       
-      // Firma (optional)
-      if(m.city){
-        const firma = document.createElement('div');
-        firma.className = 'vorstand-firma';
-        firma.textContent = m.city;
-        card.appendChild(firma);
-      }
+      // Firma
+      const firma = document.createElement('div');
+      firma.className = 'vorstand-firma';
+      firma.textContent = member.display || person.member_uid;
+      card.appendChild(firma);
       
-      // Website
-      if(m.website){
+      // Website der Firma
+      if(member.website){
         const link = document.createElement('a');
-        link.href = m.website;
+        link.href = member.website;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        link.textContent = m.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+        link.textContent = member.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
         card.appendChild(link);
       }
       
