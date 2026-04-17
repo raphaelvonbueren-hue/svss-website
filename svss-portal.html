@@ -1252,6 +1252,17 @@ async function loadProfil(){
   renderTagSelector(p.tags||[]);
   updateLogoPreview();
   document.getElementById('p-logo').addEventListener('input', updateLogoPreview);
+  
+  // Event Listener für Echtzeit-Validierung (ohne Duplikate)
+  validateProfilButton();
+  const requiredIds = ['p-name', 'p-contact', 'p-email', 'p-ort'];
+  requiredIds.forEach(function(id){
+    const el = document.getElementById(id);
+    if(el && !el.dataset.validationListenerAdded) {
+      el.addEventListener('input', validateProfilButton);
+      el.dataset.validationListenerAdded = 'true';
+    }
+  });
 }
 function updateLogoPreview(){
   const url  = document.getElementById('p-logo').value.trim();
@@ -1275,17 +1286,60 @@ function renderTagSelector(selected){
 }
 function getSelectedTags(){ return [...document.querySelectorAll('.tag-opt.sel')].map(e=>e.textContent); }
 async function saveProfil(){
+  // Validierung - wichtige Felder prüfen
+  const requiredFields = [
+    {id: 'p-name', label: 'Firmenname'},
+    {id: 'p-contact', label: 'Kontaktperson'},
+    {id: 'p-email', label: 'E-Mail'},
+    {id: 'p-ort', label: 'Ort'}
+  ];
+  
+  const missing = [];
+  requiredFields.forEach(function(field){
+    const val = document.getElementById(field.id)?.value?.trim();
+    if(!val) missing.push(field.label);
+  });
+  
+  if(missing.length > 0){
+    toast('Fehlende Felder: ' + missing.join(', '), 'err');
+    return;
+  }
+  
   const data={};
   PROFILE_FIELDS.forEach(f=>{ data[f]=document.getElementById('p-'+f)?.value?.trim()||''; });
   data.tags=getSelectedTags();
   toast('Speichert…','ok');
   try {
     await supaSaveProfile(SESSION.uid, data);
-    toast('Profil gespeichert \u2713','ok');
+    toast('Profil gespeichert ✓','ok');
   } catch(e) {
     toast('Offline — lokal gespeichert','ok');
   }
   updateDashStats();
+  validateProfilButton(); // Button-State neu prüfen
+}
+
+// Validiert Profil-Button und zeigt visuelles Feedback
+function validateProfilButton(){
+  const btn = document.querySelector('#panel-profil .btn-dark');
+  if(!btn) return;
+  
+  const requiredFields = ['p-name', 'p-contact', 'p-email', 'p-ort'];
+  const missing = [];
+  requiredFields.forEach(function(id){
+    const val = document.getElementById(id)?.value?.trim();
+    if(!val) missing.push(id);
+  });
+  
+  if(missing.length > 0){
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+    btn.title = 'Bitte alle Pflichtfelder ausfüllen: Firmenname, Kontaktperson, E-Mail, Ort';
+  } else {
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    btn.title = '';
+  }
 }
 
 // ═══════════════════════════════════════════════════════

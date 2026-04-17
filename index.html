@@ -2023,7 +2023,7 @@ try { buildPreviewGrid(); } catch(e) {}
   try {
     const members = await supaGetMembers();
     const count = Object.keys(members).filter(function(uid){ 
-      return members[uid].role === 'member'; 
+      return members[uid].role === 'member' || members[uid].role === 'board'; 
     }).length;
     // Only update if count seems right (52 ± 5)
     if(count >= 47 && count <= 57){
