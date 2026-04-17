@@ -165,6 +165,16 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
 .tag-opt.sel{background:var(--gd);color:#fff;border-color:var(--gd)}
 .tag-opt:hover:not(.sel){border-color:var(--gm);color:var(--gd)}
 
+/* ── MODAL ── */
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-content{background:#fff;border-radius:var(--rl);max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2);width:100%}
+.modal-header{padding:1.5rem;border-bottom:1px solid var(--sd);display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:1.25rem;font-weight:500;margin:0}
+.modal-close{font-size:28px;cursor:pointer;color:var(--tm);line-height:1;transition:color .15s}
+.modal-close:hover{color:var(--tx)}
+.modal-body{padding:1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--sd);display:flex;gap:8px;justify-content:flex-end}
+
 @media(max-width:768px){
   .app-sidebar{display:none}
   .app-main{margin-left:0}
@@ -250,7 +260,7 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
     </div>
     <div class="sidebar-item" id="sb-bildpool" onclick="showPanel('bildpool')">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M5 8h6"/></svg>
-      Bildpool &amp; KI
+      Bildpool
     </div>
     <div class="sidebar-item" id="sb-vorschau" onclick="showPanel('vorschau')">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
@@ -533,15 +543,14 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
       </div>
 
 
-      <!-- BILDPOOL + KI (alle Mitglieder) -->
+      <!-- BILDPOOL (alle Mitglieder) -->
       <div id="panel-bildpool" class="panel" style="display:none">
-        <p class="page-title">Bildpool &amp; KI-Bildgenerierung</p>
-        <p class="page-sub">Bilder hochladen, verwalten und mit KI neue Bilder generieren.</p>
+        <p class="page-title">Bildpool</p>
+        <p class="page-sub">Bilder hochladen und verwalten für die Galerie auf der Hauptseite.</p>
 
         <!-- TABS -->
         <div style="display:flex;gap:6px;margin-bottom:1.5rem;border-bottom:1px solid var(--sd);padding-bottom:0">
           <button class="se-tab active" id="bp-tab-upload" onclick="bpTab('upload')">Hochladen</button>
-          <button class="se-tab" id="bp-tab-ki" onclick="bpTab('ki')">KI-Generator</button>
           <button class="se-tab" id="bp-tab-pool" onclick="bpTab('pool')">Meine Bilder</button>
         </div>
 
@@ -566,56 +575,6 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
           </div>
         </div>
 
-        <!-- KI TAB -->
-        <div id="bp-ki" style="display:none">
-          <div class="card">
-            <div class="card-title">KI-Bildgenerierung</div>
-            <p style="font-size:13px;color:var(--tm);margin-bottom:1rem">Beschreiben Sie das gewünschte Bild auf Deutsch. Die KI generiert ein passendes Bild für Ihre Profilseite.</p>
-            <div class="fg">
-              <label>Bildbeschreibung</label>
-              <textarea id="bp-ki-prompt" rows="3" placeholder="z.B. Kinder spielen sicher auf einem modernen Spielplatz in der Schweiz, Sonnenschein, Weitwinkel"></textarea>
-            </div>
-            <div class="form-row">
-              <div class="fg">
-                <label>Stil</label>
-                <select id="bp-ki-style">
-                  <option value="">Standard</option>
-                  <option value="photorealistic">Fotorealistisch</option>
-                  <option value="professional corporate photo">Professionell/Corporate</option>
-                  <option value="watercolor illustration">Aquarell-Illustration</option>
-                  <option value="minimal flat design">Minimal/Flach</option>
-                </select>
-              </div>
-              <div class="fg">
-                <label>Format</label>
-                <select id="bp-ki-ratio">
-                  <option value="16:9 landscape">Querformat (16:9)</option>
-                  <option value="1:1 square">Quadrat (1:1)</option>
-                  <option value="4:3 landscape">4:3 Querformat</option>
-                  <option value="portrait">Hochformat</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn btn-dark" onclick="bpGenerate()" id="bp-ki-btn">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5z"/></svg>
-              Bild generieren
-            </button>
-            <div id="bp-ki-result" style="display:none;margin-top:1.25rem">
-              <div id="bp-ki-loading" style="display:none;padding:2rem;text-align:center;color:var(--tm);font-size:13px">
-                <div style="width:32px;height:32px;border:3px solid var(--sd);border-top-color:var(--gm);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem"></div>
-                KI generiert Ihr Bild…
-              </div>
-              <div id="bp-ki-img-wrap" style="display:none">
-                <img id="bp-ki-img" style="max-width:100%;border-radius:var(--rl);box-shadow:0 4px 20px rgba(0,0,0,.1)">
-                <div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
-                  <button class="btn btn-dark btn-sm" onclick="bpSaveKiImg()">In Bildpool speichern</button>
-                  <button class="btn btn-ghost btn-sm" onclick="bpDownloadKiImg()">Herunterladen</button>
-                </div>
-              </div>
-              <div id="bp-ki-error" style="display:none;background:var(--err-bg);color:var(--err-tx);padding:12px;border-radius:var(--r);font-size:13px"></div>
-            </div>
-          </div>
-        </div>
 
         <!-- POOL TAB -->
         <div id="bp-pool" style="display:none">
@@ -631,7 +590,7 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
       <!-- ADMIN -->
       <div id="panel-admin" class="panel" style="display:none">
         <p class="page-title">Mitglieder verwalten</p>
-        <p class="page-sub">Alle Mitgliedskonten verwalten — Passwörter ändern, neue Konten erstellen, Konten löschen.</p>
+        <p class="page-sub">Alle Mitgliedskonten verwalten — Passwörter ändern, neue Konten erstellen, Konten löschen, Vorstand definieren.</p>
 
         <!-- Neues Mitglied -->
         <div class="card" style="margin-bottom:1.5rem">
@@ -667,18 +626,133 @@ hr.div{border:none;border-top:1px solid var(--sd);margin:1.5rem 0}
             </div>
             <div style="display:flex;gap:8px;align-items:center">
               <input type="text" id="member-search" placeholder="Suchen…" 
-                style="width:160px;font-size:13px" oninput="adminFilterMembers(this.value)">
+                style="width:200px;font-size:13px" oninput="adminFilterMembers(this.value)">
+              <button class="btn btn-ghost btn-sm" onclick="exportMembersCSV()">↓ CSV Export</button>
               <button class="btn btn-ghost btn-sm" onclick="renderAdminTable()">&#8635; Aktualisieren</button>
             </div>
           </div>
 
-          <div id="member-list-wrap" style="display:flex;flex-direction:column;gap:6px">
-            <div style="text-align:center;padding:2rem;color:var(--tm);font-size:13px">
-              &#9719; Lade Mitglieder aus Supabase…
-            </div>
+          <!-- Erweiterte Tabelle -->
+          <div style="overflow-x:auto">
+            <table class="member-table">
+              <thead>
+                <tr>
+                  <th onclick="adminSortTable('display')" style="cursor:pointer">Firma / Name ↕</th>
+                  <th onclick="adminSortTable('email')" style="cursor:pointer">E-Mail ↕</th>
+                  <th onclick="adminSortTable('city')" style="cursor:pointer">Ort ↕</th>
+                  <th onclick="adminSortTable('role')" style="cursor:pointer">Rolle ↕</th>
+                  <th style="min-width:200px">Attribute</th>
+                  <th style="text-align:center">Vorstand</th>
+                  <th style="text-align:right">Aktionen</th>
+                </tr>
+              </thead>
+              <tbody id="member-list-wrap">
+                <tr>
+                  <td colspan="7" style="text-align:center;padding:2rem;color:var(--tm);font-size:13px">
+                    &#9719; Lade Mitglieder aus Supabase…
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
+      </div>
+
+      <!-- MODAL: Mitglied bearbeiten -->
+      <div id="edit-member-modal" class="modal" style="display:none">
+        <div class="modal-content" style="max-width:700px">
+          <div class="modal-header">
+            <h3>Mitglied bearbeiten</h3>
+            <span class="modal-close" onclick="closeEditMemberModal()">&times;</span>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="edit-uid">
+            
+            <div class="fg">
+              <label>Firma / Anzeigename</label>
+              <input id="edit-display" type="text">
+            </div>
+            
+            <div class="form-row">
+              <div class="fg">
+                <label>E-Mail</label>
+                <input id="edit-email" type="email">
+              </div>
+              <div class="fg">
+                <label>Telefon</label>
+                <input id="edit-phone" type="tel">
+              </div>
+            </div>
+
+            <div class="fg">
+              <label>Straße & Nr.</label>
+              <input id="edit-street" type="text" placeholder="z.B. Musterstraße 123">
+            </div>
+
+            <div class="form-row">
+              <div class="fg">
+                <label>PLZ</label>
+                <input id="edit-zip" type="text" placeholder="z.B. 8000">
+              </div>
+              <div class="fg">
+                <label>Ort</label>
+                <input id="edit-city" type="text" placeholder="z.B. Zürich">
+              </div>
+            </div>
+
+            <div class="fg">
+              <label>Website</label>
+              <input id="edit-website" type="url" placeholder="https://...">
+            </div>
+
+            <div class="fg">
+              <label>Rolle</label>
+              <select id="edit-role">
+                <option value="member">Mitglied</option>
+                <option value="board">Vorstand</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+
+            <div class="fg">
+              <label>Passwort <span style="font-weight:400;color:var(--tm)">(leer lassen = unverändert)</span></label>
+              <input id="edit-password" type="text" placeholder="Neues Passwort">
+            </div>
+
+            <hr class="div">
+
+            <div class="fg">
+              <label style="display:flex;align-items:center;gap:8px">
+                <input type="checkbox" id="edit-board-member" onchange="toggleBoardFields()">
+                <span>Im Vorstand anzeigen</span>
+              </label>
+            </div>
+
+            <div id="board-fields" style="display:none">
+              <div class="fg">
+                <label>Vorstand-Position</label>
+                <input id="edit-board-position" type="text" placeholder="z.B. Präsident, Kassier, Sekretär">
+              </div>
+
+              <div class="fg">
+                <label>Sortier-Reihenfolge <span style="font-weight:400;color:var(--tm)">(1 = zuerst, 999 = zuletzt)</span></label>
+                <input id="edit-board-order" type="number" min="1" max="999" value="999">
+              </div>
+
+              <div class="fg">
+                <label>Vorstand-Foto</label>
+                <input type="file" id="edit-board-photo" accept="image/*" onchange="previewBoardPhoto(this)">
+                <div id="board-photo-preview" style="margin-top:8px"></div>
+              </div>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeEditMemberModal()">Abbrechen</button>
+            <button class="btn btn-dark" onclick="saveEditedMember()">Speichern</button>
+          </div>
+        </div>
       </div>
 
       <script>
@@ -764,12 +838,45 @@ async function supaUploadBase64(uid, filename, base64Data) {
 async function supaGetMembers() {
   const rows = await supaSelect('members', {});
   const m = {};
-  rows.forEach(r => m[r.uid] = {pw: r.pw, display: r.display, role: r.role});
+  rows.forEach(r => m[r.uid] = {
+    pw: r.pw, 
+    display: r.display || r.display_name, 
+    role: r.role,
+    email: r.email,
+    street: r.street,
+    zip: r.zip,
+    city: r.city,
+    phone: r.phone,
+    website: r.website,
+    logo_url: r.logo_url,
+    attributes: r.attributes || [],
+    board_member: r.board_member || false,
+    board_photo_url: r.board_photo_url,
+    board_position: r.board_position,
+    board_order: r.board_order || 999
+  });
   return m;
 }
 
 async function supaSaveMembers(members) {
-  const rows = Object.entries(members).map(([uid, m]) => ({uid, pw: m.pw, display: m.display, role: m.role}));
+  const rows = Object.entries(members).map(([uid, m]) => ({
+    uid, 
+    pw: m.pw, 
+    display: m.display,
+    role: m.role,
+    email: m.email,
+    street: m.street,
+    zip: m.zip,
+    city: m.city,
+    phone: m.phone,
+    website: m.website,
+    logo_url: m.logo_url,
+    attributes: m.attributes || [],
+    board_member: m.board_member || false,
+    board_photo_url: m.board_photo_url,
+    board_position: m.board_position,
+    board_order: m.board_order || 999
+  }));
   return supaUpsert('members', rows);
 }
 
@@ -1263,11 +1370,29 @@ function buildProfileHTML(uid,p,isPreview){
 // ═══════════════════════════════════════════════════════
 //  ADMIN
 // ═══════════════════════════════════════════════════════
+// Globale Variablen für Admin
+let _adminMembers = {};
+let _adminSortBy = 'display';
+let _adminSortDir = 'asc';
+
+const ATTRIBUTE_OPTIONS = ['prueffirma', 'lieferant', 'vertrieb', 'schulungen', 'montagefirma', 'fallschutz', 'gemeinde', 'goenner', 'berater'];
+const ATTRIBUTE_LABELS = {
+  'prueffirma': 'Prüffirma',
+  'lieferant': 'Lieferant', 
+  'vertrieb': 'Vertrieb',
+  'schulungen': 'Schulungen',
+  'montagefirma': 'Montagefirma',
+  'fallschutz': 'Fallschutz',
+  'gemeinde': 'Gemeinde',
+  'goenner': 'Gönner',
+  'berater': 'Berater'
+};
+
 async function renderAdminTable(){
-  const wrap  = document.getElementById('member-list-wrap');
+  const wrap = document.getElementById('member-list-wrap');
   const countEl = document.getElementById('member-count');
   if(!wrap) return;
-  wrap.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--tm);font-size:13px">&#9719; Lade...</div>';
+  wrap.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--tm);font-size:13px">&#9719; Lade...</td></tr>';
 
   let members = {};
   try {
@@ -1278,13 +1403,23 @@ async function renderAdminTable(){
   }
 
   if(countEl) countEl.textContent = Object.keys(members).length;
-  window._adminMembers = members;
+  _adminMembers = members;
   adminRenderList(members, '');
 }
 
 function adminFilterMembers(q){
-  if(!window._adminMembers) return;
-  adminRenderList(window._adminMembers, q.toLowerCase());
+  if(!_adminMembers) return;
+  adminRenderList(_adminMembers, q.toLowerCase());
+}
+
+function adminSortTable(col){
+  if(_adminSortBy === col){
+    _adminSortDir = _adminSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _adminSortBy = col;
+    _adminSortDir = 'asc';
+  }
+  adminRenderList(_adminMembers, document.getElementById('member-search').value.toLowerCase());
 }
 
 function adminRenderList(members, filter){
@@ -1295,89 +1430,323 @@ function adminRenderList(members, filter){
   const sorted = Object.entries(members)
     .filter(function([uid, m]){
       if(!filter) return true;
-      return uid.includes(filter) || (m.display||'').toLowerCase().includes(filter);
+      const searchStr = (uid + ' ' + (m.display||'') + ' ' + (m.email||'') + ' ' + (m.city||'')).toLowerCase();
+      return searchStr.includes(filter);
     })
     .sort(function(a,b){
-      if(a[1].role==='admin' && b[1].role!=='admin') return -1;
-      if(b[1].role==='admin' && a[1].role!=='admin') return 1;
-      return a[0].localeCompare(b[0]);
+      const aVal = a[1][_adminSortBy] || '';
+      const bVal = b[1][_adminSortBy] || '';
+      const cmp = String(aVal).localeCompare(String(bVal));
+      return _adminSortDir === 'asc' ? cmp : -cmp;
     });
 
   if(!sorted.length){
-    wrap.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--tm);font-size:13px">Keine Ergebnisse.</div>';
+    wrap.innerHTML='<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--tm);font-size:13px">Keine Ergebnisse.</td></tr>';
     return;
   }
 
   sorted.forEach(function([uid, m]){
-    const isAdmin = m.role === 'admin';
-    const row = document.createElement('div');
-    row.style.cssText = 'display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;' +
-      'padding:12px 16px;border-radius:var(--r);background:var(--sl);border:1px solid var(--sd);' +
-      'transition:background .15s';
-    row.onmouseenter = function(){ this.style.background='var(--gl)'; };
-    row.onmouseleave = function(){ this.style.background='var(--sl)'; };
+    const tr = document.createElement('tr');
+    
+    // Firma / Name
+    const tdName = document.createElement('td');
+    tdName.innerHTML = '<div style="font-weight:500;font-size:13px">' + (m.display||uid) + '</div>' +
+      '<div style="font-size:11px;color:var(--tm);margin-top:2px">' +
+      '<code style="background:var(--sd);padding:1px 6px;border-radius:3px;font-size:10px">'+uid+'</code></div>';
+    tr.appendChild(tdName);
 
-    // Avatar
-    const av = document.createElement('div');
-    av.style.cssText = 'width:38px;height:38px;border-radius:50%;background:'+(isAdmin?'var(--gm)':'var(--sd)')+
-      ';display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:'+(isAdmin?'#fff':'var(--ts)')+';flex-shrink:0';
-    av.textContent = uid.substring(0,2).toUpperCase();
+    // E-Mail
+    const tdEmail = document.createElement('td');
+    tdEmail.style.fontSize = '12px';
+    tdEmail.textContent = m.email || '—';
+    tr.appendChild(tdEmail);
 
-    // Info
-    const info = document.createElement('div');
-    info.innerHTML = '<div style="font-weight:500;font-size:13px;color:var(--td)">' + (m.display||uid) + '</div>' +
-      '<div style="font-size:11px;color:var(--tm);margin-top:1px;display:flex;gap:8px;align-items:center">' +
-      '<code style="background:var(--sd);padding:1px 6px;border-radius:3px;font-size:11px">'+uid+'</code>' +
-      (isAdmin ? '<span style="background:#d4ead8;color:#1a3a2a;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:600">ADMIN</span>' : '') +
-      '</div>';
-
-    // Password field
-    const pwWrap = document.createElement('div');
-    pwWrap.style.cssText = 'display:flex;align-items:center;gap:6px';
-    const pwInput = document.createElement('input');
-    pwInput.type = 'password';
-    pwInput.value = m.pw;
-    pwInput.dataset.uid = uid;
-    pwInput.style.cssText = 'width:110px;font-size:12px;font-family:monospace;border:1px solid var(--sd);border-radius:4px;padding:5px 8px;background:var(--bg)';
-    pwInput.title = 'Passwort ändern';
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'btn btn-ghost btn-sm';
-    saveBtn.textContent = '✓';
-    saveBtn.title = 'Speichern';
-    saveBtn.dataset.uid = uid;
-    saveBtn.onclick = function(){ adminUpdatePw(pwInput.dataset.uid, pwInput.value); };
-    pwWrap.appendChild(pwInput);
-    pwWrap.appendChild(saveBtn);
-
-    // Actions
-    const acts = document.createElement('div');
-    acts.style.cssText = 'display:flex;gap:6px;align-items:center;flex-shrink:0';
-    if(!isAdmin){
-      const adminBtn = document.createElement('button');
-      adminBtn.className = 'btn btn-ghost btn-sm';
-      adminBtn.textContent = 'Admin';
-      adminBtn.title = 'Zum Admin machen';
-      adminBtn.dataset.uid = uid;
-      adminBtn.onclick = function(){ adminMakeAdmin(this.dataset.uid); };
-      acts.appendChild(adminBtn);
+    // Ort
+    const tdCity = document.createElement('td');
+    tdCity.style.fontSize = '12px';
+    if(m.city){
+      tdCity.innerHTML = (m.zip || '') + ' ' + m.city;
+    } else {
+      tdCity.textContent = '—';
     }
+    tr.appendChild(tdCity);
+
+    // Rolle
+    const tdRole = document.createElement('td');
+    const roleLabel = m.role === 'admin' ? 'Admin' : m.role === 'board' ? 'Vorstand' : 'Mitglied';
+    const roleColor = m.role === 'admin' ? 'var(--ok-bg)' : m.role === 'board' ? 'var(--info-bg)' : 'var(--sd)';
+    const roleText = m.role === 'admin' ? 'var(--ok-tx)' : m.role === 'board' ? 'var(--info-tx)' : 'var(--ts)';
+    tdRole.innerHTML = '<span style="background:'+roleColor+';color:'+roleText+';padding:3px 10px;border-radius:99px;font-size:11px;font-weight:500">'+roleLabel+'</span>';
+    tr.appendChild(tdRole);
+
+    // Attribute
+    const tdAttr = document.createElement('td');
+    const attrs = m.attributes || [];
+    const attrBtn = document.createElement('button');
+    attrBtn.className = 'btn btn-ghost btn-sm';
+    attrBtn.style.cssText = 'font-size:11px;padding:4px 8px';
+    attrBtn.textContent = attrs.length > 0 ? attrs.length + ' Tag' + (attrs.length > 1 ? 's' : '') : '+ Tags';
+    attrBtn.onclick = function(e){ 
+      e.stopPropagation();
+      openAttributePopup(uid, e.target); 
+    };
+    tdAttr.appendChild(attrBtn);
+    if(attrs.length > 0){
+      const preview = document.createElement('div');
+      preview.style.cssText = 'font-size:10px;color:var(--tm);margin-top:4px';
+      preview.textContent = attrs.slice(0,2).map(function(a){ return ATTRIBUTE_LABELS[a]||a; }).join(', ') + (attrs.length > 2 ? '...' : '');
+      tdAttr.appendChild(preview);
+    }
+    tr.appendChild(tdAttr);
+
+    // Vorstand
+    const tdBoard = document.createElement('td');
+    tdBoard.style.textAlign = 'center';
+    tdBoard.innerHTML = m.board_member ? '✓' : '—';
+    tr.appendChild(tdBoard);
+
+    // Aktionen
+    const tdActions = document.createElement('td');
+    tdActions.className = 'actions';
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-ghost btn-sm';
+    editBtn.textContent = '✎ Bearbeiten';
+    editBtn.onclick = function(){ openEditMember(uid); };
+    tdActions.appendChild(editBtn);
+    
     if(uid !== 'admin'){
       const delBtn = document.createElement('button');
       delBtn.className = 'btn btn-sm';
-      delBtn.style.cssText = 'background:#fee2e2;color:#c0392b;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:13px';
+      delBtn.style.cssText = 'background:#fee2e2;color:#c0392b;border:none';
       delBtn.textContent = '✕';
       delBtn.title = 'Löschen';
-      delBtn.dataset.uid = uid;
-      delBtn.onclick = function(){ adminDeleteMember(this.dataset.uid); };
-      acts.appendChild(delBtn);
+      delBtn.onclick = function(){ adminDeleteMember(uid); };
+      tdActions.appendChild(delBtn);
     }
+    tr.appendChild(tdActions);
 
-    row.appendChild(av);
-    row.appendChild(info);
-    row.appendChild(pwWrap);
-    row.appendChild(acts);
-    wrap.appendChild(row);
+    wrap.appendChild(tr);
   });
+}
+
+// Modal öffnen zum Bearbeiten
+function openEditMember(uid){
+  const m = _adminMembers[uid];
+  if(!m) return;
+  
+  document.getElementById('edit-uid').value = uid;
+  document.getElementById('edit-display').value = m.display || '';
+  document.getElementById('edit-email').value = m.email || '';
+  document.getElementById('edit-phone').value = m.phone || '';
+  document.getElementById('edit-street').value = m.street || '';
+  document.getElementById('edit-zip').value = m.zip || '';
+  document.getElementById('edit-city').value = m.city || '';
+  document.getElementById('edit-website').value = m.website || '';
+  document.getElementById('edit-role').value = m.role || 'member';
+  document.getElementById('edit-password').value = '';
+  document.getElementById('edit-board-member').checked = m.board_member || false;
+  document.getElementById('edit-board-position').value = m.board_position || '';
+  document.getElementById('edit-board-order').value = m.board_order || 999;
+  
+  toggleBoardFields();
+  document.getElementById('edit-member-modal').style.display = 'flex';
+}
+
+function closeEditMemberModal(){
+  document.getElementById('edit-member-modal').style.display = 'none';
+}
+
+function toggleBoardFields(){
+  const checked = document.getElementById('edit-board-member').checked;
+  document.getElementById('board-fields').style.display = checked ? 'block' : 'none';
+}
+
+let _boardPhotoBase64 = null;
+function previewBoardPhoto(input){
+  const preview = document.getElementById('board-photo-preview');
+  if(input.files && input.files[0]){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      _boardPhotoBase64 = e.target.result;
+      preview.innerHTML = '<img src="'+e.target.result+'" style="max-width:200px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1)">';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+async function saveEditedMember(){
+  const uid = document.getElementById('edit-uid').value;
+  const m = _adminMembers[uid];
+  if(!m) return;
+
+  m.display = document.getElementById('edit-display').value;
+  m.email = document.getElementById('edit-email').value;
+  m.phone = document.getElementById('edit-phone').value;
+  m.street = document.getElementById('edit-street').value;
+  m.zip = document.getElementById('edit-zip').value;
+  m.city = document.getElementById('edit-city').value;
+  m.website = document.getElementById('edit-website').value;
+  m.role = document.getElementById('edit-role').value;
+  m.board_member = document.getElementById('edit-board-member').checked;
+  m.board_position = document.getElementById('edit-board-position').value;
+  m.board_order = parseInt(document.getElementById('edit-board-order').value) || 999;
+  
+  const newPw = document.getElementById('edit-password').value.trim();
+  if(newPw) m.pw = newPw;
+
+  // Foto hochladen wenn vorhanden
+  if(_boardPhotoBase64){
+    try {
+      m.board_photo_url = await supaUploadBase64(uid, 'board-photo', _boardPhotoBase64);
+      _boardPhotoBase64 = null;
+    } catch(e) {
+      console.error('Foto-Upload Fehler:', e);
+    }
+  }
+
+  try {
+    await supaSaveMembers(_adminMembers);
+    toast('Gespeichert ✓', 'ok');
+    closeEditMemberModal();
+    renderAdminTable();
+  } catch(e) {
+    toast('Fehler: '+e.message, 'err');
+  }
+}
+
+// Attribute Popup
+let _attrPopupUid = null;
+function openAttributePopup(uid, btn){
+  closeAttributePopup(); // Close any existing popup
+  _attrPopupUid = uid;
+  const m = _adminMembers[uid];
+  if(!m) return;
+  
+  const popup = document.createElement('div');
+  popup.id = 'attr-popup';
+  popup.style.cssText = 'position:fixed;background:#fff;border:1px solid var(--sd);border-radius:var(--rl);' +
+    'padding:1rem;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:10000;min-width:280px';
+  
+  const rect = btn.getBoundingClientRect();
+  popup.style.top = (rect.bottom + 8) + 'px';
+  popup.style.left = rect.left + 'px';
+  
+  const title = document.createElement('div');
+  title.style.cssText = 'font-weight:500;margin-bottom:8px;font-size:13px';
+  title.textContent = 'Attribute für ' + (m.display || uid);
+  popup.appendChild(title);
+  
+  const grid = document.createElement('div');
+  grid.className = 'tag-selector';
+  ATTRIBUTE_OPTIONS.forEach(function(attr){
+    const tag = document.createElement('div');
+    tag.className = 'tag-opt';
+    if(m.attributes && m.attributes.includes(attr)){
+      tag.classList.add('sel');
+    }
+    tag.textContent = ATTRIBUTE_LABELS[attr] || attr;
+    tag.onclick = function(){ toggleAttribute(uid, attr); };
+    grid.appendChild(tag);
+  });
+  popup.appendChild(grid);
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'btn btn-dark btn-sm';
+  closeBtn.textContent = 'Fertig';
+  closeBtn.style.cssText = 'margin-top:12px;width:100%';
+  closeBtn.onclick = closeAttributePopup;
+  popup.appendChild(closeBtn);
+  
+  document.body.appendChild(popup);
+  
+  // Close on outside click
+  setTimeout(function(){
+    document.addEventListener('click', handleAttributeOutsideClick);
+  }, 100);
+}
+
+function handleAttributeOutsideClick(e){
+  const popup = document.getElementById('attr-popup');
+  if(popup && !popup.contains(e.target)){
+    closeAttributePopup();
+  }
+}
+
+function closeAttributePopup(){
+  const popup = document.getElementById('attr-popup');
+  if(popup){
+    popup.remove();
+    document.removeEventListener('click', handleAttributeOutsideClick);
+  }
+  _attrPopupUid = null;
+}
+
+async function toggleAttribute(uid, attr){
+  const m = _adminMembers[uid];
+  if(!m) return;
+  
+  if(!m.attributes) m.attributes = [];
+  const idx = m.attributes.indexOf(attr);
+  if(idx > -1){
+    m.attributes.splice(idx, 1);
+  } else {
+    m.attributes.push(attr);
+  }
+  
+  // Update UI immediately
+  const popup = document.getElementById('attr-popup');
+  if(popup){
+    const tags = popup.querySelectorAll('.tag-opt');
+    tags.forEach(function(tag){
+      if(tag.textContent === (ATTRIBUTE_LABELS[attr] || attr)){
+        tag.classList.toggle('sel');
+      }
+    });
+  }
+  
+  // Save to Supabase
+  try {
+    await supaSaveMembers(_adminMembers);
+    renderAdminTable();
+  } catch(e) {
+    console.error('Fehler beim Speichern:', e);
+  }
+}
+
+// Export Funktion
+async function exportMembersCSV(){
+  const members = _adminMembers;
+  if(!members || Object.keys(members).length === 0){
+    toast('Keine Mitglieder zum Exportieren', 'err');
+    return;
+  }
+  
+  let csv = 'UID,Firma/Name,E-Mail,Telefon,Straße,PLZ,Ort,Website,Rolle,Vorstand,Position,Attribute\n';
+  
+  Object.entries(members).forEach(function([uid, m]){
+    const attrs = (m.attributes || []).map(function(a){ return ATTRIBUTE_LABELS[a]||a; }).join('; ');
+    csv += [
+      uid,
+      '"' + (m.display || '').replace(/"/g, '""') + '"',
+      m.email || '',
+      m.phone || '',
+      '"' + (m.street || '').replace(/"/g, '""') + '"',
+      m.zip || '',
+      m.city || '',
+      m.website || '',
+      m.role || 'member',
+      m.board_member ? 'Ja' : 'Nein',
+      '"' + (m.board_position || '').replace(/"/g, '""') + '"',
+      '"' + attrs + '"'
+    ].join(',') + '\n';
+  });
+  
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'svss-mitglieder-' + new Date().toISOString().split('T')[0] + '.csv';
+  link.click();
+  toast('Export erfolgreich ✓', 'ok');
 }
 
 async function adminUpdatePw(uid, newPw){
@@ -2096,7 +2465,7 @@ function bpSavePool(imgs){ localStorage.setItem(BP_KEY, JSON.stringify(imgs)); }
 
 function bpTab(name){
   document.querySelectorAll('#panel-bildpool .se-tab').forEach(t=>t.classList.remove('active'));
-  ['bp-upload','bp-ki','bp-pool'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  ['bp-upload','bp-pool'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
   const tabBtn = document.getElementById('bp-tab-'+name);
   if(tabBtn) tabBtn.classList.add('active');
   const panel = document.getElementById('bp-'+name);
