@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>SVSS — Mitglieder einladen</title>
+<style>
+  :root{
+    --green-dark:#1a3a2a; --green-mid:#2d6a4a; --green-soft:#4a9068;
+    --green-pale:#d4ead8; --green-light:#f0f7f1;
+    --accent:#c8522a; --cream:#faf8f3; --sand:#f5f1e8; --sand-dark:#e8e2d4;
+    --white:#fff; --text:#1a1a18; --text-soft:#4a4a44; --text-muted:#8a8a80;
+    --border:#e3ddd0;
+    --radius:8px; --radius-lg:16px;
+    --shadow-sm:0 2px 8px rgba(0,0,0,.06); --shadow-md:0 8px 28px rgba(0,0,0,.10);
+    --shadow-lg:0 20px 60px rgba(0,0,0,.14);
+    --t:.22s cubic-bezier(.4,0,.2,1);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--sand);color:var(--text);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{margin:0;line-height:1.2;font-weight:650}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:var(--radius);transition:var(--t)}
+  input,textarea{font-family:inherit;font-size:14px;border:1px solid var(--border);border-radius:var(--radius);
+    padding:10px 12px;background:var(--white);color:var(--text);width:100%}
+  input:focus,textarea:focus{outline:none;border-color:var(--green-soft);box-shadow:0 0 0 3px var(--green-pale)}
+  textarea{resize:vertical;line-height:1.55}
+  a{color:var(--green-mid)}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
+
+  /* topbar */
+  .topbar{background:var(--green-dark);color:#eef4ee;padding:18px 20px;display:flex;align-items:center;
+    justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .topbar .brand{display:flex;align-items:center;gap:12px}
+  .topbar .mark{width:34px;height:34px;border-radius:9px;background:var(--accent);display:grid;place-items:center;
+    color:#fff;font-weight:800;font-size:14px;letter-spacing:.5px}
+  .topbar h1{font-size:18px;color:#fff}
+  .topbar .sub{font-size:12px;color:#a9c2af;margin-top:2px}
+  .topbar .who{font-size:13px;color:#cfe0d2}
+  .btn-ghost{background:transparent;color:#cfe0d2;border:1px solid #3c5b48;padding:7px 14px;font-size:13px}
+  .btn-ghost:hover{background:#244b35;color:#fff}
+
+  /* buttons */
+  .btn{padding:10px 18px;font-size:14px;font-weight:600}
+  .btn-primary{background:var(--green-mid);color:#fff}
+  .btn-primary:hover{background:var(--green-dark)}
+  .btn-accent{background:var(--accent);color:#fff}
+  .btn-accent:hover{filter:brightness(.92)}
+  .btn-outline{background:var(--white);color:var(--green-mid);border:1px solid var(--border)}
+  .btn-outline:hover{border-color:var(--green-soft);background:var(--green-light)}
+  .btn-sm{padding:6px 12px;font-size:12.5px;font-weight:600;border-radius:6px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* login */
+  .login-screen{min-height:70vh;display:grid;place-items:center}
+  .login-card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);
+    padding:36px 34px;width:100%;max-width:380px;text-align:center}
+  .login-card .mark{width:48px;height:48px;border-radius:12px;background:var(--green-mid);color:#fff;
+    display:grid;place-items:center;font-weight:800;margin:0 auto 18px;font-size:18px}
+  .login-card h2{font-size:20px;margin-bottom:6px}
+  .login-card p{color:var(--text-muted);font-size:13px;margin:0 0 22px}
+  .login-card label{display:block;text-align:left;font-size:12px;font-weight:600;color:var(--text-soft);
+    margin:14px 0 5px}
+  .login-card .err{color:var(--accent);font-size:13px;margin-top:12px;min-height:18px}
+
+  .card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:22px 24px;margin-bottom:20px}
+  .card h2{font-size:16px;margin-bottom:4px}
+  .card .hint{color:var(--text-muted);font-size:13px;margin:0 0 16px}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+  .stat{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+  .stat .n{font-size:26px;font-weight:750;color:var(--green-dark);line-height:1}
+  .stat .l{font-size:12px;color:var(--text-muted);margin-top:6px;font-weight:500}
+  .stat.warn .n{color:var(--accent)}
+
+  /* template */
+  details.tpl{margin-bottom:20px}
+  details.tpl>summary{cursor:pointer;list-style:none;font-weight:650;font-size:15px;color:var(--green-dark);
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;
+    display:flex;align-items:center;gap:8px}
+  details.tpl>summary::-webkit-details-marker{display:none}
+  details.tpl>summary::before{content:'▸';color:var(--green-soft);transition:var(--t)}
+  details.tpl[open]>summary::before{transform:rotate(90deg)}
+  .tpl-body{background:var(--white);border:1px solid var(--border);border-top:none;
+    border-radius:0 0 var(--radius) var(--radius);padding:18px}
+  .tpl-body label{font-size:12px;font-weight:600;color:var(--text-soft);display:block;margin:0 0 5px}
+  .tpl-body .row{margin-bottom:14px}
+  .ph{display:inline-block;background:var(--green-light);color:var(--green-mid);font-size:12px;
+    padding:2px 7px;border-radius:5px;font-family:ui-monospace,monospace;margin:0 3px 3px 0}
+  .opts{display:flex;flex-wrap:wrap;gap:18px;margin-top:6px;font-size:13px;color:var(--text-soft)}
+  .opts label{display:inline-flex;align-items:center;gap:7px;font-weight:500;cursor:pointer}
+  .opts input{width:auto}
+
+  /* toolbar */
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  .toolbar .grow{flex:1}
+  .search{max-width:260px}
+
+  /* table */
+  .tbl-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+  th{background:var(--sand);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);
+    font-weight:650;cursor:default}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--cream)}
+  td.name{font-weight:600}
+  td .uid{font-family:ui-monospace,monospace;font-size:12.5px;color:var(--text-soft)}
+  .chk{width:18px;height:18px;accent-color:var(--green-mid)}
+  .badge{display:inline-block;font-size:11.5px;font-weight:650;padding:3px 9px;border-radius:20px}
+  .badge.ready{background:var(--green-light);color:var(--green-mid)}
+  .badge.sent{background:var(--green-pale);color:var(--green-dark)}
+  .badge.no-mail{background:#fbe7df;color:var(--accent)}
+  td.acts{text-align:right;white-space:nowrap}
+  .empty{padding:40px;text-align:center;color:var(--text-muted)}
+
+  /* modal (step-through) */
+  .overlay{position:fixed;inset:0;background:rgba(26,58,42,.45);display:none;place-items:center;z-index:50;padding:20px}
+  .overlay.show{display:grid}
+  .modal{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);
+    width:100%;max-width:460px;padding:28px}
+  .modal h3{font-size:18px;margin-bottom:4px}
+  .modal .progress{color:var(--text-muted);font-size:13px;margin-bottom:18px}
+  .modal .target{background:var(--cream);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px;margin-bottom:18px}
+  .modal .target .nm{font-weight:650}
+  .modal .target .em{font-size:13px;color:var(--text-soft);font-family:ui-monospace,monospace}
+  .modal-acts{display:flex;gap:10px;flex-wrap:wrap}
+  .modal-acts .grow{flex:1}
+
+  /* toast */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--green-dark);color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;
+    box-shadow:var(--shadow-md);opacity:0;pointer-events:none;transition:var(--t);z-index:60}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{background:var(--accent)}
+
+  .hidden{display:none!important}
+  @media(max-width:640px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    td.acts .label-hide{display:none}
+    th.opt,td.opt{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login-screen">
+  <div class="login-card">
+    <div class="mark">SV</div>
+    <h2>Mitglieder einladen</h2>
+    <p>Anmeldung nur für Administratoren</p>
+    <label for="lg-uid">Benutzername</label>
+    <input id="lg-uid" autocomplete="username" autocapitalize="off">
+    <label for="lg-pw">Passwort</label>
+    <input id="lg-pw" type="password" autocomplete="current-password">
+    <button class="btn btn-primary" style="width:100%;margin-top:20px" onclick="doLogin()">Anmelden →</button>
+    <div class="err" id="lg-err"></div>
+    <p style="margin-top:18px"><a href="svss-portal.html">← Zurück zum Portal</a></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark">SV</div>
+      <div>
+        <h1>Mitglieder einladen</h1>
+        <div class="sub">SVSS · Schweizerische Vereinigung für Spielplatzsicherheit</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="who" id="who"></span>
+      <button class="btn-ghost" onclick="logout()">Abmelden</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="stats">
+      <div class="stat"><div class="n" id="st-total">0</div><div class="l">Mitglieder</div></div>
+      <div class="stat"><div class="n" id="st-mail">0</div><div class="l">Mit E-Mail</div></div>
+      <div class="stat warn"><div class="n" id="st-nomail">0</div><div class="l">Ohne E-Mail</div></div>
+      <div class="stat"><div class="n" id="st-sent">0</div><div class="l">Eingeladen</div></div>
+    </div>
+
+    <details class="tpl" id="tplBox">
+      <summary>Einladungstext bearbeiten</summary>
+      <div class="tpl-body">
+        <div class="row">
+          <label for="tpl-link">Portal-Link (wohin die Mitglieder zum Bearbeiten gehen)</label>
+          <input id="tpl-link" value="https://www.richis.ch/svss-portal.html">
+        </div>
+        <div class="row">
+          <label for="tpl-subj">Betreff</label>
+          <input id="tpl-subj">
+        </div>
+        <div class="row">
+          <label for="tpl-body">Nachricht</label>
+          <textarea id="tpl-body" rows="11"></textarea>
+        </div>
+        <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:4px">Platzhalter (werden pro Mitglied ersetzt):</div>
+        <div>
+          <span class="ph">{{name}}</span><span class="ph">{{uid}}</span>
+          <span class="ph">{{pw}}</span><span class="ph">{{link}}</span>
+        </div>
+        <div class="opts">
+          <label><input type="checkbox" id="opt-genpw" checked> Fehlende Passwörter automatisch erzeugen &amp; speichern</label>
+        </div>
+        <div style="margin-top:14px">
+          <button class="btn-sm btn-outline" onclick="resetTemplate()">Standardtext wiederherstellen</button>
+        </div>
+      </div>
+    </details>
+
+    <div class="toolbar">
+      <input class="search" id="search" placeholder="Suchen…" oninput="renderTable()">
+      <span class="grow"></span>
+      <button class="btn-sm btn-outline" onclick="exportCSV()">CSV-Export (Mailmerge)</button>
+      <button class="btn-sm btn-outline" onclick="copyAll()">Alle Texte kopieren</button>
+      <button class="btn-sm btn-accent" onclick="startBulk()">Ausgewählte einladen →</button>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:36px"><input type="checkbox" class="chk" id="selAll" onclick="toggleAll(this)"></th>
+          <th>Name</th>
+          <th class="opt">Benutzername</th>
+          <th>E-Mail</th>
+          <th>Status</th>
+          <th style="text-align:right">Aktion</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty hidden" id="empty">Keine Mitglieder gefunden.</div>
+    </div>
+
+    <p style="font-size:12.5px;color:var(--text-muted);margin-top:16px;max-width:680px">
+      Hinweis: Der Versand läuft über deine eigene Mail-App (beste Zustellbarkeit). Der Einlade-Status
+      wird nur auf diesem Gerät gespeichert. Mitglieder ohne hinterlegte E-Mail-Adresse musst du separat
+      kontaktieren — sie erscheinen oben unter „Ohne E-Mail".
+    </p>
+  </div>
+</div>
+
+<!-- BULK MODAL -->
+<div class="overlay" id="bulk">
+  <div class="modal">
+    <h3 id="bk-title">Einladung versenden</h3>
+    <div class="progress" id="bk-prog"></div>
+    <div class="target">
+      <div class="nm" id="bk-name"></div>
+      <div class="em" id="bk-mail"></div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-outline" onclick="bulkSkip()">Überspringen</button>
+      <button class="btn btn-primary grow" id="bk-send" onclick="bulkSend()">Mail öffnen &amp; weiter →</button>
+    </div>
+    <div style="margin-top:14px;text-align:center">
+      <button class="btn-sm btn-outline" onclick="closeBulk()">Schliessen</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL = 'https://tcxpydpeqlymtwqwoxnc.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjeHB5ZHBlcWx5bXR3cXdveG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjcyOTIsImV4cCI6MjA5MTUwMzI5Mn0.XIjwKNxNhuP6e_uvxs_qFv0hhwtbEDqM0uXDfZ8yBTo';
+const INVITED_KEY = 'svss_invited';
+
+const DEFAULT_SUBJ = 'Dein Zugang zum SVSS-Mitgliederbereich';
+const DEFAULT_BODY =
+`Hallo {{name}}
+
+Schön, dass du bei der Schweizerischen Vereinigung für Spielplatzsicherheit (SVSS) dabei bist!
+
+Du kannst deinen eigenen Eintrag auf unserer Website ab sofort selbst bearbeiten – Adresse, Website, Logo und deine Tätigkeitsbereiche. Logge dich dazu hier ein:
+
+{{link}}
+
+Benutzername: {{uid}}
+Passwort: {{pw}}
+
+Nach dem Login findest du dein Profil und kannst es jederzeit aktualisieren. Bei Fragen einfach auf diese Mail antworten.
+
+Herzliche Grüsse
+SVSS`;
+
+let supaHeaders = (extra) => Object.assign({
+  'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,
+  'Content-Type':'application/json','Prefer':'return=representation'
+}, extra||{});
+
+let MEMBERS = [];      // array of row objects from members table
+let invited = {};      // {uid: isoDate}
+let me = null;
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg, type){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(type==='err'?' err':'');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.className='toast',2600);
+}
+
+/* ---------- supabase ---------- */
+async function supaSelect(table, query){
+  const params=new URLSearchParams(query||{});
+  const r=await fetch(SUPA_URL+'/rest/v1/'+table+'?'+params,{headers:supaHeaders({'Accept':'application/json'})});
+  if(!r.ok) throw new Error('Laden fehlgeschlagen ('+r.status+')');
+  return r.json();
+}
+async function supaUpsert(table, rows){
+  const r=await fetch(SUPA_URL+'/rest/v1/'+table,{
+    method:'POST',
+    headers:supaHeaders({'Prefer':'resolution=merge-duplicates,return=representation'}),
+    body:JSON.stringify(rows)
+  });
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+/* ---------- login ---------- */
+async function doLogin(){
+  const uid=document.getElementById('lg-uid').value.trim().toLowerCase();
+  const pw=document.getElementById('lg-pw').value;
+  const err=document.getElementById('lg-err');
+  err.textContent='';
+  try{
+    const rows=await supaSelect('members',{uid:'eq.'+uid});
+    const m=rows[0];
+    if(!m || m.pw!==pw){ err.textContent='Benutzername oder Passwort falsch.'; return; }
+    if(m.role!=='admin'){ err.textContent='Nur Administratoren können einladen.'; return; }
+    me=m;
+    sessionStorage.setItem('svss_inviter',JSON.stringify({uid:m.uid,display:m.display||m.uid}));
+    enterApp();
+  }catch(e){ err.textContent='Verbindungsfehler: '+e.message; }
+}
+function logout(){ sessionStorage.removeItem('svss_inviter'); location.reload(); }
+
+async function enterApp(){
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('who').textContent='Angemeldet als '+(me.display||me.uid);
+  loadTemplate();
+  await loadMembers();
+}
+
+/* ---------- template ---------- */
+function loadTemplate(){
+  document.getElementById('tpl-subj').value=DEFAULT_SUBJ;
+  document.getElementById('tpl-body').value=DEFAULT_BODY;
+}
+function resetTemplate(){ loadTemplate(); toast('Standardtext wiederhergestellt ✓'); }
+
+/* ---------- load members ---------- */
+function genPw(){
+  const w=['Sonne','Wiese','Sand','Schaukel','Garten','Hügel','Wald','Apfel','Stein','Brücke'];
+  return w[Math.floor(Math.random()*w.length)]+Math.floor(100+Math.random()*900);
+}
+async function loadMembers(){
+  try{
+    invited=JSON.parse(localStorage.getItem(INVITED_KEY)||'{}');
+    let rows=await supaSelect('members',{order:'display.asc'});
+    // ensure everyone can log in: fill missing passwords if option on
+    if(document.getElementById('opt-genpw').checked){
+      const needPw=rows.filter(r=>!r.pw);
+      if(needPw.length){
+        needPw.forEach(r=>r.pw=genPw());
+        try{
+          await supaUpsert('members',needPw.map(r=>({uid:r.uid,pw:r.pw})));
+          toast(needPw.length+' Passwort(e) erzeugt & gespeichert ✓');
+        }catch(e){ toast('Passwörter konnten nicht gespeichert werden','err'); }
+      }
+    }
+    MEMBERS=rows;
+    renderStats(); renderTable();
+  }catch(e){ toast('Fehler: '+e.message,'err'); }
+}
+
+function renderStats(){
+  const total=MEMBERS.length;
+  const withMail=MEMBERS.filter(m=>m.email).length;
+  const sent=MEMBERS.filter(m=>invited[m.uid]).length;
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-mail').textContent=withMail;
+  document.getElementById('st-nomail').textContent=total-withMail;
+  document.getElementById('st-sent').textContent=sent;
+}
+
+/* ---------- table ---------- */
+function filtered(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  if(!q) return MEMBERS;
+  return MEMBERS.filter(m=>((m.display||'')+' '+m.uid+' '+(m.email||'')).toLowerCase().includes(q));
+}
+function statusBadge(m){
+  if(!m.email) return '<span class="badge no-mail">Keine E-Mail</span>';
+  if(invited[m.uid]) return '<span class="badge sent">Eingeladen</span>';
+  return '<span class="badge ready">Bereit</span>';
+}
+function renderTable(){
+  const list=filtered();
+  const tb=document.getElementById('rows');
+  document.getElementById('empty').classList.toggle('hidden',list.length>0);
+  tb.innerHTML=list.map(m=>`
+    <tr data-uid="${esc(m.uid)}">
+      <td><input type="checkbox" class="chk row-chk" ${m.email?'':'disabled'} ${m.email?'checked':''}></td>
+      <td class="name">${esc(m.display||m.uid)}</td>
+      <td class="opt"><span class="uid">${esc(m.uid)}</span></td>
+      <td>${m.email?esc(m.email):'<span style="color:var(--text-muted)">—</span>'}</td>
+      <td>${statusBadge(m)}</td>
+      <td class="acts">
+        <button class="btn-sm btn-outline" onclick="preview('${esc(m.uid)}')">Vorschau</button>
+        <button class="btn-sm btn-primary" ${m.email?'':'disabled'} onclick="inviteOne('${esc(m.uid)}')">
+          ✉ <span class="label-hide">Einladen</span></button>
+      </td>
+    </tr>`).join('');
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function toggleAll(box){
+  document.querySelectorAll('.row-chk:not(:disabled)').forEach(c=>c.checked=box.checked);
+}
+function selectedUids(){
+  const out=[];
+  document.querySelectorAll('#rows tr').forEach(tr=>{
+    const c=tr.querySelector('.row-chk');
+    if(c&&c.checked&&!c.disabled) out.push(tr.dataset.uid);
+  });
+  return out;
+}
+
+/* ---------- message building ---------- */
+function buildMsg(m){
+  const link=document.getElementById('tpl-link').value.trim();
+  const subj=document.getElementById('tpl-subj').value;
+  const body=document.getElementById('tpl-body').value;
+  const fill=s=>s.replace(/\{\{name\}\}/g,m.display||m.uid)
+                 .replace(/\{\{uid\}\}/g,m.uid)
+                 .replace(/\{\{pw\}\}/g,m.pw||'(bitte zurücksetzen)')
+                 .replace(/\{\{link\}\}/g,link);
+  return {subject:fill(subj),body:fill(body)};
+}
+function mailto(m){
+  const {subject,body}=buildMsg(m);
+  return 'mailto:'+encodeURIComponent(m.email)+
+    '?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+}
+function markInvited(uid){
+  invited[uid]=new Date().toISOString();
+  localStorage.setItem(INVITED_KEY,JSON.stringify(invited));
+  renderStats(); renderTable();
+}
+
+function inviteOne(uid){
+  const m=MEMBERS.find(x=>x.uid===uid); if(!m||!m.email) return;
+  window.location.href=mailto(m);
+  markInvited(uid);
+}
+function preview(uid){
+  const m=MEMBERS.find(x=>x.uid===uid); if(!m) return;
+  const {subject,body}=buildMsg(m);
+  alert('An: '+(m.email||'(keine E-Mail)')+'\nBetreff: '+subject+'\n\n'+body);
+}
+
+/* ---------- bulk step-through ---------- */
+let queue=[], qi=0;
+function startBulk(){
+  const uids=selectedUids();
+  if(!uids.length){ toast('Niemand ausgewählt','err'); return; }
+  queue=uids; qi=0;
+  document.getElementById('bulk').classList.add('show');
+  showCurrent();
+}
+function showCurrent(){
+  if(qi>=queue.length){ closeBulk(); toast('Alle '+queue.length+' Einladungen durch ✓'); return; }
+  const m=MEMBERS.find(x=>x.uid===queue[qi]);
+  document.getElementById('bk-prog').textContent='Einladung '+(qi+1)+' von '+queue.length;
+  document.getElementById('bk-name').textContent=m.display||m.uid;
+  document.getElementById('bk-mail').textContent=m.email;
+}
+function bulkSend(){
+  const m=MEMBERS.find(x=>x.uid===queue[qi]);
+  window.open(mailto(m),'_blank');
+  markInvited(m.uid);
+  qi++; showCurrent();
+}
+function bulkSkip(){ qi++; showCurrent(); }
+function closeBulk(){ document.getElementById('bulk').classList.remove('show'); }
+
+/* ---------- export ---------- */
+function exportCSV(){
+  const link=document.getElementById('tpl-link').value.trim();
+  const head=['name','email','benutzername','passwort','portal_link'];
+  const lines=[head.join(',')];
+  MEMBERS.filter(m=>m.email).forEach(m=>{
+    lines.push([m.display||m.uid,m.email,m.uid,m.pw||'',link]
+      .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  });
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='svss-mitglieder-mailmerge.csv'; a.click();
+  toast('CSV exportiert ✓');
+}
+function copyAll(){
+  const parts=MEMBERS.filter(m=>m.email).map(m=>{
+    const {subject,body}=buildMsg(m);
+    return '── '+(m.display||m.uid)+' <'+m.email+'> ──\nBetreff: '+subject+'\n\n'+body;
+  });
+  navigator.clipboard.writeText(parts.join('\n\n\n')).then(
+    ()=>toast(parts.length+' Texte kopiert ✓'),
+    ()=>toast('Kopieren nicht möglich','err'));
+}
+
+/* ---------- init ---------- */
+document.getElementById('lg-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+(async function(){
+  const saved=sessionStorage.getItem('svss_inviter');
+  if(saved){
+    try{
+      const s=JSON.parse(saved);
+      const rows=await supaSelect('members',{uid:'eq.'+s.uid});
+      if(rows[0]&&rows[0].role==='admin'){ me=rows[0]; enterApp(); }
+    }catch(e){}
+  }
+})();
+</script>
+</body>
+</html>
