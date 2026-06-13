@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>SVSS — Passwort zurücksetzen</title>
+<style>
+  :root{
+    --green-dark:#1a3a2a; --green-mid:#2d6a4a; --green-soft:#4a9068; --green-pale:#d4ead8; --green-light:#f0f7f1;
+    --accent:#c8522a; --cream:#faf8f3; --sand:#f5f1e8; --white:#fff;
+    --text:#1a1a18; --text-soft:#4a4a44; --text-muted:#8a8a80; --border:#e3ddd0;
+    --radius:8px; --radius-lg:16px; --shadow-md:0 8px 28px rgba(0,0,0,.10);
+    --t:.22s cubic-bezier(.4,0,.2,1);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--sand);color:var(--text);line-height:1.5;min-height:100vh;display:grid;place-items:center;padding:24px}
+  .card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);
+    padding:38px 34px;width:100%;max-width:400px}
+  .mark{width:48px;height:48px;border-radius:12px;background:var(--green-mid);color:#fff;
+    display:grid;place-items:center;font-weight:800;margin:0 auto 18px;font-size:18px}
+  h1{font-size:21px;margin:0 0 6px;text-align:center;font-weight:650}
+  .lead{color:var(--text-muted);font-size:13.5px;text-align:center;margin:0 0 24px}
+  label{display:block;font-size:12px;font-weight:600;color:var(--text-soft);margin:14px 0 5px}
+  input{width:100%;font-family:inherit;font-size:15px;border:1px solid var(--border);border-radius:var(--radius);
+    padding:11px 13px;background:var(--white);color:var(--text)}
+  input:focus{outline:none;border-color:var(--green-soft);box-shadow:0 0 0 3px var(--green-pale)}
+  button{width:100%;margin-top:22px;padding:12px;font-family:inherit;font-size:15px;font-weight:650;
+    border:none;border-radius:var(--radius);background:var(--green-mid);color:#fff;cursor:pointer;transition:var(--t)}
+  button:hover{background:var(--green-dark)}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  .msg{margin-top:16px;font-size:13.5px;text-align:center;min-height:20px}
+  .msg.err{color:var(--accent)}
+  .msg.ok{color:var(--green-mid)}
+  .foot{margin-top:22px;text-align:center;font-size:13px}
+  .foot a{color:var(--green-mid)}
+  .hint{font-size:12px;color:var(--text-muted);margin-top:4px}
+  .hidden{display:none!important}
+  .done{text-align:center}
+  .done .check{width:54px;height:54px;border-radius:50%;background:var(--green-pale);color:var(--green-dark);
+    display:grid;place-items:center;font-size:26px;margin:0 auto 16px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="mark">SV</div>
+
+  <!-- MODE A: Reset anfordern -->
+  <div id="request">
+    <h1>Passwort vergessen?</h1>
+    <p class="lead">Gib deine E-Mail-Adresse ein. Falls sie bei uns registriert ist, schicken wir dir einen Link zum Zurücksetzen.</p>
+    <label for="email">E-Mail-Adresse</label>
+    <input id="email" type="email" autocomplete="email" autocapitalize="off" placeholder="name@beispiel.ch">
+    <button id="req-btn" onclick="requestReset()">Link senden</button>
+    <div class="msg" id="req-msg"></div>
+    <div class="foot"><a href="svss-portal.html">← Zurück zum Login</a></div>
+  </div>
+
+  <!-- MODE B: neues Passwort setzen -->
+  <div id="setpw" class="hidden">
+    <h1>Neues Passwort</h1>
+    <p class="lead">Wähle ein neues Passwort für dein SVSS-Konto.</p>
+    <label for="pw1">Neues Passwort</label>
+    <input id="pw1" type="password" autocomplete="new-password">
+    <div class="hint">Mindestens 6 Zeichen.</div>
+    <label for="pw2">Passwort wiederholen</label>
+    <input id="pw2" type="password" autocomplete="new-password">
+    <button id="set-btn" onclick="confirmReset()">Passwort speichern</button>
+    <div class="msg" id="set-msg"></div>
+  </div>
+
+  <!-- MODE C: fertig -->
+  <div id="done" class="hidden done">
+    <div class="check">✓</div>
+    <h1>Passwort geändert</h1>
+    <p class="lead">Du kannst dich jetzt mit deinem neuen Passwort anmelden.</p>
+    <button onclick="location.href='svss-portal.html'">Zum Login →</button>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://tcxpydpeqlymtwqwoxnc.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjeHB5ZHBlcWx5bXR3cXdveG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjcyOTIsImV4cCI6MjA5MTUwMzI5Mn0.XIjwKNxNhuP6e_uvxs_qFv0hhwtbEDqM0uXDfZ8yBTo';
+const FN_URL = SUPA_URL + '/functions/v1/password-reset';
+const TOKEN = new URLSearchParams(location.search).get('token');
+
+function show(id){ ['request','setpw','done'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id)); }
+
+async function callFn(payload){
+  const r = await fetch(FN_URL,{method:'POST',
+    headers:{'Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify(payload)});
+  let data={}; try{ data=await r.json(); }catch(e){}
+  return {ok:r.ok, data};
+}
+
+async function requestReset(){
+  const email=document.getElementById('email').value.trim();
+  const msg=document.getElementById('req-msg'); const btn=document.getElementById('req-btn');
+  msg.className='msg'; msg.textContent='';
+  if(!email || !email.includes('@')){ msg.className='msg err'; msg.textContent='Bitte gültige E-Mail eingeben.'; return; }
+  btn.disabled=true; btn.textContent='Sende…';
+  try{
+    await callFn({action:'request', email});
+    msg.className='msg ok';
+    msg.textContent='Falls die Adresse registriert ist, ist ein Link unterwegs. Schau auch im Spam nach.';
+    btn.textContent='Link gesendet';
+  }catch(e){
+    msg.className='msg err'; msg.textContent='Verbindungsfehler. Bitte später erneut versuchen.';
+    btn.disabled=false; btn.textContent='Link senden';
+  }
+}
+
+async function confirmReset(){
+  const pw1=document.getElementById('pw1').value, pw2=document.getElementById('pw2').value;
+  const msg=document.getElementById('set-msg'); const btn=document.getElementById('set-btn');
+  msg.className='msg'; msg.textContent='';
+  if(pw1.length<6){ msg.className='msg err'; msg.textContent='Mindestens 6 Zeichen.'; return; }
+  if(pw1!==pw2){ msg.className='msg err'; msg.textContent='Die Passwörter stimmen nicht überein.'; return; }
+  btn.disabled=true; btn.textContent='Speichere…';
+  try{
+    const {ok,data}=await callFn({action:'confirm', token:TOKEN, password:pw1});
+    if(ok && data.ok){ show('done'); return; }
+    msg.className='msg err'; msg.textContent=data.error||'Konnte nicht gespeichert werden.';
+    btn.disabled=false; btn.textContent='Passwort speichern';
+  }catch(e){
+    msg.className='msg err'; msg.textContent='Verbindungsfehler. Bitte später erneut versuchen.';
+    btn.disabled=false; btn.textContent='Passwort speichern';
+  }
+}
+
+// Init: mit Token -> Passwort setzen, sonst -> anfordern
+show(TOKEN ? 'setpw' : 'request');
+document.getElementById('email').addEventListener('keydown',e=>{if(e.key==='Enter')requestReset();});
+document.getElementById('pw2').addEventListener('keydown',e=>{if(e.key==='Enter')confirmReset();});
+</script>
+</body>
+</html>
