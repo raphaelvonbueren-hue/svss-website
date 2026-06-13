@@ -223,7 +223,7 @@
       <span class="grow"></span>
       <button class="btn-sm btn-outline" onclick="exportCSV()">CSV-Export (Mailmerge)</button>
       <button class="btn-sm btn-outline" onclick="copyAll()">Alle Texte kopieren</button>
-      <button class="btn-sm btn-accent" onclick="startBulk()">Ausgewählte einladen →</button>
+      <button class="btn-sm btn-accent" onclick="sendInvites(selectedUids())">Ausgewählte versenden →</button>
     </div>
 
     <div class="tbl-wrap">
@@ -242,28 +242,21 @@
     </div>
 
     <p style="font-size:12.5px;color:var(--text-muted);margin-top:16px;max-width:680px">
-      Hinweis: Der Versand läuft über deine eigene Mail-App (beste Zustellbarkeit). Der Einlade-Status
-      wird nur auf diesem Gerät gespeichert. Mitglieder ohne hinterlegte E-Mail-Adresse musst du separat
-      kontaktieren — sie erscheinen oben unter „Ohne E-Mail".
+      Hinweis: Die Einladungen werden automatisch über den Server (Resend) aus der offiziellen
+      SVSS-Adresse versendet — nicht über deine eigene Mail-App. Mitglieder ohne hinterlegte
+      E-Mail-Adresse erscheinen unter „Ohne E-Mail" und müssen separat erfasst werden.
     </p>
   </div>
 </div>
 
-<!-- BULK MODAL -->
-<div class="overlay" id="bulk">
+<!-- SEND / RESULT MODAL -->
+<div class="overlay" id="sendm">
   <div class="modal">
-    <h3 id="bk-title">Einladung versenden</h3>
-    <div class="progress" id="bk-prog"></div>
-    <div class="target">
-      <div class="nm" id="bk-name"></div>
-      <div class="em" id="bk-mail"></div>
-    </div>
+    <h3 id="sm-title">Einladungen werden versendet…</h3>
+    <div class="progress" id="sm-sub"></div>
+    <div id="sm-list" style="max-height:300px;overflow:auto;margin:4px 0 18px"></div>
     <div class="modal-acts">
-      <button class="btn btn-outline" onclick="bulkSkip()">Überspringen</button>
-      <button class="btn btn-primary grow" id="bk-send" onclick="bulkSend()">Mail öffnen &amp; weiter →</button>
-    </div>
-    <div style="margin-top:14px;text-align:center">
-      <button class="btn-sm btn-outline" onclick="closeBulk()">Schliessen</button>
+      <button class="btn btn-primary grow" id="sm-close" onclick="closeSend()" disabled>Schliessen</button>
     </div>
   </div>
 </div>
@@ -274,6 +267,8 @@
 const SUPA_URL = 'https://tcxpydpeqlymtwqwoxnc.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjeHB5ZHBlcWx5bXR3cXdveG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjcyOTIsImV4cCI6MjA5MTUwMzI5Mn0.XIjwKNxNhuP6e_uvxs_qFv0hhwtbEDqM0uXDfZ8yBTo';
 const INVITED_KEY = 'svss_invited';
+const FN_URL = SUPA_URL + '/functions/v1/send-invite';
+let ADMIN_PW = '';
 
 const DEFAULT_SUBJ = 'Dein Zugang zum SVSS-Mitgliederbereich';
 const DEFAULT_BODY =
@@ -338,8 +333,8 @@ async function doLogin(){
     const m=rows[0];
     if(!m || m.pw!==pw){ err.textContent='Benutzername oder Passwort falsch.'; return; }
     if(m.role!=='admin'){ err.textContent='Nur Administratoren können einladen.'; return; }
-    me=m;
-    sessionStorage.setItem('svss_inviter',JSON.stringify({uid:m.uid,display:m.display||m.uid}));
+    me=m; ADMIN_PW=pw;
+    sessionStorage.setItem('svss_inviter',JSON.stringify({uid:m.uid,display:m.display||m.uid,pw:pw}));
     enterApp();
   }catch(e){ err.textContent='Verbindungsfehler: '+e.message; }
 }
@@ -460,41 +455,68 @@ function markInvited(uid){
   renderStats(); renderTable();
 }
 
-function inviteOne(uid){
-  const m=MEMBERS.find(x=>x.uid===uid); if(!m||!m.email) return;
-  window.location.href=mailto(m);
-  markInvited(uid);
-}
+function inviteOne(uid){ sendInvites([uid]); }
 function preview(uid){
   const m=MEMBERS.find(x=>x.uid===uid); if(!m) return;
   const {subject,body}=buildMsg(m);
   alert('An: '+(m.email||'(keine E-Mail)')+'\nBetreff: '+subject+'\n\n'+body);
 }
 
-/* ---------- bulk step-through ---------- */
-let queue=[], qi=0;
-function startBulk(){
-  const uids=selectedUids();
-  if(!uids.length){ toast('Niemand ausgewählt','err'); return; }
-  queue=uids; qi=0;
-  document.getElementById('bulk').classList.add('show');
-  showCurrent();
+/* ---------- server send (Edge Function) ---------- */
+function ensureAdminPw(){
+  if(ADMIN_PW) return true;
+  const pw=prompt('Zur Bestätigung bitte dein Admin-Passwort eingeben:');
+  if(!pw) return false;
+  ADMIN_PW=pw; return true;
 }
-function showCurrent(){
-  if(qi>=queue.length){ closeBulk(); toast('Alle '+queue.length+' Einladungen durch ✓'); return; }
-  const m=MEMBERS.find(x=>x.uid===queue[qi]);
-  document.getElementById('bk-prog').textContent='Einladung '+(qi+1)+' von '+queue.length;
-  document.getElementById('bk-name').textContent=m.display||m.uid;
-  document.getElementById('bk-mail').textContent=m.email;
+async function sendInvites(uids){
+  uids=(uids||[]).filter(u=>{const m=MEMBERS.find(x=>x.uid===u);return m&&m.email;});
+  if(!uids.length){ toast('Niemand mit E-Mail ausgewählt','err'); return; }
+  if(!ensureAdminPw()) return;
+  const link=document.getElementById('tpl-link').value.trim();
+  const subject=document.getElementById('tpl-subj').value;
+  const body=document.getElementById('tpl-body').value;
+  const recipients=uids.map(uid=>{const m=MEMBERS.find(x=>x.uid===uid);
+    return {uid:m.uid,email:m.email,name:m.display||m.uid,pw:m.pw||'',link};});
+  openSendModal(recipients.length);
+  try{
+    const r=await fetch(FN_URL,{method:'POST',
+      headers:{'Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({adminUid:me.uid,adminPw:ADMIN_PW,recipients,subject,body})});
+    let data={}; try{ data=await r.json(); }catch(e){}
+    if(!r.ok||data.error){ sendResult(null,data.error||('Server-Fehler '+r.status)); return; }
+    (data.results||[]).forEach(res=>{ if(res.ok) markInvited(res.uid); });
+    sendResult(data.results||[],null);
+  }catch(e){ sendResult(null,'Verbindungsfehler: '+e.message); }
 }
-function bulkSend(){
-  const m=MEMBERS.find(x=>x.uid===queue[qi]);
-  window.open(mailto(m),'_blank');
-  markInvited(m.uid);
-  qi++; showCurrent();
+function openSendModal(n){
+  document.getElementById('sm-title').textContent='Einladungen werden versendet…';
+  document.getElementById('sm-sub').textContent=n+' Empfänger · einen Moment';
+  document.getElementById('sm-list').innerHTML='<div style="text-align:center;padding:24px;color:var(--text-muted)">Sende…</div>';
+  document.getElementById('sm-close').disabled=true;
+  document.getElementById('sendm').classList.add('show');
 }
-function bulkSkip(){ qi++; showCurrent(); }
-function closeBulk(){ document.getElementById('bulk').classList.remove('show'); }
+function sendResult(results, err){
+  document.getElementById('sm-close').disabled=false;
+  if(err){
+    document.getElementById('sm-title').textContent='Versand fehlgeschlagen';
+    document.getElementById('sm-sub').textContent='';
+    document.getElementById('sm-list').innerHTML='<div style="color:var(--accent);padding:8px 0;font-size:13.5px">'+esc(err)+'</div>';
+    return;
+  }
+  const ok=results.filter(r=>r.ok).length, fail=results.length-ok;
+  document.getElementById('sm-title').textContent=ok+' Einladung'+(ok===1?'':'en')+' versendet ✓';
+  document.getElementById('sm-sub').textContent=fail?(fail+' fehlgeschlagen'):'Alle erfolgreich';
+  document.getElementById('sm-list').innerHTML=results.map(r=>{
+    const m=MEMBERS.find(x=>x.uid===r.uid)||{};
+    return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13.5px">'+
+      '<span>'+esc(m.display||r.uid||'?')+'</span>'+
+      (r.ok?'<span style="color:var(--green-mid);font-weight:600;white-space:nowrap">✓ gesendet</span>'
+           :'<span style="color:var(--accent);white-space:nowrap" title="'+esc(r.error||'')+'">✗ '+esc((r.error||'Fehler').slice(0,36))+'</span>')+
+      '</div>';
+  }).join('');
+}
+function closeSend(){ document.getElementById('sendm').classList.remove('show'); }
 
 /* ---------- export ---------- */
 function exportCSV(){
@@ -528,7 +550,7 @@ document.getElementById('lg-pw').addEventListener('keydown',e=>{if(e.key==='Ente
     try{
       const s=JSON.parse(saved);
       const rows=await supaSelect('members',{uid:'eq.'+s.uid});
-      if(rows[0]&&rows[0].role==='admin'){ me=rows[0]; enterApp(); }
+      if(rows[0]&&rows[0].role==='admin'){ me=rows[0]; ADMIN_PW=s.pw||''; enterApp(); }
     }catch(e){}
   }
 })();
