@@ -97,6 +97,10 @@
   .nc .date{font-family:'DM Serif Display',serif;font-size:15px;color:var(--accent)}
   .nc h3{font-family:'DM Sans',sans-serif;font-weight:700;font-size:17px;margin:0 0 8px}
   .nc p{color:var(--soft);font-size:14.5px;margin:0}
+  .nc .nc-img{width:100%;height:170px;object-fit:cover;border-radius:10px;margin-bottom:14px;display:block}
+  .nc .nc-links{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px}
+  .nc .nc-links a{font-size:13.5px;font-weight:600;color:var(--accent);text-decoration:none}
+  .nc .nc-links a:hover{text-decoration:underline}
 
   /* FOOTER */
   footer{background:var(--gd);color:#a9c2af;padding:54px 0 30px;font-size:14px}
@@ -183,6 +187,7 @@ const SUPA_KEY = 'sb_publishable_R5FUE8lNPrQag-p6rIJIJQ_9VXzPwj9';
 
 const TOKEN_KEY = 'svss_token';
 const FN_INVITE_URL = SUPA_URL + '/functions/v1/send-invites';
+const FN_UPLOAD_URL = SUPA_URL + '/functions/v1/upload-media';
 let SESSION = null;          // {role, company_slug, name}
 let CONTENT = {};            // site_content keyed
 let COMPANIES = [];          // active companies (public)
@@ -326,7 +331,7 @@ function renderHome(){
 
   <section id="news" class="about"><div class="wrap">
     <div class="eyebrow">Aktuelles</div><h2 class="sec-title">News & Veranstaltungen</h2>
-    <div class="news">${news.map(n=>`<div class="nc"><div class="meta"><span class="date">${esc(n.date||'')}</span><span class="tag">${esc(n.tag||'')}</span></div><h3>${esc(n.title||'')}</h3><p>${esc(n.text||'')}</p></div>`).join('')||'<p class="lead">Aktuell keine Meldungen.</p>'}</div>
+    <div class="news">${news.map(n=>`<div class="nc">${n.image?`<img class="nc-img" src="${esc(n.image)}" alt="">`:''}<div class="meta"><span class="date">${esc(n.date||'')}</span><span class="tag">${esc(n.tag||'')}</span></div><h3>${esc(n.title||'')}</h3><p>${esc(n.text||'')}</p>${(n.pdf||(n.link&&/^https?:\/\//i.test(n.link)))?`<div class="nc-links">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener">PDF ansehen</a>`:''}${n.link&&/^https?:\/\//i.test(n.link)?`<a href="${esc(n.link)}" target="_blank" rel="noopener">Zum Bericht ↗</a>`:''}</div>`:''}</div>`).join('')||'<p class="lead">Aktuell keine Meldungen.</p>'}</div>
   </div></section>` + footer();
 }
 function firmCard(c){
@@ -588,7 +593,28 @@ function statRow(s,i){return `<div class="form-grid" style="margin-bottom:8px"><
 function addStatRow(){$('stats-rows').insertAdjacentHTML('beforeend',statRow({},0));}
 function boardRow(b){return `<div class="form-grid" style="margin-bottom:8px"><div><input class="bd-n" value="${esc(b.name||'')}" placeholder="Name"></div><div><input class="bd-r" value="${esc(b.role||'')}" placeholder="Funktion"></div></div>`;}
 function addBoardRow(){$('board-rows').insertAdjacentHTML('beforeend',boardRow({}));}
-function newsRow(n){return `<div class="panel" style="background:var(--sand);margin-bottom:10px"><div class="form-grid"><div><input class="nw-date" value="${esc(n.date||'')}" placeholder="08 Apr"></div><div><input class="nw-tag" value="${esc(n.tag||'')}" placeholder="Normen"></div><div class="full"><input class="nw-title" value="${esc(n.title||'')}" placeholder="Titel"></div><div class="full"><textarea class="nw-text" rows="2" placeholder="Text">${esc(n.text||'')}</textarea></div></div></div>`;}
+function newsRow(n){n=n||{};return `<div class="panel news-row" style="background:var(--sand);margin-bottom:10px">
+  <div class="form-grid">
+    <div><label>Datum</label><input class="nw-date" value="${esc(n.date||'')}" placeholder="08 Apr"></div>
+    <div><label>Tag</label><input class="nw-tag" value="${esc(n.tag||'')}" placeholder="Normen"></div>
+    <div class="full"><label>Titel</label><input class="nw-title" value="${esc(n.title||'')}" placeholder="Titel"></div>
+    <div class="full"><label>Text</label><textarea class="nw-text" rows="2" placeholder="Text">${esc(n.text||'')}</textarea></div>
+    <div class="full"><label>Externer Medienbericht (Link)</label><input class="nw-link" value="${esc(n.link||'')}" placeholder="https://..."></div>
+    <div><label>Bild</label>
+      <div class="nw-img-prev" style="margin-bottom:6px">${n.image?`<img src="${esc(n.image)}" style="max-height:54px;border-radius:8px">`:'<span style="color:var(--muted);font-size:13px">kein Bild</span>'}</div>
+      <input type="file" accept="image/*" onchange="uploadNewsMedia(this,'image')">
+      <input type="hidden" class="nw-image" value="${esc(n.image||'')}">
+      <button type="button" class="btn-sm btn-o" style="margin-top:6px" onclick="clearNewsMedia(this,'image')">Bild entfernen</button>
+    </div>
+    <div><label>PDF</label>
+      <div class="nw-pdf-name" style="margin-bottom:6px">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener" style="font-size:13px;color:var(--accent)">PDF ansehen</a>`:'<span style="color:var(--muted);font-size:13px">kein PDF</span>'}</div>
+      <input type="file" accept="application/pdf" onchange="uploadNewsMedia(this,'pdf')">
+      <input type="hidden" class="nw-pdf" value="${esc(n.pdf||'')}">
+      <button type="button" class="btn-sm btn-o" style="margin-top:6px" onclick="clearNewsMedia(this,'pdf')">PDF entfernen</button>
+    </div>
+  </div>
+  <button type="button" class="btn-sm btn-a" style="margin-top:10px" onclick="this.closest('.news-row').remove()">Meldung löschen</button>
+</div>`;}
 function addNewsRow(){$('news-rows').insertAdjacentHTML('beforeend',newsRow({}));}
 
 async function setContent(key,val){ try{ await rpc('board_set_content',{p_token:token(),p_key:key,p_value:val}); CONTENT[key]=val; _pubLoaded=false; toast('Gespeichert ✓'); }catch(e){ toast('Fehler: '+e.message,'err'); } }
@@ -599,9 +625,51 @@ function saveStats(){const n=[...document.querySelectorAll('.st-n')],l=[...docum
   const arr=n.map((x,i)=>({n:x.value.trim(),l:l[i].value.trim()})).filter(s=>s.n||s.l);setContent('stats',arr);}
 function saveBoard(){const n=[...document.querySelectorAll('.bd-n')],r=[...document.querySelectorAll('.bd-r')];
   const arr=n.map((x,i)=>({name:x.value.trim(),role:r[i].value.trim()})).filter(b=>b.name);setContent('board',arr);}
-function saveNews(){const d=[...document.querySelectorAll('.nw-date')],t=[...document.querySelectorAll('.nw-tag')],
-  ti=[...document.querySelectorAll('.nw-title')],tx=[...document.querySelectorAll('.nw-text')];
-  const arr=d.map((x,i)=>({date:x.value.trim(),tag:t[i].value.trim(),title:ti[i].value.trim(),text:tx[i].value.trim()})).filter(n=>n.title);setContent('news',arr);}
+function saveNews(){
+  const rows=[...document.querySelectorAll('#news-rows .news-row')];
+  const arr=rows.map(r=>({
+    date:r.querySelector('.nw-date').value.trim(),
+    tag:r.querySelector('.nw-tag').value.trim(),
+    title:r.querySelector('.nw-title').value.trim(),
+    text:r.querySelector('.nw-text').value.trim(),
+    link:r.querySelector('.nw-link').value.trim(),
+    image:r.querySelector('.nw-image').value.trim(),
+    pdf:r.querySelector('.nw-pdf').value.trim()
+  })).filter(n=>n.title);
+  setContent('news',arr);
+}
+async function uploadNewsMedia(input,kind){
+  const file=input.files&&input.files[0]; if(!file) return;
+  const row=input.closest('.news-row');
+  try{
+    let dataB64, ctype, fname=file.name||'datei';
+    if(kind==='image' && file.type!=='image/svg+xml'){
+      // verkleinern auf max 1200px, als JPEG
+      const url=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(file);});
+      const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+      const max=1200;let w=img.width,h=img.height;if(w>=h){if(w>max){h=Math.round(h*max/w);w=max;}}else{if(h>max){w=Math.round(w*max/h);h=max;}}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
+      dataB64=cv.toDataURL('image/jpeg',0.85).split(',')[1]; ctype='image/jpeg'; fname=(fname.replace(/\.[^.]*$/,'')||'bild')+'.jpg';
+    } else {
+      const url=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(file);});
+      dataB64=String(url).split(',')[1]; ctype=file.type||(kind==='pdf'?'application/pdf':'application/octet-stream');
+    }
+    toast((kind==='pdf'?'PDF':'Bild')+' wird hochgeladen…');
+    const r=await fetch(FN_UPLOAD_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),filename:fname,content_type:ctype,data_base64:dataB64})});
+    let d={}; try{d=await r.json();}catch(e){}
+    if(!r.ok||d.error||!d.url){ toast(d.error||('Fehler '+r.status),'err'); return; }
+    if(kind==='image'){ row.querySelector('.nw-image').value=d.url; row.querySelector('.nw-img-prev').innerHTML='<img src="'+d.url+'" style="max-height:54px;border-radius:8px">'; }
+    else { row.querySelector('.nw-pdf').value=d.url; row.querySelector('.nw-pdf-name').innerHTML='<a href="'+d.url+'" target="_blank" rel="noopener" style="font-size:13px;color:var(--accent)">PDF ansehen</a>'; }
+    input.value='';
+    toast((kind==='pdf'?'PDF':'Bild')+' hochgeladen ✓ — News speichern nicht vergessen');
+  }catch(e){ toast('Upload-Fehler: '+(e.message||e),'err'); }
+}
+function clearNewsMedia(btn,kind){
+  const row=btn.closest('.news-row');
+  if(kind==='image'){ row.querySelector('.nw-image').value=''; row.querySelector('.nw-img-prev').innerHTML='<span style="color:var(--muted);font-size:13px">kein Bild</span>'; }
+  else { row.querySelector('.nw-pdf').value=''; row.querySelector('.nw-pdf-name').innerHTML='<span style="color:var(--muted);font-size:13px">kein PDF</span>'; }
+  const f=row.querySelector(kind==='image'?'input[accept="image/*"]':'input[accept="application/pdf"]'); if(f) f.value='';
+}
 
 /* ---------- Init ---------- */
 $('lg-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
