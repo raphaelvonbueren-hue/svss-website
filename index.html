@@ -182,6 +182,7 @@ const SUPA_KEY = 'sb_publishable_R5FUE8lNPrQag-p6rIJIJQ_9VXzPwj9';
 /* ====================================================================== */
 
 const TOKEN_KEY = 'svss_token';
+const FN_INVITE_URL = SUPA_URL + '/functions/v1/send-invites';
 let SESSION = null;          // {role, company_slug, name}
 let CONTENT = {};            // site_content keyed
 let COMPANIES = [];          // active companies (public)
@@ -427,7 +428,16 @@ async function renderAdmin(){
 }
 function renderAdminMembers(){
   const acctBySlug={}; ADMIN.accounts.forEach(a=>{if(a.company_slug)acctBySlug[a.company_slug]=a;});
+  const pending = ADMIN.companies.filter(c=>{const a=acctBySlug[c.slug];return c.email&&a&&!a.last_login;});
+  const onboarded = ADMIN.companies.filter(c=>{const a=acctBySlug[c.slug];return a&&a.last_login;}).length;
+  const noMail = ADMIN.companies.filter(c=>!c.email).length;
   $('admin-body').innerHTML = `
+    <div class="panel">
+      <h2 style="font-size:18px">Mitglieder einladen</h2>
+      <p class="ph">${onboarded} onboardet · ${pending.length} noch nicht eingeloggt (mit E-Mail) · ${noMail} ohne E-Mail</p>
+      <button class="btn btn-a" ${pending.length?'':'disabled'} onclick="sendInvitesAll()">Nicht-onboardete einladen (${pending.length})</button>
+      <span style="font-size:12.5px;color:var(--muted);margin-left:12px">Sendet Login + Link. Bereits eingeloggte werden übersprungen.</span>
+    </div>
     <div class="panel">
       <h2 style="font-size:18px">Neues Mitglied</h2>
       <div class="form-grid">
@@ -440,10 +450,16 @@ function renderAdminMembers(){
       <button class="btn btn-p" style="margin-top:16px" onclick="addMember()">Mitglied hinzufügen</button>
     </div>
     <div class="panel" style="padding:0;overflow:hidden">
-      <table><thead><tr><th>Firma</th><th>Login</th><th>Status</th><th class="r">Aktionen</th></tr></thead><tbody>
-      ${ADMIN.companies.map(c=>{const a=acctBySlug[c.slug];return `<tr>
+      <table><thead><tr><th>Firma</th><th>Login</th><th>Onboarding</th><th>Status</th><th class="r">Aktionen</th></tr></thead><tbody>
+      ${ADMIN.companies.map(c=>{const a=acctBySlug[c.slug];
+        let ob; if(a&&a.last_login) ob='<span class="badge active">onboardet</span>';
+        else if(!c.email) ob='<span class="badge" style="background:#fbe7df;color:var(--accent)">keine E-Mail</span>';
+        else if(a&&a.invited_at) ob='<span class="badge" style="background:var(--sand-d);color:var(--soft)">eingeladen</span>';
+        else ob='<span class="badge" style="background:var(--gl);color:var(--gm)">offen</span>';
+        return `<tr>
         <td><b>${esc(c.name)}</b><br><span style="color:var(--muted);font-size:12px">${esc(c.slug)}</span></td>
         <td>${a?esc(a.username):'<span style="color:var(--muted)">—</span>'}</td>
+        <td>${ob}</td>
         <td><span class="badge ${c.status}">${c.status==='active'?'aktiv':'gesperrt'}</span></td>
         <td class="r">
           <button class="btn-sm btn-o" onclick="toggleStatus('${esc(c.slug)}','${c.status}')">${c.status==='active'?'Sperren':'Entsperren'}</button>
@@ -452,6 +468,17 @@ function renderAdminMembers(){
         </td></tr>`;}).join('')}
       </tbody></table>
     </div>`;
+}
+async function sendInvitesAll(){
+  if(!confirm('Allen noch nicht onboardeten Mitgliedern mit E-Mail eine Einladung senden?')) return;
+  toast('Sende Einladungen…');
+  try{
+    const r=await fetch(FN_INVITE_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token()})});
+    let d={}; try{d=await r.json();}catch(e){}
+    if(!r.ok||d.error){ toast(d.error||('Fehler '+r.status),'err'); return; }
+    toast((d.sent||0)+' Einladung(en) verschickt'+(d.failed?(', '+d.failed+' fehlgeschlagen'):'')+' ✓');
+    renderAdmin();
+  }catch(e){ toast('Verbindungsfehler: '+e.message,'err'); }
 }
 async function addMember(){
   const name=$('a-name').value.trim(),slug=$('a-slug').value.trim().toLowerCase().replace(/\s+/g,'-'),
