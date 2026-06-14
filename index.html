@@ -462,6 +462,7 @@ function renderAdminMembers(){
       <h2 style="font-size:18px">Mitglieder einladen</h2>
       <p class="ph">${onboarded} onboardet · ${pending.length} noch nicht eingeloggt (mit E-Mail) · ${noMail} ohne E-Mail</p>
       <button class="btn btn-a" ${pending.length?'':'disabled'} onclick="sendInvitesAll()">Nicht-onboardete einladen (${pending.length})</button>
+      <button class="btn btn-o" style="margin-left:8px" onclick="sendTestInvite()">Testmail an mich</button>
       <span style="font-size:12.5px;color:var(--muted);margin-left:12px">Sendet Login + Link. Bereits eingeloggte werden übersprungen.</span>
     </div>
     <div class="panel">
@@ -501,9 +502,19 @@ function renderAdminMembers(){
       </tbody></table>
     </div>`;
 }
+async function sendTestInvite(){
+  const email=(prompt('Test-Einladung an welche E-Mail senden?')||'').trim();
+  if(!email) return;
+  toast('Sende Testmail…');
+  try{
+    const r=await fetch(FN_INVITE_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),test_email:email})});
+    let d={}; try{d=await r.json();}catch(e){}
+    if(!r.ok||d.error){ toast(d.error||('Fehler '+r.status),'err'); return; }
+    toast('Testmail an '+email+' gesendet ✓');
+  }catch(e){ toast('Verbindungsfehler: '+e.message,'err'); }
+}
 async function sendInvitesAll(){
-  if(!confirm('Allen noch nicht onboardeten Mitgliedern mit E-Mail eine Einladung senden?')) return;
-  toast('Sende Einladungen…');
+  if(!confirm('Allen noch nicht onboardeten Mitgliedern mit E-Mail eine Einladung senden?')) return;  toast('Sende Einladungen…');
   try{
     const r=await fetch(FN_INVITE_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token()})});
     let d={}; try{d=await r.json();}catch(e){}
