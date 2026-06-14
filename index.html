@@ -91,6 +91,7 @@
   .vb .av{width:64px;height:64px;border-radius:50%;background:var(--gp);color:var(--gd);display:grid;place-items:center;
     margin:0 auto 12px;font-family:'DM Serif Display',serif;font-size:24px}
   .vb b{display:block;font-size:15px}.vb span{color:var(--muted);font-size:13px}
+  .vb .av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
   .news{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:32px}
   .nc{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:24px}
   .nc .meta{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -196,6 +197,8 @@ const FN_INVITE_URL = SUPA_URL + '/functions/v1/send-invites';
 const FN_UPLOAD_URL = SUPA_URL + '/functions/v1/upload-media';
 let SESSION = null;          // {is_board, company_slug, name}
 let MYGALLERY = [];          // Referenzbilder im Mitglieder-Portal
+let BOARDPERSONS = [];       // Vorstands-Personen (Startseite)
+let MYBOARDPHOTO = '';       // Portrait im eigenen Vorstandsprofil
 let CONTENT = {};            // site_content keyed
 let COMPANIES = [];          // active companies (public)
 
@@ -228,12 +231,14 @@ async function sel(table,query){
 
 /* ---------- Daten laden ---------- */
 async function loadPublic(){
-  const [content, comps] = await Promise.all([
+  const [content, comps, board] = await Promise.all([
     sel('site_content',{select:'*'}),
-    sel('companies',{select:'*',status:'eq.active',order:'sort_order.asc'})
+    sel('companies',{select:'*',status:'eq.active',order:'sort_order.asc'}),
+    rpc('public_board').catch(()=>[])
   ]);
   CONTENT={}; content.forEach(r=>CONTENT[r.key]=r.value);
   COMPANIES=comps;
+  BOARDPERSONS = Array.isArray(board)?board:[];
 }
 async function restoreSession(){
   if(!token()) return;
@@ -312,7 +317,7 @@ function initials(name){ return (name||'?').replace(/[^A-Za-zÄÖÜäöü0-9 ]/g
 
 /* ---------- HOME ---------- */
 function renderHome(){
-  const hero=CONTENT.hero||{}, stats=CONTENT.stats||[], about=CONTENT.about||{}, board=CONTENT.board||[], news=CONTENT.news||[];
+  const hero=CONTENT.hero||{}, stats=CONTENT.stats||[], about=CONTENT.about||{}, board=BOARDPERSONS||[], news=CONTENT.news||[];
   $('app').innerHTML = nav() + `
   <section class="hero" style="padding-bottom:96px"><div class="wrap">
     <h1>${esc(hero.title||'Sichere Spielplätze.')}<br><span class="accent">${esc(hero.title2||'Für alle Kinder.')}</span></h1>
@@ -327,7 +332,7 @@ function renderHome(){
   <section id="ueber" class="about"><div class="wrap">
     <div class="eyebrow">Über die SVSS</div><h2 class="sec-title">${esc(about.title||'Unser Zweck & unsere Ziele')}</h2>
     <p class="lead">${esc(about.text||'')}</p>
-    ${board.length?`<div class="vorstand-grid">${board.map(v=>`<div class="vb"><div class="av">${esc(initials(v.name))}</div><b>${esc(v.name)}</b><span>${esc(v.role||'')}</span></div>`).join('')}</div>`:''}
+    ${board.length?`<div class="vorstand-grid">${board.map(v=>`<div class="vb"><div class="av">${v.photo?`<img src="${esc(v.photo)}" alt="">`:esc(initials(v.name))}</div><b>${esc(v.name)}</b><span>${esc(v.function||'')}</span></div>`).join('')}</div>`:''}
   </div></section>
 
   <section id="mitglieder"><div class="wrap">
@@ -380,10 +385,27 @@ async function renderPortal(){
   let c={};
   try{ const rows=await sel('companies',{select:'*',slug:'eq.'+SESSION.company_slug}); c=rows[0]||{}; }catch{}
   MYGALLERY = (c&&Array.isArray(c.gallery))?c.gallery.slice():[];
+  let bp={}; if(SESSION.is_board){ try{ bp=await rpc('my_board_profile',{p_token:token()}); }catch{} }
+  MYBOARDPHOTO = (bp&&bp.photo)||'';
   const f=(k,v)=>`<input id="p-${k}" value="${esc(v||'')}">`;
   $('portal-body').innerHTML = `
     <div class="eyebrow">Mein Bereich</div><h2 class="sec-title">${esc(c.name||SESSION.name)}</h2>
     <p class="lead">Pflege hier die Angaben deiner Firma. Sie erscheinen auf deiner öffentlichen Unterseite.</p>
+    ${SESSION.is_board?`
+    <div class="panel" style="margin-top:30px;border-color:var(--accent)">
+      <h2 style="font-size:18px">Mein Vorstandsprofil</h2>
+      <p class="ph">Du bist im Vorstand. Hinterlege dich als Person – Name, Funktion und Portrait. Erscheint im Vorstand auf der Startseite.</p>
+      <div class="form-grid">
+        <div><label>Name (Person)</label><input id="bp-name" value="${esc((bp&&bp.name)||'')}" placeholder="z.B. Raphael von Büren"></div>
+        <div><label>Funktion</label><input id="bp-function" value="${esc((bp&&bp.function)||'')}" placeholder="z.B. Web & Social Media · PSP"></div>
+      </div>
+      <div style="margin-top:12px"><label>Portrait</label>
+        <div id="bp-photo-prev" style="margin:8px 0">${MYBOARDPHOTO?`<img src="${esc(MYBOARDPHOTO)}" style="width:84px;height:84px;border-radius:50%;object-fit:cover">`:'<span style="color:var(--muted);font-size:13px">kein Portrait</span>'}</div>
+        <input type="file" accept="image/*" onchange="uploadBoardPhoto(this)">
+        <button type="button" class="btn-sm btn-o" style="margin-left:8px" onclick="clearBoardPhoto()">Entfernen</button>
+      </div>
+      <button class="btn btn-p" style="margin-top:16px" onclick="saveBoardProfile()">Vorstandsprofil speichern</button>
+    </div>`:''}
     <div class="panel" style="margin-top:30px">
       <div class="form-grid">
         <div class="full"><label>Firmenname</label>${f('name',c.name)}</div>
@@ -457,6 +479,34 @@ async function saveMyCompany(){
     email:getVal('email'),website:getVal('website'),logo_url:getVal('logo_url'),description:getVal('description'),
     tags:getVal('tags').split(',').map(s=>s.trim()).filter(Boolean), gallery:MYGALLERY};
   try{ await rpc('update_my_company',{p_token:token(),p_patch:patch}); _pubLoaded=false; toast('Gespeichert ✓'); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
+}
+async function uploadBoardPhoto(input){
+  const file=input.files&&input.files[0]; if(!file) return;
+  if(!file.type.startsWith('image/')){ toast('Nur Bilder.','err'); return; }
+  try{
+    const url=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(file);});
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+    const max=600;let w=img.width,h=img.height;if(w>=h){if(w>max){h=Math.round(h*max/w);w=max;}}else{if(h>max){w=Math.round(w*max/h);h=max;}}
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
+    const dataB64=cv.toDataURL('image/jpeg',0.85).split(',')[1];
+    toast('Portrait wird hochgeladen…');
+    const r=await fetch(FN_UPLOAD_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),filename:'portrait.jpg',content_type:'image/jpeg',data_base64:dataB64})});
+    let d={}; try{d=await r.json();}catch(e){}
+    if(!r.ok||d.error||!d.url){ toast(d.error||('Fehler '+r.status),'err'); return; }
+    MYBOARDPHOTO=d.url;
+    const p=$('bp-photo-prev'); if(p) p.innerHTML='<img src="'+d.url+'" style="width:84px;height:84px;border-radius:50%;object-fit:cover">';
+    input.value='';
+    toast('Portrait hochgeladen ✓ — Vorstandsprofil speichern');
+  }catch(e){ toast('Upload-Fehler: '+(e.message||e),'err'); }
+}
+function clearBoardPhoto(){
+  MYBOARDPHOTO='';
+  const p=$('bp-photo-prev'); if(p) p.innerHTML='<span style="color:var(--muted);font-size:13px">kein Portrait</span>';
+}
+async function saveBoardProfile(){
+  const patch={p_token:token(),p_name:$('bp-name').value.trim(),p_function:$('bp-function').value.trim(),p_photo:MYBOARDPHOTO};
+  try{ await rpc('update_my_board_profile',patch); _pubLoaded=false; toast('Vorstandsprofil gespeichert ✓'); }
   catch(e){ toast('Fehler: '+e.message,'err'); }
 }
 function onLogoPick(e){
@@ -623,9 +673,7 @@ function renderAdminContent(){
       <div><button class="btn btn-p" style="margin-top:14px" onclick="saveStats()">Kennzahlen speichern</button></div></div>
 
     <div class="panel"><h2 style="font-size:18px">Vorstand</h2>
-      <div id="board-rows">${board.map((b,i)=>boardRow(b,i)).join('')}</div>
-      <button class="btn-sm btn-o" onclick="addBoardRow()" style="margin-top:10px">+ Person</button>
-      <div><button class="btn btn-p" style="margin-top:14px" onclick="saveBoard()">Vorstand speichern</button></div></div>
+      <p class="ph">Der Vorstand besteht aus Personen. Jedes Vorstandsmitglied pflegt sein eigenes Profil (Name, Funktion, Portrait) unter «Mein Bereich». Wähle Mitglieder über den Schalter «Vorstand» in der Mitglieder-Liste.</p></div>
 
     <div class="panel"><h2 style="font-size:18px">News</h2>
       <div id="news-rows">${news.map((n,i)=>newsRow(n,i)).join('')}</div>
