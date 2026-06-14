@@ -382,7 +382,15 @@ async function renderPortal(){
         <div><label>Telefon</label>${f('phone',c.phone)}</div>
         <div><label>E-Mail</label>${f('email',c.email)}</div>
         <div><label>Website</label>${f('website',c.website)}</div>
-        <div class="full"><label>Logo-URL</label>${f('logo_url',c.logo_url)}</div>
+        <div class="full"><label>Logo</label>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <div id="p-logo-prev" style="width:64px;height:64px;border-radius:12px;background:var(--gl);display:grid;place-items:center;overflow:hidden;border:1px solid var(--border);flex:none">${c.logo_url?`<img src="${esc(c.logo_url)}" style="width:100%;height:100%;object-fit:contain">`:`<span style="color:var(--gm);font-weight:700">${esc(initials(c.name||SESSION.name))}</span>`}</div>
+            <input type="file" id="p-logo-file" accept="image/*" onchange="onLogoPick(event)">
+            <button type="button" class="btn-sm btn-o" onclick="clearLogo()">Entfernen</button>
+          </div>
+          <input type="hidden" id="p-logo_url" value="${esc(c.logo_url||'')}">
+          <p class="ph" style="margin-top:8px">PNG oder JPG — wird automatisch verkleinert und erscheint auf der Startseite und Ihrer Firmenseite. Nach dem Wählen «Speichern» klicken.</p>
+        </div>
         <div class="full"><label>Tags (mit Komma getrennt)</label><input id="p-tags" value="${esc((c.tags||[]).join(', '))}"></div>
         <div class="full"><label>Beschreibung</label><textarea id="p-description" rows="5">${esc(c.description||'')}</textarea></div>
       </div>
@@ -404,6 +412,24 @@ async function saveMyCompany(){
   try{ await rpc('update_my_company',{p_token:token(),p_patch:patch}); _pubLoaded=false; toast('Gespeichert ✓'); }
   catch(e){ toast('Fehler: '+e.message,'err'); }
 }
+function onLogoPick(e){
+  const file=e.target.files&&e.target.files[0]; if(!file) return;
+  if(!file.type.startsWith('image/')){ toast('Bitte ein Bild wählen','err'); return; }
+  const fr=new FileReader();
+  fr.onload=()=>{ const img=new Image(); img.onload=()=>{
+    const max=320; let w=img.width,h=img.height;
+    if(w>=h){ if(w>max){ h=Math.round(h*max/w); w=max; } } else { if(h>max){ w=Math.round(w*max/h); h=max; } }
+    const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+    cv.getContext('2d').drawImage(img,0,0,w,h);
+    const url=cv.toDataURL('image/png');
+    $('p-logo_url').value=url;
+    const pv=$('p-logo-prev'); if(pv) pv.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:contain">';
+    toast('Logo geladen — jetzt «Speichern» klicken');
+  }; img.onerror=()=>toast('Bild konnte nicht gelesen werden','err'); img.src=fr.result; };
+  fr.onerror=()=>toast('Datei konnte nicht gelesen werden','err');
+  fr.readAsDataURL(file);
+}
+function clearLogo(){ const i=$('p-logo_url'); if(i) i.value=''; const f=$('p-logo-file'); if(f) f.value=''; const pv=$('p-logo-prev'); if(pv) pv.innerHTML='<span style="color:var(--gm);font-weight:700">–</span>'; }
 async function changePw(){
   const a=$('np1').value,b=$('np2').value;
   if(a.length<6){toast('Mindestens 6 Zeichen','err');return;}
@@ -437,6 +463,12 @@ function renderAdminMembers(){
       <p class="ph">${onboarded} onboardet · ${pending.length} noch nicht eingeloggt (mit E-Mail) · ${noMail} ohne E-Mail</p>
       <button class="btn btn-a" ${pending.length?'':'disabled'} onclick="sendInvitesAll()">Nicht-onboardete einladen (${pending.length})</button>
       <span style="font-size:12.5px;color:var(--muted);margin-left:12px">Sendet Login + Link. Bereits eingeloggte werden übersprungen.</span>
+    </div>
+    <div class="panel">
+      <h2 style="font-size:18px">Mein Passwort ändern</h2>
+      <div class="form-grid"><div><label>Neues Passwort</label><input id="np1" type="password"></div>
+        <div><label>Wiederholen</label><input id="np2" type="password"></div></div>
+      <button class="btn btn-o" style="margin-top:14px" onclick="changePw()">Passwort ändern</button>
     </div>
     <div class="panel">
       <h2 style="font-size:18px">Neues Mitglied</h2>
