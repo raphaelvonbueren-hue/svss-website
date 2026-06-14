@@ -101,6 +101,12 @@
   .nc .nc-links{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px}
   .nc .nc-links a{font-size:13.5px;font-weight:600;color:var(--accent);text-decoration:none}
   .nc .nc-links a:hover{text-decoration:underline}
+  .gal-strip{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+  .gal-strip .gi{position:relative;width:104px;height:78px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+  .gal-strip .gi img{width:100%;height:100%;object-fit:cover}
+  .gal-strip .gi button{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:13px;line-height:18px;padding:0}
+  .gal-pub{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:18px}
+  .gal-pub img{width:100%;height:185px;object-fit:cover;border-radius:12px;border:1px solid var(--border)}
 
   /* FOOTER */
   footer{background:var(--gd);color:#a9c2af;padding:54px 0 30px;font-size:14px}
@@ -188,7 +194,8 @@ const SUPA_KEY = 'sb_publishable_R5FUE8lNPrQag-p6rIJIJQ_9VXzPwj9';
 const TOKEN_KEY = 'svss_token';
 const FN_INVITE_URL = SUPA_URL + '/functions/v1/send-invites';
 const FN_UPLOAD_URL = SUPA_URL + '/functions/v1/upload-media';
-let SESSION = null;          // {role, company_slug, name}
+let SESSION = null;          // {is_board, company_slug, name}
+let MYGALLERY = [];          // Referenzbilder im Mitglieder-Portal
 let CONTENT = {};            // site_content keyed
 let COMPANIES = [];          // active companies (public)
 
@@ -244,9 +251,9 @@ async function doLogin(){
     const r=await rpc('login',{p_user:u,p_pw:p});
     if(!r.ok){ $('lg-err').textContent='Benutzername oder Passwort falsch.'; return; }
     localStorage.setItem(TOKEN_KEY,r.token);
-    SESSION={role:r.role,company_slug:r.company_slug,name:r.name};
+    SESSION={is_board:!!r.is_board,company_slug:r.company_slug,name:r.name};
     closeLogin();
-    location.hash = r.role==='board' ? '#/vorstand' : '#/konto';
+    location.hash = r.company_slug ? '#/konto' : '#/vorstand';
     toast('Willkommen, '+r.name);
   }catch(e){ $('lg-err').textContent='Verbindungsfehler.'; }
 }
@@ -260,8 +267,8 @@ async function route(){
   }
   try{
     if(h.startsWith('#/firma/')){ await ensurePublic(); renderCompany(decodeURIComponent(h.slice(8))); }
-    else if(h==='#/konto'){ if(!SESSION){openLogin();location.hash='#/';return;} renderPortal(); }
-    else if(h==='#/vorstand'){ if(!SESSION||SESSION.role!=='board'){openLogin();location.hash='#/';return;} renderAdmin(); }
+    else if(h==='#/konto'){ if(!SESSION){openLogin();location.hash='#/';return;} if(!SESSION.company_slug){location.hash='#/vorstand';return;} renderPortal(); }
+    else if(h==='#/vorstand'){ if(!SESSION||!SESSION.is_board){openLogin();location.hash='#/';return;} renderAdmin(); }
     else { await ensurePublic(); renderHome(); }
   }catch(e){ $('app').innerHTML='<div class="wrap" style="padding:60px 24px"><p>Fehler beim Laden. '+esc(e.message)+'</p></div>'; }
   window.scrollTo(0,0);
@@ -272,7 +279,7 @@ async function ensurePublic(){ if(!configured())return; if(!_pubLoaded){ await l
 /* ---------- Shared chrome ---------- */
 function nav(){
   const acct = SESSION
-    ? `<a onclick="location.hash='${SESSION.role==='board'?'#/vorstand':'#/konto'}'">${esc(SESSION.name)}</a><a onclick="logout()">Abmelden</a>`
+    ? `${SESSION.company_slug?`<a onclick="location.hash='#/konto'">Mein Bereich</a>`:''}${SESSION.is_board?`<a onclick="location.hash='#/vorstand'">Vorstand</a>`:''}<a onclick="logout()">Abmelden</a>`
     : `<a onclick="openLogin()">Login</a>`;
   return `<header class="nav"><div class="wrap nav-in">
     <div class="logo" onclick="location.hash='#/'">
@@ -364,7 +371,7 @@ function renderCompany(slug){
   <section><div class="wrap"><div class="sub-grid">
     <div>${c.description?`<div class="eyebrow">Über die Firma</div><p class="lead" style="white-space:pre-line">${esc(c.description)}</p>`:'<p class="lead">Diese Firma hat noch keine Beschreibung hinterlegt.</p>'}</div>
     <div><div class="panel" style="margin:0">${rows.map(r=>`<div class="info-row"><span class="k">${esc(r[0])}</span><span>${r[1]}</span></div>`).join('')||'<p style="color:var(--muted)">Keine Kontaktdaten.</p>'}</div></div>
-  </div></div></section>` + footer();
+  </div></div></section>${(c.gallery&&c.gallery.length)?`<section class="about"><div class="wrap"><div class="eyebrow">Referenzen</div><div class="gal-pub">${c.gallery.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join('')}</div></div></section>`:''}` + footer();
 }
 
 /* ---------- MEMBER PORTAL ---------- */
@@ -372,6 +379,7 @@ async function renderPortal(){
   $('app').innerHTML = nav() + `<section><div class="wrap" id="portal-body"><p class="lead">Lade…</p></div></section>` + footer();
   let c={};
   try{ const rows=await sel('companies',{select:'*',slug:'eq.'+SESSION.company_slug}); c=rows[0]||{}; }catch{}
+  MYGALLERY = (c&&Array.isArray(c.gallery))?c.gallery.slice():[];
   const f=(k,v)=>`<input id="p-${k}" value="${esc(v||'')}">`;
   $('portal-body').innerHTML = `
     <div class="eyebrow">Mein Bereich</div><h2 class="sec-title">${esc(c.name||SESSION.name)}</h2>
@@ -402,18 +410,52 @@ async function renderPortal(){
       <button class="btn btn-p" style="margin-top:18px" onclick="saveMyCompany()">Speichern</button>
     </div>
     <div class="panel">
+      <h2 style="font-size:18px">Referenzbilder</h2>
+      <p class="ph">Zeig ein paar Bilder deiner Projekte oder Anlagen – sie erscheinen auf deiner Firmenseite.</p>
+      <div id="gallery-strip" class="gal-strip"></div>
+      <input type="file" accept="image/*" multiple onchange="uploadGallery(this)">
+      <p class="ph" style="margin-top:6px">Mehrere Bilder möglich. Nach dem Hochladen «Speichern» klicken.</p>
+    </div>
+    <div class="panel">
       <h2 style="font-size:18px">Passwort ändern</h2>
       <div class="form-grid"><div><label>Neues Passwort</label><input id="np1" type="password"></div>
         <div><label>Wiederholen</label><input id="np2" type="password"></div></div>
       <button class="btn btn-o" style="margin-top:14px" onclick="changePw()">Passwort ändern</button>
     </div>`;
+  renderGalleryStrip();
+}
+function renderGalleryStrip(){
+  const el=$('gallery-strip'); if(!el) return;
+  el.innerHTML = MYGALLERY.map((u,i)=>`<div class="gi"><img src="${esc(u)}" alt=""><button onclick="removeGalleryItem(${i})" title="Entfernen">×</button></div>`).join('') || '<span style="color:var(--muted);font-size:13px">noch keine Bilder</span>';
+}
+function removeGalleryItem(i){ MYGALLERY.splice(i,1); renderGalleryStrip(); }
+async function uploadGallery(input){
+  const files=[...(input.files||[])]; if(!files.length) return;
+  for(const file of files){
+    if(!file.type.startsWith('image/')) continue;
+    try{
+      let dataB64, fname=(file.name||'bild');
+      const url=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(file);});
+      const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+      const max=1400;let w=img.width,h=img.height;if(w>=h){if(w>max){h=Math.round(h*max/w);w=max;}}else{if(h>max){w=Math.round(w*max/h);h=max;}}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
+      dataB64=cv.toDataURL('image/jpeg',0.85).split(',')[1];
+      toast('Bild wird hochgeladen…');
+      const r=await fetch(FN_UPLOAD_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),filename:(fname.replace(/\.[^.]*$/,'')||'bild')+'.jpg',content_type:'image/jpeg',data_base64:dataB64})});
+      let d={}; try{d=await r.json();}catch(e){}
+      if(!r.ok||d.error||!d.url){ toast(d.error||('Fehler '+r.status),'err'); continue; }
+      MYGALLERY.push(d.url); renderGalleryStrip();
+    }catch(e){ toast('Upload-Fehler: '+(e.message||e),'err'); }
+  }
+  input.value='';
+  toast('Bilder geladen ✓ — jetzt «Speichern» klicken');
 }
 function getVal(k){return $('p-'+k).value.trim();}
 async function saveMyCompany(){
   const patch={name:getVal('name'),contact_person:getVal('contact_person'),category:getVal('category'),
     street:getVal('street'),zip:getVal('zip'),city:getVal('city'),canton:getVal('canton'),phone:getVal('phone'),
     email:getVal('email'),website:getVal('website'),logo_url:getVal('logo_url'),description:getVal('description'),
-    tags:getVal('tags').split(',').map(s=>s.trim()).filter(Boolean)};
+    tags:getVal('tags').split(',').map(s=>s.trim()).filter(Boolean), gallery:MYGALLERY};
   try{ await rpc('update_my_company',{p_token:token(),p_patch:patch}); _pubLoaded=false; toast('Gespeichert ✓'); }
   catch(e){ toast('Fehler: '+e.message,'err'); }
 }
@@ -488,7 +530,7 @@ function renderAdminMembers(){
       <button class="btn btn-p" style="margin-top:16px" onclick="addMember()">Mitglied hinzufügen</button>
     </div>
     <div class="panel" style="padding:0;overflow:hidden">
-      <table><thead><tr><th>Firma</th><th>Login</th><th>Onboarding</th><th>Status</th><th class="r">Aktionen</th></tr></thead><tbody>
+      <table><thead><tr><th>Firma</th><th>Login</th><th>Onboarding</th><th>Status</th><th>Vorstand</th><th class="r">Aktionen</th></tr></thead><tbody>
       ${ADMIN.companies.map(c=>{const a=acctBySlug[c.slug];
         let ob; if(a&&a.last_login) ob='<span class="badge active">onboardet</span>';
         else if(!c.email) ob='<span class="badge" style="background:#fbe7df;color:var(--accent)">keine E-Mail</span>';
@@ -499,6 +541,7 @@ function renderAdminMembers(){
         <td>${a?esc(a.username):'<span style="color:var(--muted)">—</span>'}</td>
         <td>${ob}</td>
         <td><span class="badge ${c.status}">${c.status==='active'?'aktiv':'gesperrt'}</span></td>
+        <td>${a?`<button class="btn-sm ${a.is_board?'btn-p':'btn-o'}" onclick="electBoard('${esc(a.username)}',${a.is_board?'false':'true'})">${a.is_board?'Vorstand ✓':'wählen'}</button>`:'<span style="color:var(--muted)">—</span>'}</td>
         <td class="r">
           <button class="btn-sm btn-o" onclick="toggleStatus('${esc(c.slug)}','${c.status}')">${c.status==='active'?'Sperren':'Entsperren'}</button>
           <button class="btn-sm btn-o" onclick="resetPw('${esc(a?a.username:'')}')">PW</button>
@@ -506,6 +549,10 @@ function renderAdminMembers(){
         </td></tr>`;}).join('')}
       </tbody></table>
     </div>`;
+}
+async function electBoard(username,val){
+  try{ await rpc('board_set_board',{p_token:token(),p_username:username,p_is_board:val}); toast(val?'In den Vorstand gewählt ✓':'Aus dem Vorstand entfernt ✓'); renderAdmin(); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
 }
 async function sendTestInvite(){
   const email=(prompt('Test-Einladung an welche E-Mail senden?')||'').trim();
