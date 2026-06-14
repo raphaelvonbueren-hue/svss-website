@@ -238,7 +238,10 @@ async function loadPublic(){
   ]);
   CONTENT={}; content.forEach(r=>CONTENT[r.key]=r.value);
   COMPANIES=comps;
-  BOARDPERSONS = Array.isArray(board)?board:[];
+  BOARDPERSONS = (Array.isArray(board)?board:[]).slice().sort((a,b)=>{
+    const pa=/präsident/i.test(a.function||'')?0:1, pb=/präsident/i.test(b.function||'')?0:1;
+    return pa-pb;
+  });
 }
 async function restoreSession(){
   if(!token()) return;
