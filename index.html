@@ -6,6 +6,10 @@
 <title>SVSS — Schweizerische Vereinigung Sichere Spielplätze</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<!-- Rich-Text: Quill 2 + DOMPurify 3 (synchron, damit global verfügbar vor route()) -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <style>
   :root{
     --gd:#1a3a2a; --gm:#2d6a4a; --gs:#4a9068; --gp:#d4ead8; --gl:#f0f7f1;
@@ -157,6 +161,31 @@
     margin:20px auto;max-width:1140px;font-size:14px}
   .hidden{display:none!important}
 
+  /* RICH-TEXT (Quill) — Anzeige außerhalb des Editors */
+  .rich{}
+  .rich p{margin:0 0 10px}
+  .rich p:last-child{margin-bottom:0}
+  .rich h2{font-family:'DM Serif Display',Georgia,serif;font-size:24px;line-height:1.2;margin:18px 0 8px}
+  .rich h3{font-family:'DM Serif Display',Georgia,serif;font-size:19px;line-height:1.25;margin:16px 0 6px}
+  .rich ul,.rich ol{margin:0 0 12px;padding-left:22px}
+  .rich li{margin:2px 0}
+  .rich blockquote{margin:12px 0;padding:6px 14px;border-left:3px solid var(--gs);color:var(--soft);background:var(--gl);border-radius:0 6px 6px 0}
+  .rich a{color:var(--gm);text-decoration:underline}
+  .rich .ql-align-center{text-align:center}
+  .rich .ql-align-right{text-align:right}
+  .rich .ql-align-justify{text-align:justify}
+  /* News-Card-Body bleibt optisch wie zuvor (soft, kleiner) */
+  .nc .rich{color:var(--soft);font-size:14.5px}
+  .nc .rich h2{font-size:20px}.nc .rich h3{font-size:17px}
+
+  /* Quill-Editor im Formular passend zum Theme */
+  .quill-wrap{background:var(--white);border-radius:var(--r)}
+  .quill-wrap .ql-toolbar.ql-snow{border:1px solid var(--border);border-radius:var(--r) var(--r) 0 0;background:var(--sand)}
+  .quill-wrap .ql-container.ql-snow{border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r)}
+  .quill-wrap .ql-editor{min-height:140px;font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.55;color:var(--text)}
+  .quill-wrap .ql-editor.ql-blank::before{color:var(--muted);font-style:normal}
+  .quill-hint{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+
   @media(max-width:820px){
     .nav-links{display:none}.nav-burger{display:block}
     .nav-links.open{display:flex;position:absolute;top:68px;left:0;right:0;flex-direction:column;background:var(--cream);
@@ -209,6 +238,58 @@ const token = ()=>localStorage.getItem(TOKEN_KEY);
 let toastT;
 function toast(m,type){const t=$('toast');t.textContent=m;t.className='toast show'+(type==='err'?' err':'');
   clearTimeout(toastT);toastT=setTimeout(()=>t.className='toast',2800);}
+
+/* ---------- Rich-Text (Quill + DOMPurify) ---------- */
+const RICH_TOOLBAR = [
+  ['bold','italic','underline'],
+  [{header:2},{header:3}],
+  [{list:'ordered'},{list:'bullet'}],
+  [{align:''},{align:'center'},{align:'right'}],
+  ['link'],
+  ['clean']
+];
+const QUILL_INSTANCES = {};
+// Instanziiert einen Quill-Editor auf #elId, setzt initiales HTML, gibt Instanz zurück.
+function mountQuill(elId, html){
+  const el=$(elId); if(!el || typeof Quill==='undefined') return null;
+  const q=new Quill(el,{theme:'snow',modules:{toolbar:RICH_TOOLBAR}});
+  if(html){ q.clipboard.dangerouslyPasteHTML(String(html)); }
+  QUILL_INSTANCES[elId]=q;
+  return q;
+}
+// Liefert das HTML der Instanz; leeres '<p><br></p>' -> ''.
+function quillHtml(inst){
+  if(!inst) return '';
+  let h=inst.root.innerHTML||'';
+  if(/^\s*<p>\s*(<br\s*\/?>)?\s*<\/p>\s*$/i.test(h)) return '';
+  return h;
+}
+// Sicheres Anzeige-HTML: HTML -> sanitize; reiner Text -> escapen + \n->,<br>.
+function renderRich(value){
+  const v=value==null?'':String(value);
+  if(!v.trim()) return '';
+  const hasTags=/<[a-z][\s\S]*>/i.test(v);
+  let html;
+  if(hasTags && typeof DOMPurify!=='undefined'){
+    html=DOMPurify.sanitize(v,{
+      ALLOWED_TAGS:['p','br','strong','em','u','h2','h3','ul','ol','li','a','blockquote','span'],
+      ALLOWED_ATTR:['href','target','rel','class','style']
+    });
+  } else if(hasTags){
+    // Fallback ohne DOMPurify: lieber escapen als ungefiltert ausgeben
+    html=esc(v).replace(/\n/g,'<br>');
+  } else {
+    html=esc(v).replace(/\n/g,'<br>');
+  }
+  // Links absichern: target=_blank rel=noopener
+  html=html.replace(/<a\s+([^>]*)>/gi,(m,attrs)=>{
+    let a=attrs;
+    if(!/target\s*=/i.test(a)) a+=' target="_blank"';
+    if(!/rel\s*=/i.test(a)) a+=' rel="noopener"';
+    return '<a '+a+'>';
+  });
+  return html;
+}
 
 function configured(){ return SUPA_URL && SUPA_KEY; }
 
@@ -347,7 +428,7 @@ function renderHome(){
 
   <section id="news" class="about"><div class="wrap">
     <div class="eyebrow">Aktuelles</div><h2 class="sec-title">News & Veranstaltungen</h2>
-    <div class="news">${news.map(n=>`<div class="nc">${n.image?`<img class="nc-img" src="${esc(n.image)}" alt="">`:''}<div class="meta"><span class="date">${esc(n.date||'')}</span><span class="tag">${esc(n.tag||'')}</span></div><h3>${esc(n.title||'')}</h3><p>${esc(n.text||'')}</p>${(n.pdf||(n.link&&/^https?:\/\//i.test(n.link)))?`<div class="nc-links">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener">PDF ansehen</a>`:''}${n.link&&/^https?:\/\//i.test(n.link)?`<a href="${esc(n.link)}" target="_blank" rel="noopener">Zum Bericht ↗</a>`:''}</div>`:''}</div>`).join('')||'<p class="lead">Aktuell keine Meldungen.</p>'}</div>
+    <div class="news">${news.map(n=>`<div class="nc">${n.image?`<img class="nc-img" src="${esc(n.image)}" alt="">`:''}<div class="meta"><span class="date">${esc(n.date||'')}</span><span class="tag">${esc(n.tag||'')}</span></div><h3>${esc(n.title||'')}</h3><div class="rich">${renderRich(n.text||'')}</div>${(n.pdf||(n.link&&/^https?:\/\//i.test(n.link)))?`<div class="nc-links">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener">PDF ansehen</a>`:''}${n.link&&/^https?:\/\//i.test(n.link)?`<a href="${esc(n.link)}" target="_blank" rel="noopener">Zum Bericht ↗</a>`:''}</div>`:''}</div>`).join('')||'<p class="lead">Aktuell keine Meldungen.</p>'}</div>
   </div></section>` + footer();
 }
 function renderMembersSection(){
@@ -394,7 +475,7 @@ function renderCompany(slug){
     </div>
   </div></div>
   <section><div class="wrap"><div class="sub-grid">
-    <div>${c.description?`<div class="eyebrow">Über die Firma</div><p class="lead" style="white-space:pre-line">${esc(c.description)}</p>`:'<p class="lead">Diese Firma hat noch keine Beschreibung hinterlegt.</p>'}</div>
+    <div>${c.description?`<div class="eyebrow">Über die Firma</div><div class="rich lead" style="max-width:640px">${renderRich(c.description)}</div>`:'<p class="lead">Diese Firma hat noch keine Beschreibung hinterlegt.</p>'}</div>
     <div><div class="panel" style="margin:0">${rows.map(r=>`<div class="info-row"><span class="k">${esc(r[0])}</span><span>${r[1]}</span></div>`).join('')||'<p style="color:var(--muted)">Keine Kontaktdaten.</p>'}</div></div>
   </div></div></section>${(c.gallery&&c.gallery.length)?`<section class="about"><div class="wrap"><div class="eyebrow">Referenzen</div><div class="gal-pub">${c.gallery.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join('')}</div></div></section>`:''}` + footer();
 }
@@ -447,7 +528,10 @@ async function renderPortal(){
           <p class="ph" style="margin-top:8px">PNG oder JPG — wird automatisch verkleinert und erscheint auf der Startseite und Ihrer Firmenseite. Nach dem Wählen «Speichern» klicken.</p>
         </div>
         <div class="full"><label>Tags (mit Komma getrennt)</label><input id="p-tags" value="${esc((c.tags||[]).join(', '))}"></div>
-        <div class="full"><label>Beschreibung</label><textarea id="p-description" rows="5">${esc(c.description||'')}</textarea></div>
+        <div class="full"><label>Beschreibung</label>
+          <div class="quill-wrap"><div id="p-description-ed"></div></div>
+          <p class="quill-hint">Formatierung: fett, Überschriften, Aufzählungen, Ausrichtung.</p>
+        </div>
       </div>
       <button class="btn btn-p" style="margin-top:18px" onclick="saveMyCompany()">Speichern</button>
     </div>
@@ -465,6 +549,7 @@ async function renderPortal(){
       <button class="btn btn-o" style="margin-top:14px" onclick="changePw()">Passwort ändern</button>
     </div>`;
   renderGalleryStrip();
+  mountQuill('p-description-ed', c.description||'');
 }
 function renderGalleryStrip(){
   const el=$('gallery-strip'); if(!el) return;
@@ -496,7 +581,7 @@ function getVal(k){return $('p-'+k).value.trim();}
 async function saveMyCompany(){
   const patch={name:getVal('name'),contact_person:getVal('contact_person'),category:getVal('category'),
     street:getVal('street'),zip:getVal('zip'),city:getVal('city'),canton:getVal('canton'),phone:getVal('phone'),
-    email:getVal('email'),website:getVal('website'),logo_url:getVal('logo_url'),description:getVal('description'),
+    email:getVal('email'),website:getVal('website'),logo_url:getVal('logo_url'),description:quillHtml(QUILL_INSTANCES['p-description-ed']),
     tags:getVal('tags').split(',').map(s=>s.trim()).filter(Boolean), gallery:MYGALLERY};
   try{ await rpc('update_my_company',{p_token:token(),p_patch:patch}); _pubLoaded=false; toast('Gespeichert ✓'); }
   catch(e){ toast('Fehler: '+e.message,'err'); }
@@ -563,6 +648,7 @@ async function renderAdmin(){
     <div class="tabs" style="margin-top:24px">
       <button class="tab ${adminTab==='members'?'active':''}" onclick="adminTab='members';renderAdmin()">Mitglieder</button>
       <button class="tab ${adminTab==='content'?'active':''}" onclick="adminTab='content';renderAdmin()">Inhalte</button>
+      <button class="tab ${adminTab==='news'?'active':''}" onclick="adminTab='news';renderAdmin()">News</button>
       <button class="tab ${adminTab==='applications'?'active':''}" onclick="adminTab='applications';renderAdmin()">Bewerbungen</button>
       <button class="tab ${adminTab==='fees'?'active':''}" onclick="adminTab='fees';renderAdmin()">Beiträge</button>
     </div>
@@ -570,6 +656,7 @@ async function renderAdmin(){
   </div></section>` + footer();
   if(adminTab==='applications'){ renderAdminApplications(); return; }
   if(adminTab==='fees'){ renderAdminFees(); return; }
+  if(adminTab==='news'){ renderAdminNews(); return; }
   try{ ADMIN=await rpc('board_list',{p_token:token()}); }catch(e){ $('admin-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
   adminTab==='content'?renderAdminContent():renderAdminMembers();
 }
@@ -848,9 +935,59 @@ async function resetPw(user){
   try{ await rpc('board_reset_password',{p_token:token(),p_username:user,p_newpw:pw}); toast('Passwort gesetzt ✓'); }
   catch(e){ toast('Fehler: '+e.message,'err'); }
 }
+/* ---------- ADMIN: News (eigener Tab, Rich-Text) ---------- */
+// Arbeitskopie der News, damit ↑/↓ und Add/Remove vor dem Speichern funktionieren.
+let NEWS_DRAFT=[];
+function renderAdminNews(){
+  NEWS_DRAFT = (CONTENT.news||[]).map(n=>({date:n.date||'',tag:n.tag||'',title:n.title||'',text:n.text||'',link:n.link||'',image:n.image||'',pdf:n.pdf||''}));
+  drawAdminNews();
+}
+// Zeichnet NEWS_DRAFT neu. Caller müssen vorher ggf. syncNewsDraftFromEditors() aufrufen.
+function drawAdminNews(){
+  const rows = NEWS_DRAFT.map((n,i)=>newsRow(n,i)).join('') || '<p class="ph">Noch keine Meldungen. Lege unten eine an.</p>';
+  // Stale Quill-Instanzen der News-Zeilen verwerfen (Editoren werden unten neu gemountet)
+  Object.keys(QUILL_INSTANCES).forEach(k=>{ if(k.indexOf('nw-text-')===0) delete QUILL_INSTANCES[k]; });
+  $('admin-body').innerHTML = `
+    <div class="panel">
+      <h2 style="font-size:18px">News & Veranstaltungen</h2>
+      <p class="ph">Meldungen für die Startseite. Reihenfolge mit ↑/↓ ändern. Text mit Formatierung (fett, Überschriften, Aufzählungen, Ausrichtung, Links).</p>
+      <div id="news-rows">${rows}</div>
+      <button class="btn-sm btn-o" onclick="addNewsRow()" style="margin-top:10px">+ Meldung</button>
+      <div><button class="btn btn-p" style="margin-top:14px" onclick="saveNews()">News speichern</button></div>
+    </div>`;
+  // Quill-Editoren neu mounten (IDs pro Zeile)
+  NEWS_DRAFT.forEach((n,i)=>mountQuill('nw-text-'+i, n.text||''));
+}
+// Liest aktuelle Formularwerte (inkl. Quill-HTML) in NEWS_DRAFT zurück.
+function syncNewsDraftFromEditors(){
+  const rows=[...document.querySelectorAll('#news-rows .news-row')];
+  if(!rows.length) return;
+  NEWS_DRAFT = rows.map((r,i)=>({
+    date:r.querySelector('.nw-date').value.trim(),
+    tag:r.querySelector('.nw-tag').value.trim(),
+    title:r.querySelector('.nw-title').value.trim(),
+    text:quillHtml(QUILL_INSTANCES['nw-text-'+i]),
+    link:r.querySelector('.nw-link').value.trim(),
+    image:r.querySelector('.nw-image').value.trim(),
+    pdf:r.querySelector('.nw-pdf').value.trim()
+  }));
+}
+function moveNewsRow(i,dir){
+  syncNewsDraftFromEditors();
+  const j=i+dir;
+  if(j<0||j>=NEWS_DRAFT.length) return;
+  const tmp=NEWS_DRAFT[i]; NEWS_DRAFT[i]=NEWS_DRAFT[j]; NEWS_DRAFT[j]=tmp;
+  drawAdminNews();
+}
+function removeNewsRow(i){
+  syncNewsDraftFromEditors();
+  NEWS_DRAFT.splice(i,1);
+  drawAdminNews();
+}
+
 function renderAdminContent(){
   const hero=CONTENT.hero||{},about=CONTENT.about||{},contact=CONTENT.contact||{},
-    stats=CONTENT.stats||[],news=CONTENT.news||[],board=CONTENT.board||[];
+    stats=CONTENT.stats||[],board=CONTENT.board||[];
   $('admin-body').innerHTML = `
     <div class="panel"><h2 style="font-size:18px">Hero (Startseite oben)</h2>
       <div class="form-grid">
@@ -874,9 +1011,8 @@ function renderAdminContent(){
       <p class="ph">Der Vorstand besteht aus Personen. Jedes Vorstandsmitglied pflegt sein eigenes Profil (Name, Funktion, Portrait) unter «Mein Bereich». Wähle Mitglieder über den Schalter «Vorstand» in der Mitglieder-Liste.</p></div>
 
     <div class="panel"><h2 style="font-size:18px">News</h2>
-      <div id="news-rows">${news.map((n,i)=>newsRow(n,i)).join('')}</div>
-      <button class="btn-sm btn-o" onclick="addNewsRow()" style="margin-top:10px">+ Meldung</button>
-      <div><button class="btn btn-p" style="margin-top:14px" onclick="saveNews()">News speichern</button></div></div>
+      <p class="ph" style="margin:0">News & Veranstaltungen werden jetzt im eigenen Tab <b>«News»</b> bearbeitet (mit Formatierung).</p>
+      <button class="btn btn-o btn-sm" style="margin-top:12px" onclick="adminTab='news';renderAdmin()">→ Zum News-Tab</button></div>
 
     <div class="panel"><h2 style="font-size:18px">Kontakt</h2>
       <div class="fg"><label>E-Mail</label><input id="c-contact-email" value="${esc(contact.email||'')}"></div>
@@ -886,12 +1022,23 @@ function statRow(s,i){return `<div class="form-grid" style="margin-bottom:8px"><
 function addStatRow(){$('stats-rows').insertAdjacentHTML('beforeend',statRow({},0));}
 function boardRow(b){return `<div class="form-grid" style="margin-bottom:8px"><div><input class="bd-n" value="${esc(b.name||'')}" placeholder="Name"></div><div><input class="bd-r" value="${esc(b.role||'')}" placeholder="Funktion"></div></div>`;}
 function addBoardRow(){$('board-rows').insertAdjacentHTML('beforeend',boardRow({}));}
-function newsRow(n){n=n||{};return `<div class="panel news-row" style="background:var(--sand);margin-bottom:10px">
+function newsRow(n,i){n=n||{};i=i||0;return `<div class="panel news-row" style="background:var(--sand);margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <span style="font-weight:700;color:var(--soft);font-size:13px">Meldung ${i+1}</span>
+    <span style="display:flex;gap:6px">
+      <button type="button" class="btn-sm btn-o" onclick="moveNewsRow(${i},-1)" title="nach oben">↑</button>
+      <button type="button" class="btn-sm btn-o" onclick="moveNewsRow(${i},1)" title="nach unten">↓</button>
+      <button type="button" class="btn-sm btn-a" onclick="removeNewsRow(${i})">Meldung löschen</button>
+    </span>
+  </div>
   <div class="form-grid">
     <div><label>Datum</label><input class="nw-date" value="${esc(n.date||'')}" placeholder="08 Apr"></div>
     <div><label>Tag</label><input class="nw-tag" value="${esc(n.tag||'')}" placeholder="Normen"></div>
     <div class="full"><label>Titel</label><input class="nw-title" value="${esc(n.title||'')}" placeholder="Titel"></div>
-    <div class="full"><label>Text</label><textarea class="nw-text" rows="2" placeholder="Text">${esc(n.text||'')}</textarea></div>
+    <div class="full"><label>Text</label>
+      <div class="quill-wrap"><div id="nw-text-${i}"></div></div>
+      <p class="quill-hint">Formatierung: fett, Überschriften, Aufzählungen, Ausrichtung.</p>
+    </div>
     <div class="full"><label>Externer Medienbericht (Link)</label><input class="nw-link" value="${esc(n.link||'')}" placeholder="https://..."></div>
     <div><label>Bild</label>
       <div class="nw-img-prev" style="margin-bottom:6px">${n.image?`<img src="${esc(n.image)}" style="max-height:54px;border-radius:8px">`:'<span style="color:var(--muted);font-size:13px">kein Bild</span>'}</div>
@@ -906,9 +1053,12 @@ function newsRow(n){n=n||{};return `<div class="panel news-row" style="backgroun
       <button type="button" class="btn-sm btn-o" style="margin-top:6px" onclick="clearNewsMedia(this,'pdf')">PDF entfernen</button>
     </div>
   </div>
-  <button type="button" class="btn-sm btn-a" style="margin-top:10px" onclick="this.closest('.news-row').remove()">Meldung löschen</button>
 </div>`;}
-function addNewsRow(){$('news-rows').insertAdjacentHTML('beforeend',newsRow({}));}
+function addNewsRow(){
+  syncNewsDraftFromEditors();
+  NEWS_DRAFT.push({date:'',tag:'',title:'',text:'',link:'',image:'',pdf:''});
+  drawAdminNews();
+}
 
 async function setContent(key,val){ try{ await rpc('board_set_content',{p_token:token(),p_key:key,p_value:val}); CONTENT[key]=val; _pubLoaded=false; toast('Gespeichert ✓'); }catch(e){ toast('Fehler: '+e.message,'err'); } }
 function saveHero(){setContent('hero',{title:$('c-h-title').value,title2:$('c-h-title2').value,intro:$('c-h-intro').value});}
@@ -920,11 +1070,11 @@ function saveBoard(){const n=[...document.querySelectorAll('.bd-n')],r=[...docum
   const arr=n.map((x,i)=>({name:x.value.trim(),role:r[i].value.trim()})).filter(b=>b.name);setContent('board',arr);}
 function saveNews(){
   const rows=[...document.querySelectorAll('#news-rows .news-row')];
-  const arr=rows.map(r=>({
+  const arr=rows.map((r,i)=>({
     date:r.querySelector('.nw-date').value.trim(),
     tag:r.querySelector('.nw-tag').value.trim(),
     title:r.querySelector('.nw-title').value.trim(),
-    text:r.querySelector('.nw-text').value.trim(),
+    text:quillHtml(QUILL_INSTANCES['nw-text-'+i]),
     link:r.querySelector('.nw-link').value.trim(),
     image:r.querySelector('.nw-image').value.trim(),
     pdf:r.querySelector('.nw-pdf').value.trim()
