@@ -878,6 +878,7 @@ function renderAdminMembers(){
         <td><span class="badge ${c.status}">${c.status==='active'?'aktiv':'gesperrt'}</span></td>
         <td>${a?`<button class="btn-sm ${a.is_board?'btn-p':'btn-o'}" onclick="electBoard('${esc(a.username)}',${a.is_board?'false':'true'})">${a.is_board?'Vorstand ✓':'wählen'}</button>`:'<span style="color:var(--muted)">—</span>'}</td>
         <td class="r">
+          ${c.email?`<button class="btn-sm btn-p" onclick="sendInviteOne('${esc(c.slug)}','${esc(c.name)}')">Einladen</button>`:''}
           <button class="btn-sm btn-o" onclick="toggleStatus('${esc(c.slug)}','${c.status}')">${c.status==='active'?'Sperren':'Entsperren'}</button>
           <button class="btn-sm btn-o" onclick="resetPw('${esc(a?a.username:'')}')">PW</button>
           <button class="btn-sm btn-a" onclick="delMember('${esc(c.slug)}','${esc(c.name)}')">Löschen</button>
@@ -907,6 +908,17 @@ async function sendInvitesAll(){
     let d={}; try{d=await r.json();}catch(e){}
     if(!r.ok||d.error){ toast(d.error||('Fehler '+r.status),'err'); return; }
     toast((d.sent||0)+' Einladung(en) verschickt'+(d.failed?(', '+d.failed+' fehlgeschlagen'):'')+' ✓');
+    renderAdmin();
+  }catch(e){ toast('Verbindungsfehler: '+e.message,'err'); }
+}
+async function sendInviteOne(slug,name){
+  if(!confirm('Einladung an «'+name+'» senden? Setzt ein neues Start-Passwort und schickt Login + Link an die hinterlegte E-Mail.')) return;
+  toast('Sende Einladung…');
+  try{
+    const r=await fetch(FN_INVITE_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),slug:slug})});
+    let d={}; try{d=await r.json();}catch(e){}
+    if(!r.ok||d.error){ toast(d.error||('Fehler '+r.status),'err'); return; }
+    toast('Einladung an '+(d.to||name)+' gesendet ✓');
     renderAdmin();
   }catch(e){ toast('Verbindungsfehler: '+e.message,'err'); }
 }
