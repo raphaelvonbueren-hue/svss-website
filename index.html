@@ -112,6 +112,11 @@
   .gal-strip .gi button{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:13px;line-height:18px;padding:0}
   .gal-pub{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:18px}
   .gal-pub img{width:100%;height:185px;object-fit:cover;border-radius:12px;border:1px solid var(--border)}
+  .team-pub{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-top:18px}
+  .team-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;display:flex;flex-direction:column;gap:3px}
+  .team-card b{font-size:15.5px}
+  .team-card .role{color:var(--muted);font-size:13.5px}
+  .team-card a{font-size:13.5px;margin-top:4px}
 
   /* FOOTER */
   footer{background:var(--gd);color:#a9c2af;padding:54px 0 30px;font-size:14px}
@@ -230,6 +235,7 @@ const FN_IMPERSONATE_URL = SUPA_URL + '/functions/v1/impersonate';
 const ADMIN_TOKEN_KEY = 'svss_admin_token';
 let SESSION = null;          // {is_board, company_slug, name}
 let MYGALLERY = [];          // Referenzbilder im Mitglieder-Portal
+let MYTEAM = [];             // Team/Mitarbeiter im Mitglieder-Portal
 let BOARDPERSONS = [];       // Vorstands-Personen (Startseite)
 let MYBOARDPHOTO = '';       // Portrait im eigenen Vorstandsprofil
 let CONTENT = {};            // site_content keyed
@@ -481,7 +487,7 @@ function renderCompany(slug){
   <section><div class="wrap"><div class="sub-grid">
     <div>${c.description?`<div class="eyebrow">Über die Firma</div><div class="rich lead" style="max-width:640px">${renderRich(c.description)}</div>`:'<p class="lead">Diese Firma hat noch keine Beschreibung hinterlegt.</p>'}</div>
     <div><div class="panel" style="margin:0">${rows.map(r=>`<div class="info-row"><span class="k">${esc(r[0])}</span><span>${r[1]}</span></div>`).join('')||'<p style="color:var(--muted)">Keine Kontaktdaten.</p>'}</div></div>
-  </div></div></section>${(c.gallery&&c.gallery.length)?`<section class="about"><div class="wrap"><div class="eyebrow">Referenzen</div><div class="gal-pub">${c.gallery.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join('')}</div></div></section>`:''}` + footer();
+  </div></div></section>${(Array.isArray(c.team)&&c.team.length)?`<section class="about"><div class="wrap"><div class="eyebrow">Team</div><h2 class="sec-title" style="margin-bottom:8px">Mitarbeitende</h2><div class="team-pub">${c.team.map(p=>{const nm=[p.first,p.last].filter(Boolean).join(' ').trim();if(!nm&&!p.role)return '';return `<div class="team-card"><b>${esc(nm||'—')}</b>${p.role?`<span class="role">${esc(p.role)}</span>`:''}${p.email?`<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>`:''}</div>`;}).join('')}</div></div></section>`:''}${(c.gallery&&c.gallery.length)?`<section${(Array.isArray(c.team)&&c.team.length)?'':' class="about"'}><div class="wrap"><div class="eyebrow">Referenzen</div><div class="gal-pub">${c.gallery.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join('')}</div></div></section>`:''}` + footer();
 }
 
 /* ---------- MEMBER PORTAL ---------- */
@@ -490,6 +496,7 @@ async function renderPortal(){
   let c={};
   try{ const rows=await sel('companies',{select:'*',slug:'eq.'+SESSION.company_slug}); c=rows[0]||{}; }catch{}
   MYGALLERY = (c&&Array.isArray(c.gallery))?c.gallery.slice():[];
+  MYTEAM = (c&&Array.isArray(c.team))?c.team.slice():[];
   let bp={}; if(SESSION.is_board){ try{ bp=await rpc('my_board_profile',{p_token:token()}); }catch{} }
   MYBOARDPHOTO = (bp&&bp.photo)||'';
   const f=(k,v)=>`<input id="p-${k}" value="${esc(v||'')}">`;
@@ -547,6 +554,13 @@ async function renderPortal(){
       <p class="ph" style="margin-top:6px">Mehrere Bilder möglich. Nach dem Hochladen «Speichern» klicken.</p>
     </div>
     <div class="panel">
+      <h2 style="font-size:18px">Team / weitere Mitarbeiter</h2>
+      <p class="ph">Personen Ihrer Firma mit Funktion. E-Mail ist optional – ohne E-Mail erscheinen nur Name und Funktion. Wird auf Ihrer öffentlichen Firmenseite angezeigt.</p>
+      <div id="team-rows">${MYTEAM.map(teamRow).join('')}</div>
+      <button type="button" class="btn-sm btn-o" style="margin-top:10px" onclick="addTeamRow()">+ Person</button>
+      <div><button class="btn btn-p" style="margin-top:14px" onclick="saveTeam()">Team speichern</button></div>
+    </div>
+    <div class="panel">
       <h2 style="font-size:18px">Passwort ändern</h2>
       <div class="form-grid"><div><label>Neues Passwort</label><input id="np1" type="password"></div>
         <div><label>Wiederholen</label><input id="np2" type="password"></div></div>
@@ -554,6 +568,24 @@ async function renderPortal(){
     </div>`;
   renderGalleryStrip();
   mountQuill('p-description-ed', c.description||'');
+}
+function teamRow(p){p=p||{};return `<div class="form-grid team-row" style="margin-bottom:10px;align-items:end">
+  <div><label>Vorname</label><input class="tm-first" value="${esc(p.first||'')}"></div>
+  <div><label>Nachname</label><input class="tm-last" value="${esc(p.last||'')}"></div>
+  <div><label>Funktion</label><input class="tm-role" value="${esc(p.role||'')}" placeholder="z.B. Geschäftsführer"></div>
+  <div><label>E-Mail (optional)</label><div style="display:flex;gap:8px"><input class="tm-email" value="${esc(p.email||'')}"><button type="button" class="btn-sm btn-a" title="Entfernen" onclick="this.closest('.team-row').remove()">×</button></div></div>
+</div>`;}
+function addTeamRow(){ $('team-rows').insertAdjacentHTML('beforeend', teamRow({})); }
+async function saveTeam(){
+  const rows=[...document.querySelectorAll('#team-rows .team-row')];
+  const team=rows.map(r=>({
+    first:r.querySelector('.tm-first').value.trim(),
+    last:r.querySelector('.tm-last').value.trim(),
+    role:r.querySelector('.tm-role').value.trim(),
+    email:r.querySelector('.tm-email').value.trim()
+  })).filter(p=>p.first||p.last||p.role);
+  try{ await rpc('update_my_company',{p_token:token(),p_patch:{team:team}}); MYTEAM=team; _pubLoaded=false; toast('Team gespeichert ✓'); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
 }
 function renderGalleryStrip(){
   const el=$('gallery-strip'); if(!el) return;
