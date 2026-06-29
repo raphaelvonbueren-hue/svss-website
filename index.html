@@ -160,6 +160,8 @@
   .config-warn{background:#fff4e8;border:1px solid #f0c89a;color:#9a5a1a;padding:14px 18px;border-radius:var(--r);
     margin:20px auto;max-width:1140px;font-size:14px}
   .hidden{display:none!important}
+  .imp-banner{background:var(--accent);color:#fff;text-align:center;padding:9px 16px;font-size:13.5px;font-weight:600;position:sticky;top:0;z-index:45}
+  .imp-banner a{color:#fff;text-decoration:underline;cursor:pointer;font-weight:700}
 
   /* RICH-TEXT (Quill) — Anzeige außerhalb des Editors */
   .rich{}
@@ -224,6 +226,8 @@ const SUPA_KEY = 'sb_publishable_R5FUE8lNPrQag-p6rIJIJQ_9VXzPwj9';
 const TOKEN_KEY = 'svss_token';
 const FN_INVITE_URL = SUPA_URL + '/functions/v1/send-invites';
 const FN_UPLOAD_URL = SUPA_URL + '/functions/v1/upload-media';
+const FN_IMPERSONATE_URL = SUPA_URL + '/functions/v1/impersonate';
+const ADMIN_TOKEN_KEY = 'svss_admin_token';
 let SESSION = null;          // {is_board, company_slug, name}
 let MYGALLERY = [];          // Referenzbilder im Mitglieder-Portal
 let BOARDPERSONS = [];       // Vorstands-Personen (Startseite)
@@ -372,7 +376,7 @@ function nav(){
   const acct = SESSION
     ? `${SESSION.company_slug?`<a onclick="location.hash='#/konto'">Mein Bereich</a>`:''}${SESSION.is_board?`<a onclick="location.hash='#/vorstand'">Vorstand</a>`:''}<a onclick="logout()">Abmelden</a>`
     : `<a onclick="openLogin()">Login</a>`;
-  return `<header class="nav"><div class="wrap nav-in">
+  return `${localStorage.getItem(ADMIN_TOKEN_KEY)?`<div class="imp-banner">👤 Du bearbeitest als «${esc((SESSION&&SESSION.name)||'Mitglied')}» — <a onclick="stopImpersonate()">zurück zum Vorstand →</a></div>`:''}<header class="nav"><div class="wrap nav-in">
     <div class="logo" onclick="location.hash='#/'">
       <div class="mk">S</div><div class="tx"><b>SVSS</b><span>Sichere Spielplätze</span></div>
     </div>
@@ -878,6 +882,7 @@ function renderAdminMembers(){
         <td><span class="badge ${c.status}">${c.status==='active'?'aktiv':'gesperrt'}</span></td>
         <td>${a?`<button class="btn-sm ${a.is_board?'btn-p':'btn-o'}" onclick="electBoard('${esc(a.username)}',${a.is_board?'false':'true'})">${a.is_board?'Vorstand ✓':'wählen'}</button>`:'<span style="color:var(--muted)">—</span>'}</td>
         <td class="r">
+          ${a?`<button class="btn-sm btn-o" title="Als dieses Mitglied anmelden (Profil bearbeiten)" onclick="impersonate('${esc(c.slug)}','${esc(c.name)}')">👤→</button>`:''}
           ${c.email?`<button class="btn-sm btn-p" onclick="sendInviteOne('${esc(c.slug)}','${esc(c.name)}')">Einladen</button>`:''}
           <button class="btn-sm btn-o" onclick="toggleStatus('${esc(c.slug)}','${c.status}')">${c.status==='active'?'Sperren':'Entsperren'}</button>
           <button class="btn-sm btn-o" onclick="resetPw('${esc(a?a.username:'')}')">PW</button>
@@ -921,6 +926,22 @@ async function sendInviteOne(slug,name){
     toast('Einladung an '+(d.to||name)+' gesendet ✓');
     renderAdmin();
   }catch(e){ toast('Verbindungsfehler: '+e.message,'err'); }
+}
+async function impersonate(slug,name){
+  toast('Anmeldung als «'+name+'»…');
+  try{
+    const r=await fetch(FN_IMPERSONATE_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),slug:slug})});
+    let d={}; try{d=await r.json();}catch(e){}
+    if(!r.ok||d.error||!d.token){ toast(d.error||('Fehler '+r.status),'err'); return; }
+    if(!localStorage.getItem(ADMIN_TOKEN_KEY)) localStorage.setItem(ADMIN_TOKEN_KEY, token()); // Vorstands-Token sichern
+    localStorage.setItem(TOKEN_KEY, d.token);
+    location.hash='#/konto'; location.reload();
+  }catch(e){ toast('Verbindungsfehler: '+e.message,'err'); }
+}
+function stopImpersonate(){
+  const adm=localStorage.getItem(ADMIN_TOKEN_KEY);
+  if(adm){ localStorage.setItem(TOKEN_KEY, adm); localStorage.removeItem(ADMIN_TOKEN_KEY); }
+  location.hash='#/vorstand'; location.reload();
 }
 async function addMember(){
   const name=$('a-name').value.trim(),slug=$('a-slug').value.trim().toLowerCase().replace(/\s+/g,'-'),
