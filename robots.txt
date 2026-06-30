@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# KI-/Such-Crawler ausdrücklich willkommen
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+
+Sitemap: https://www.richis.ch/sitemap.xml

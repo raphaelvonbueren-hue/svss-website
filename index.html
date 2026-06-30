@@ -3,7 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SVSS — Schweizerische Vereinigung Sichere Spielplätze</title>
+<title>SVSS — Schweizerische Vereinigung Sichere Spielplätze | Prüfung, Schulungen, Fachfirmen</title>
+<meta name="description" content="Schweizerische Vereinigung Sichere Spielplätze (SVSS): Fachverband für sichere Spielplätze nach SN EN 1176/1177. Geprüfte Fachfirmen für Planung, Bau, Inspektion und Unterhalt – sowie Schulungen und Ausbildungen zur Spielplatzsicherheit in der ganzen Schweiz.">
+<meta name="keywords" content="Spielplatzsicherheit, Spielplatzprüfung, SN EN 1176, EN 1177, Spielplatz Inspektion, Spielplatzprüfer Ausbildung, Schulung Spielplatzsicherheit, Fallschutz, Fachfirmen Spielplatz, SVSS, Schweiz">
+<link rel="canonical" href="https://www.richis.ch/">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#2d6a4a">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SVSS — Sichere Spielplätze">
+<meta property="og:title" content="SVSS — Schweizerische Vereinigung Sichere Spielplätze">
+<meta property="og:description" content="Fachverband für sichere Spielplätze nach SN EN 1176/1177: geprüfte Fachfirmen, Spielplatzprüfungen und Schulungen in der ganzen Schweiz.">
+<meta property="og:url" content="https://www.richis.ch/">
+<meta property="og:locale" content="de_CH">
+<meta property="og:locale:alternate" content="fr_CH">
+<meta property="og:locale:alternate" content="it_CH">
+<meta property="og:locale:alternate" content="en_GB">
+<meta property="og:image" content="https://www.richis.ch/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SVSS — Schweizerische Vereinigung Sichere Spielplätze">
+<meta name="twitter:description" content="Fachverband für sichere Spielplätze nach SN EN 1176/1177: geprüfte Fachfirmen, Prüfungen und Schulungen schweizweit.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Schweizerische Vereinigung Sichere Spielplätze (SVSS)","alternateName":"SVSS","url":"https://www.richis.ch/","logo":"https://www.richis.ch/favicon.svg","description":"Fachverband für sichere, kindgerechte und qualitativ hochwertige Spiel- und Freizeitanlagen nach SN EN 1176/1177 in der Schweiz.","areaServed":"CH","knowsAbout":["Spielplatzsicherheit","Spielplatzprüfung","SN EN 1176","SN EN 1177","Spielplatz-Inspektion","Fallschutz","Ausbildung Spielplatzprüfer"]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <!-- Rich-Text: Quill 2 + DOMPurify 3 (synchron, damit global verfügbar vor route()) -->
@@ -865,6 +884,24 @@ async function loadPublic(){
     const pa=/präsident/i.test(a.function||'')?0:1, pb=/präsident/i.test(b.function||'')?0:1;
     return pa-pb;
   });
+  injectSeoJsonLd();
+}
+// schema.org JSON-LD für Kurse (EducationEvent) + Mitglieder-Verzeichnis — hält sich an die echten Daten.
+function injectSeoJsonLd(){
+  try{
+    const courseItems=(COURSES||[]).map((c,i)=>({"@type":"ListItem","position":i+1,"item":{
+      "@type":"Course","name":c.title,
+      "provider":{"@type":"Organization","name":"PlaySafePro","url":"https://www.playsafepro.ch"},
+      "url":c.link||"https://www.richis.ch/#/schulungen",
+      "hasCourseInstance":{"@type":"CourseInstance","courseMode":"Onsite","startDate":c.date_start||undefined,...(c.date_end?{"endDate":c.date_end}:{}),
+        "location":{"@type":"Place","name":[c.location,c.canton].filter(Boolean).join(', ')||'Schweiz',
+          "address":{"@type":"PostalAddress","addressLocality":c.location||undefined,"addressRegion":c.canton||undefined,"addressCountry":"CH"}}}
+    }}));
+    const data={"@context":"https://schema.org","@type":"ItemList","name":"Schulungen Spielplatzsicherheit","itemListElement":courseItems};
+    let el=document.getElementById('seo-jsonld');
+    if(!el){ el=document.createElement('script'); el.type='application/ld+json'; el.id='seo-jsonld'; document.head.appendChild(el); }
+    el.textContent=JSON.stringify(data);
+  }catch(e){}
 }
 async function restoreSession(){
   if(!token()) return;
