@@ -50,6 +50,11 @@
   .nav-links a{color:var(--soft);font-weight:500;font-size:14.5px;cursor:pointer}
   .nav-links a:hover{color:var(--gd)}
   .nav-burger{display:none;background:none;font-size:22px;color:var(--gd)}
+  .lang-switch{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+  .lang-opt{color:var(--muted);cursor:pointer;padding:2px 3px;transition:var(--t)}
+  .lang-opt:hover{color:var(--gd)}
+  .lang-opt.active{color:var(--gd);text-decoration:underline;text-underline-offset:3px}
+  .lang-sep{color:var(--border)}
 
   /* HERO */
   .hero{background:linear-gradient(160deg,var(--gd),var(--gm) 75%);color:#eef4ee;padding:84px 0 96px;position:relative;overflow:hidden}
@@ -239,13 +244,13 @@
 <!-- LOGIN MODAL -->
 <div class="overlay" id="login-modal">
   <div class="modal">
-    <h2>Anmelden</h2>
-    <p class="sub">Mitglieder- und Vorstandsbereich</p>
-    <div class="fg"><label>Benutzername</label><input id="lg-user" autocomplete="username" autocapitalize="off"></div>
-    <div class="fg"><label>Passwort</label><input id="lg-pw" type="password" autocomplete="current-password"></div>
-    <button class="btn btn-p" style="width:100%;margin-top:8px" onclick="doLogin()">Anmelden →</button>
+    <h2 id="lg-title">Anmelden</h2>
+    <p class="sub" id="lg-sub">Mitglieder- und Vorstandsbereich</p>
+    <div class="fg"><label id="lg-l-user">Benutzername</label><input id="lg-user" autocomplete="username" autocapitalize="off"></div>
+    <div class="fg"><label id="lg-l-pw">Passwort</label><input id="lg-pw" type="password" autocomplete="current-password"></div>
+    <button class="btn btn-p" id="lg-submit" style="width:100%;margin-top:8px" onclick="doLogin()">Anmelden →</button>
     <div class="err" id="lg-err"></div>
-    <p style="text-align:center;margin:14px 0 0;font-size:13px"><a onclick="closeLogin()" style="cursor:pointer;color:var(--muted)">Abbrechen</a></p>
+    <p style="text-align:center;margin:14px 0 0;font-size:13px"><a id="lg-cancel" onclick="closeLogin()" style="cursor:pointer;color:var(--muted)">Abbrechen</a></p>
   </div>
 </div>
 
@@ -256,6 +261,464 @@
 const SUPA_URL = 'https://incjdnfwjhmbnenhkwwu.supabase.co';
 const SUPA_KEY = 'sb_publishable_R5FUE8lNPrQag-p6rIJIJQ_9VXzPwj9';
 /* ====================================================================== */
+
+/* ======================================================================
+   MEHRSPRACHIGKEIT (i18n) — hand-übersetzte Kern-Oberfläche
+   DE / FR / IT / RM (Rumantsch Grischun) / EN
+   Nur FESTE Oberflächentexte; KEINE CMS-/Mitglieder-Inhalte.
+   ====================================================================== */
+let LANG = localStorage.getItem('svss_lang') || 'de';
+const LANGS = [['de','DE'],['fr','FR'],['it','IT'],['rm','RM'],['en','EN']];
+const I18N = {
+  de:{
+    'nav.members':'Mitglieder','nav.about':'Über uns','nav.news':'News','nav.courses':'Schulungen',
+    'nav.join':'Mitglied werden','nav.inquiry':'Anfrage','nav.downloads':'Downloads','nav.search':'Suche',
+    'nav.myarea':'Mein Bereich','nav.board':'Vorstand','nav.login':'Login','nav.logout':'Abmelden',
+    'hero.findExpert':'Fachperson finden →','hero.aboutBtn':'Über die SVSS',
+    'sec.members':'Mitglieder','members.countSuffix':'Fachfirmen im Verband',
+    'members.lead':'Geprüfte Fachfirmen für Planung, Bau, Inspektion und Unterhalt sicherer Spielplätze.',
+    'members.private':'Privatmitglieder','members.show':'Mitglieder anzeigen','members.hide':'Mitglieder ausblenden',
+    'members.none':'Noch keine Mitglieder erfasst.',
+    'members.privSupport':'unterstützen den Verband.','members.privSupport1':'unterstützt den Verband.',
+    'about.eyebrow':'Über die SVSS','about.defaultTitle':'Unser Zweck & unsere Ziele',
+    'news.eyebrow':'Aktuelles','news.title':'News & Veranstaltungen','news.none':'Aktuell keine Meldungen.',
+    'news.pdf':'PDF ansehen','news.report':'Zum Bericht ↗',
+    'courses.eyebrow':'Aus- & Weiterbildung','courses.nextTitle':'Nächste Schulungen','courses.allBtn':'Alle Schulungen →',
+    'courses.title':'Schulungen','courses.regOpen':'Anmeldung offen','courses.past':'vergangen',
+    'courses.details':'Details / Anmeldung ↗','courses.none':'Aktuell sind keine Schulungen ausgeschrieben.',
+    'courses.lead':'Kurse und Termine rund um Spielplatzsicherheit und Inspektionen nach SN EN 1176.',
+    'courses.dateOpen':'Datum offen',
+    'btn.download':'Herunterladen','btn.open':'Öffnen ↗','btn.back':'Zurück','btn.send':'Senden','btn.save':'Speichern',
+    'login.title':'Anmelden','login.sub':'Mitglieder- und Vorstandsbereich','login.user':'Benutzername','login.pw':'Passwort',
+    'login.submit':'Anmelden →','login.cancel':'Abbrechen','login.error':'Benutzername oder Passwort falsch.',
+    'login.connError':'Verbindungsfehler.',
+    'dl.title':'Downloads','dl.lead':'Dokumente, Protokolle und nützliche Links für SVSS-Mitglieder.',
+    'dl.eyebrow':'Mitgliederbereich','dl.empty':'Noch keine Einträge.',
+    'dl.cat.gv-protokolle':'GV-Protokolle','dl.cat.wissenswertes':'Wissenswertes','dl.cat.news':'News',
+    'dl.cat.unfaelle':'Unfälle','dl.cat.links':'Links',
+    'inquiry.eyebrow':'Kontakt','inquiry.title':'Anfrage an den Vorstand',
+    'inquiry.lead':'Sie sind kein Mitglied, haben aber eine Frage? Hier können Sie eine <b>sicherheitstechnische Anfrage</b> stellen oder <b>Infos zu Spielplätzen oder unseren Mitgliedern</b> anfordern. Der Vorstand bearbeitet Ihre Anfrage und antwortet Ihnen per E-Mail.',
+    'inquiry.topic':'Anliegen','inquiry.topicChoose':'Bitte wählen…',
+    'inquiry.topic.safety':'Sicherheitstechnische Anfrage','inquiry.topic.playgrounds':'Infos zu Spielplätzen',
+    'inquiry.topic.members':'Infos zu Mitgliedern','inquiry.topic.other':'Sonstiges',
+    'inquiry.name':'Name','inquiry.email':'E-Mail *','inquiry.subject':'Betreff','inquiry.question':'Ihre Frage *',
+    'inquiry.questionPh':'Beschreiben Sie Ihr Anliegen…','inquiry.images':'Bilder (optional)',
+    'inquiry.imagesHint':'Optional, z.B. Fotos der Anlage. Empfohlen max. 4 Bilder. Werden automatisch verkleinert.',
+    'inquiry.submit':'Anfrage absenden','inquiry.thanks':'Vielen Dank!',
+    'inquiry.thanksText':'Ihre Anfrage wurde an den Vorstand übermittelt. Sie erhalten eine Antwort per E-Mail.',
+    'inquiry.toHome':'Zur Startseite',
+    'inquiry.err.email':'Bitte eine E-Mail-Adresse angeben.','inquiry.err.question':'Bitte Ihre Frage angeben.',
+    'inquiry.err.send':'Fehler beim Absenden: ',
+    'apply.eyebrow':'Mitwirken','apply.title':'Mitglied werden',
+    'apply.lead':'Werden Sie Teil der SVSS. Füllen Sie das Formular aus – wir melden uns nach der Aufnahme mit den Zugangsdaten.',
+    'apply.type':'Art der Mitgliedschaft','apply.company':'Firma','apply.private':'Privatperson',
+    'apply.tariff':'Tarif: Firma CHF 280.– / Jahr · Privat CHF 50.– / Jahr · MwSt-befreit.',
+    'apply.companyName':'Firmenname *','apply.birthdate':'Geburtsdatum','apply.first':'Vorname *','apply.last':'Nachname *',
+    'apply.street':'Strasse','apply.zip':'PLZ','apply.city':'Ort','apply.email':'E-Mail *',
+    'apply.phone':'Telefon Festnetz','apply.mobile':'Mobil',
+    'apply.phoneHint':'Mindestens eine Telefonnummer (Festnetz oder Mobil) ist erforderlich.',
+    'apply.logo':'Logo (optional)','apply.logoHint':'Optional. Falls das Hochladen nicht klappt, reichen wir das Logo nach der Aufnahme nach.',
+    'apply.billingToggle':'Abweichende Rechnungsadresse','apply.billingName':'Name / Firma (Rechnung)',
+    'apply.billingEmail':'E-Mail (Rechnung)','apply.submit':'Bewerbung absenden','apply.thanks':'Vielen Dank!',
+    'apply.thanksText':'Ihre Bewerbung ist bei uns eingegangen. Der Vorstand prüft sie und meldet sich bei Ihnen mit den weiteren Schritten und Zugangsdaten.',
+    'apply.err.email':'Bitte eine E-Mail-Adresse angeben.','apply.err.name':'Bitte Vor- und Nachname angeben.',
+    'apply.err.phone':'Bitte mindestens eine Telefonnummer (Festnetz oder Mobil) angeben.',
+    'apply.err.company':'Bitte den Firmennamen angeben.','apply.err.send':'Fehler beim Absenden: ',
+    'apply.errImg':'Bitte ein Bild wählen','apply.errImgRead':'Bild konnte nicht gelesen werden',
+    'foot.tagline':'Schweizerische Vereinigung Sichere Spielplätze — für sichere, kindgerechte Spiel- und Freizeitanlagen.',
+    'foot.contact':'Kontakt','foot.area':'Bereich','foot.join':'Mitglied werden','foot.inquiry':'Anfrage stellen',
+    'foot.memberLogin':'Mitglieder-Login',
+    'company.back':'← Alle Mitglieder','company.notFound':'Firma nicht gefunden','company.backShort':'← Zurück',
+    'company.aboutFirm':'Über die Firma','company.noDesc':'Diese Firma hat noch keine Beschreibung hinterlegt.',
+    'company.noContact':'Keine Kontaktdaten.','company.team':'Team','company.teamTitle':'Mitarbeitende',
+    'company.references':'Referenzen',
+    'company.contactPerson':'Ansprechperson','company.address':'Adresse','company.canton':'Kanton',
+    'company.phone':'Telefon','company.email':'E-Mail','company.website':'Website','company.category':'Kategorie',
+    'portal.myarea':'Mein Bereich',
+    'portal.lead':'Pflege hier die Angaben deiner Firma. Sie erscheinen auf deiner öffentlichen Unterseite.',
+    'portal.companyName':'Firmenname','portal.contactPerson':'Ansprechperson','portal.category':'Kategorie',
+    'portal.street':'Strasse','portal.zipCity':'PLZ / Ort','portal.canton':'Kanton','portal.phone':'Telefon',
+    'portal.email':'E-Mail','portal.website':'Website','portal.logo':'Logo',
+    'portal.logoHint':'PNG oder JPG — wird automatisch verkleinert und erscheint auf der Startseite und Ihrer Firmenseite. Nach dem Wählen «Speichern» klicken.',
+    'portal.tags':'Tätigkeitsbereiche','portal.tagsHint':'Wählen Sie die zutreffenden Bereiche – sie erscheinen als Tags auf Ihrer Firmenseite.',
+    'portal.description':'Beschreibung','portal.richHint':'Formatierung: fett, Überschriften, Aufzählungen, Ausrichtung.',
+    'portal.gallery':'Referenzbilder','portal.galleryHint':'Zeig ein paar Bilder deiner Projekte oder Anlagen – sie erscheinen auf deiner Firmenseite.',
+    'portal.galleryHint2':'Mehrere Bilder möglich. Nach dem Hochladen «Speichern» klicken.','portal.galleryEmpty':'noch keine Bilder',
+    'portal.team':'Team / weitere Mitarbeiter',
+    'portal.teamHint':'Personen Ihrer Firma mit Funktion. E-Mail ist optional – ohne E-Mail erscheinen nur Name und Funktion. Wird auf Ihrer öffentlichen Firmenseite angezeigt.',
+    'portal.addPerson':'+ Person','portal.saveTeam':'Team speichern',
+    'portal.tmFirst':'Vorname','portal.tmLast':'Nachname','portal.tmRole':'Funktion','portal.tmRolePh':'z.B. Geschäftsführer',
+    'portal.tmEmail':'E-Mail (optional)','portal.changePw':'Passwort ändern','portal.newPw':'Neues Passwort',
+    'portal.repeatPw':'Wiederholen','portal.save':'Speichern','portal.loading':'Lade…',
+    'search.eyebrow':'Mitgliederbereich','search.title':'Suche',
+    'search.lead':'Durchsuche Mitgliederfirmen, News und Dokumente (inkl. PDF-Inhalt).',
+    'search.ph':'Suchbegriff…','search.btn':'Suchen','search.running':'Suche läuft…',
+    'search.empty':'Bitte einen Suchbegriff eingeben.','search.error':'Fehler bei der Suche: ',
+    'search.noHits':'Keine Treffer für','search.grpMembers':'Mitglieder','search.grpNews':'News','search.grpDocs':'Dokumente',
+    'common.loading':'Lade…','common.switzerland':'Schweiz','common.errLoad':'Fehler beim Laden. '
+  },
+  fr:{
+    'nav.members':'Membres','nav.about':'À propos','nav.news':'Actualités','nav.courses':'Formations',
+    'nav.join':'Devenir membre','nav.inquiry':'Demande','nav.downloads':'Téléchargements','nav.search':'Recherche',
+    'nav.myarea':'Mon espace','nav.board':'Comité','nav.login':'Connexion','nav.logout':'Déconnexion',
+    'hero.findExpert':'Trouver un spécialiste →','hero.aboutBtn':'À propos de la SVSS',
+    'sec.members':'Membres','members.countSuffix':'entreprises spécialisées membres',
+    'members.lead':'Entreprises spécialisées certifiées pour la planification, la construction, l’inspection et l’entretien d’aires de jeux sûres.',
+    'members.private':'Membres privés','members.show':'Afficher les membres','members.hide':'Masquer les membres',
+    'members.none':'Aucun membre enregistré pour le moment.',
+    'members.privSupport':'soutiennent l’association.','members.privSupport1':'soutient l’association.',
+    'about.eyebrow':'À propos de la SVSS','about.defaultTitle':'Notre but et nos objectifs',
+    'news.eyebrow':'Actualités','news.title':'Actualités & événements','news.none':'Aucune actualité pour le moment.',
+    'news.pdf':'Voir le PDF','news.report':'Vers l’article ↗',
+    'courses.eyebrow':'Formation continue','courses.nextTitle':'Prochaines formations','courses.allBtn':'Toutes les formations →',
+    'courses.title':'Formations','courses.regOpen':'Inscriptions ouvertes','courses.past':'passée',
+    'courses.details':'Détails / Inscription ↗','courses.none':'Aucune formation n’est actuellement proposée.',
+    'courses.lead':'Cours et dates autour de la sécurité des aires de jeux et des inspections selon SN EN 1176.',
+    'courses.dateOpen':'Date à définir',
+    'btn.download':'Télécharger','btn.open':'Ouvrir ↗','btn.back':'Retour','btn.send':'Envoyer','btn.save':'Enregistrer',
+    'login.title':'Connexion','login.sub':'Espace membres et comité','login.user':'Nom d’utilisateur','login.pw':'Mot de passe',
+    'login.submit':'Se connecter →','login.cancel':'Annuler','login.error':'Nom d’utilisateur ou mot de passe incorrect.',
+    'login.connError':'Erreur de connexion.',
+    'dl.title':'Téléchargements','dl.lead':'Documents, procès-verbaux et liens utiles pour les membres de la SVSS.',
+    'dl.eyebrow':'Espace membres','dl.empty':'Aucune entrée pour le moment.',
+    'dl.cat.gv-protokolle':'Procès-verbaux d’AG','dl.cat.wissenswertes':'À savoir','dl.cat.news':'Actualités',
+    'dl.cat.unfaelle':'Accidents','dl.cat.links':'Liens',
+    'inquiry.eyebrow':'Contact','inquiry.title':'Demande au comité',
+    'inquiry.lead':'Vous n’êtes pas membre mais avez une question ? Vous pouvez ici poser une <b>demande technique de sécurité</b> ou demander des <b>informations sur les aires de jeux ou nos membres</b>. Le comité traite votre demande et vous répond par e-mail.',
+    'inquiry.topic':'Objet','inquiry.topicChoose':'Veuillez choisir…',
+    'inquiry.topic.safety':'Demande technique de sécurité','inquiry.topic.playgrounds':'Informations sur les aires de jeux',
+    'inquiry.topic.members':'Informations sur les membres','inquiry.topic.other':'Autre',
+    'inquiry.name':'Nom','inquiry.email':'E-mail *','inquiry.subject':'Sujet','inquiry.question':'Votre question *',
+    'inquiry.questionPh':'Décrivez votre demande…','inquiry.images':'Images (facultatif)',
+    'inquiry.imagesHint':'Facultatif, p. ex. photos de l’installation. Max. 4 images recommandées. Réduites automatiquement.',
+    'inquiry.submit':'Envoyer la demande','inquiry.thanks':'Merci beaucoup !',
+    'inquiry.thanksText':'Votre demande a été transmise au comité. Vous recevrez une réponse par e-mail.',
+    'inquiry.toHome':'Vers l’accueil',
+    'inquiry.err.email':'Veuillez indiquer une adresse e-mail.','inquiry.err.question':'Veuillez indiquer votre question.',
+    'inquiry.err.send':'Erreur lors de l’envoi : ',
+    'apply.eyebrow':'Participer','apply.title':'Devenir membre',
+    'apply.lead':'Rejoignez la SVSS. Remplissez le formulaire – nous vous contacterons après votre admission avec vos identifiants.',
+    'apply.type':'Type d’adhésion','apply.company':'Entreprise','apply.private':'Particulier',
+    'apply.tariff':'Tarif : Entreprise CHF 280.– / an · Particulier CHF 50.– / an · exonéré de TVA.',
+    'apply.companyName':'Nom de l’entreprise *','apply.birthdate':'Date de naissance','apply.first':'Prénom *','apply.last':'Nom *',
+    'apply.street':'Rue','apply.zip':'NPA','apply.city':'Lieu','apply.email':'E-mail *',
+    'apply.phone':'Téléphone fixe','apply.mobile':'Mobile',
+    'apply.phoneHint':'Au moins un numéro de téléphone (fixe ou mobile) est requis.',
+    'apply.logo':'Logo (facultatif)','apply.logoHint':'Facultatif. Si le téléchargement échoue, nous ajouterons le logo après votre admission.',
+    'apply.billingToggle':'Adresse de facturation différente','apply.billingName':'Nom / Entreprise (facturation)',
+    'apply.billingEmail':'E-mail (facturation)','apply.submit':'Envoyer la candidature','apply.thanks':'Merci beaucoup !',
+    'apply.thanksText':'Votre candidature nous est bien parvenue. Le comité l’examine et vous contactera pour les prochaines étapes et vos identifiants.',
+    'apply.err.email':'Veuillez indiquer une adresse e-mail.','apply.err.name':'Veuillez indiquer le prénom et le nom.',
+    'apply.err.phone':'Veuillez indiquer au moins un numéro de téléphone (fixe ou mobile).',
+    'apply.err.company':'Veuillez indiquer le nom de l’entreprise.','apply.err.send':'Erreur lors de l’envoi : ',
+    'apply.errImg':'Veuillez choisir une image','apply.errImgRead':'Impossible de lire l’image',
+    'foot.tagline':'Association suisse pour la sécurité des aires de jeux — pour des aires de jeux et de loisirs sûres et adaptées aux enfants.',
+    'foot.contact':'Contact','foot.area':'Espace','foot.join':'Devenir membre','foot.inquiry':'Poser une demande',
+    'foot.memberLogin':'Connexion membres',
+    'company.back':'← Tous les membres','company.notFound':'Entreprise introuvable','company.backShort':'← Retour',
+    'company.aboutFirm':'À propos de l’entreprise','company.noDesc':'Cette entreprise n’a pas encore de description.',
+    'company.noContact':'Pas de coordonnées.','company.team':'Équipe','company.teamTitle':'Collaborateurs',
+    'company.references':'Références',
+    'company.contactPerson':'Personne de contact','company.address':'Adresse','company.canton':'Canton',
+    'company.phone':'Téléphone','company.email':'E-mail','company.website':'Site web','company.category':'Catégorie',
+    'portal.myarea':'Mon espace',
+    'portal.lead':'Gérez ici les informations de votre entreprise. Elles apparaissent sur votre page publique.',
+    'portal.companyName':'Nom de l’entreprise','portal.contactPerson':'Personne de contact','portal.category':'Catégorie',
+    'portal.street':'Rue','portal.zipCity':'NPA / Lieu','portal.canton':'Canton','portal.phone':'Téléphone',
+    'portal.email':'E-mail','portal.website':'Site web','portal.logo':'Logo',
+    'portal.logoHint':'PNG ou JPG — réduit automatiquement et affiché sur la page d’accueil et votre page d’entreprise. Cliquez sur « Enregistrer » après l’avoir choisi.',
+    'portal.tags':'Domaines d’activité','portal.tagsHint':'Choisissez les domaines pertinents – ils apparaissent comme tags sur votre page d’entreprise.',
+    'portal.description':'Description','portal.richHint':'Mise en forme : gras, titres, listes, alignement.',
+    'portal.gallery':'Images de référence','portal.galleryHint':'Montrez quelques images de vos projets ou installations – elles apparaissent sur votre page d’entreprise.',
+    'portal.galleryHint2':'Plusieurs images possibles. Cliquez sur « Enregistrer » après le téléchargement.','portal.galleryEmpty':'pas encore d’images',
+    'portal.team':'Équipe / autres collaborateurs',
+    'portal.teamHint':'Personnes de votre entreprise avec leur fonction. L’e-mail est facultatif – sans e-mail, seuls le nom et la fonction apparaissent. Affiché sur votre page publique.',
+    'portal.addPerson':'+ Personne','portal.saveTeam':'Enregistrer l’équipe',
+    'portal.tmFirst':'Prénom','portal.tmLast':'Nom','portal.tmRole':'Fonction','portal.tmRolePh':'p. ex. directeur',
+    'portal.tmEmail':'E-mail (facultatif)','portal.changePw':'Changer le mot de passe','portal.newPw':'Nouveau mot de passe',
+    'portal.repeatPw':'Répéter','portal.save':'Enregistrer','portal.loading':'Chargement…',
+    'search.eyebrow':'Espace membres','search.title':'Recherche',
+    'search.lead':'Recherchez parmi les entreprises membres, les actualités et les documents (y compris le contenu PDF).',
+    'search.ph':'Terme de recherche…','search.btn':'Rechercher','search.running':'Recherche en cours…',
+    'search.empty':'Veuillez saisir un terme de recherche.','search.error':'Erreur lors de la recherche : ',
+    'search.noHits':'Aucun résultat pour','search.grpMembers':'Membres','search.grpNews':'Actualités','search.grpDocs':'Documents',
+    'common.loading':'Chargement…','common.switzerland':'Suisse','common.errLoad':'Erreur de chargement. '
+  },
+  it:{
+    'nav.members':'Membri','nav.about':'Chi siamo','nav.news':'Notizie','nav.courses':'Formazioni',
+    'nav.join':'Diventare membro','nav.inquiry':'Richiesta','nav.downloads':'Download','nav.search':'Ricerca',
+    'nav.myarea':'La mia area','nav.board':'Comitato','nav.login':'Accesso','nav.logout':'Esci',
+    'hero.findExpert':'Trovare uno specialista →','hero.aboutBtn':'Informazioni sulla SVSS',
+    'sec.members':'Membri','members.countSuffix':'aziende specializzate nell’associazione',
+    'members.lead':'Aziende specializzate certificate per la progettazione, la costruzione, l’ispezione e la manutenzione di parchi giochi sicuri.',
+    'members.private':'Membri privati','members.show':'Mostra i membri','members.hide':'Nascondi i membri',
+    'members.none':'Nessun membro registrato al momento.',
+    'members.privSupport':'sostengono l’associazione.','members.privSupport1':'sostiene l’associazione.',
+    'about.eyebrow':'Informazioni sulla SVSS','about.defaultTitle':'Il nostro scopo e i nostri obiettivi',
+    'news.eyebrow':'Attualità','news.title':'Notizie ed eventi','news.none':'Nessuna notizia al momento.',
+    'news.pdf':'Vedi PDF','news.report':'All’articolo ↗',
+    'courses.eyebrow':'Formazione e perfezionamento','courses.nextTitle':'Prossime formazioni','courses.allBtn':'Tutte le formazioni →',
+    'courses.title':'Formazioni','courses.regOpen':'Iscrizioni aperte','courses.past':'passata',
+    'courses.details':'Dettagli / Iscrizione ↗','courses.none':'Al momento non sono previste formazioni.',
+    'courses.lead':'Corsi e date sulla sicurezza dei parchi giochi e le ispezioni secondo SN EN 1176.',
+    'courses.dateOpen':'Data da definire',
+    'btn.download':'Scarica','btn.open':'Apri ↗','btn.back':'Indietro','btn.send':'Invia','btn.save':'Salva',
+    'login.title':'Accesso','login.sub':'Area membri e comitato','login.user':'Nome utente','login.pw':'Password',
+    'login.submit':'Accedi →','login.cancel':'Annulla','login.error':'Nome utente o password errati.',
+    'login.connError':'Errore di connessione.',
+    'dl.title':'Download','dl.lead':'Documenti, verbali e link utili per i membri della SVSS.',
+    'dl.eyebrow':'Area membri','dl.empty':'Ancora nessuna voce.',
+    'dl.cat.gv-protokolle':'Verbali AG','dl.cat.wissenswertes':'Da sapere','dl.cat.news':'Notizie',
+    'dl.cat.unfaelle':'Incidenti','dl.cat.links':'Link',
+    'inquiry.eyebrow':'Contatto','inquiry.title':'Richiesta al comitato',
+    'inquiry.lead':'Non è membro ma ha una domanda? Qui può inoltrare una <b>richiesta tecnica di sicurezza</b> oppure richiedere <b>informazioni sui parchi giochi o sui nostri membri</b>. Il comitato tratta la sua richiesta e le risponde via e-mail.',
+    'inquiry.topic':'Richiesta','inquiry.topicChoose':'Selezionare…',
+    'inquiry.topic.safety':'Richiesta tecnica di sicurezza','inquiry.topic.playgrounds':'Informazioni sui parchi giochi',
+    'inquiry.topic.members':'Informazioni sui membri','inquiry.topic.other':'Altro',
+    'inquiry.name':'Nome','inquiry.email':'E-mail *','inquiry.subject':'Oggetto','inquiry.question':'La sua domanda *',
+    'inquiry.questionPh':'Descriva la sua richiesta…','inquiry.images':'Immagini (facoltative)',
+    'inquiry.imagesHint':'Facoltativo, ad es. foto dell’impianto. Consigliate max. 4 immagini. Vengono ridotte automaticamente.',
+    'inquiry.submit':'Invia la richiesta','inquiry.thanks':'Grazie mille!',
+    'inquiry.thanksText':'La sua richiesta è stata trasmessa al comitato. Riceverà una risposta via e-mail.',
+    'inquiry.toHome':'Alla home',
+    'inquiry.err.email':'Indicare un indirizzo e-mail.','inquiry.err.question':'Indicare la sua domanda.',
+    'inquiry.err.send':'Errore durante l’invio: ',
+    'apply.eyebrow':'Partecipare','apply.title':'Diventare membro',
+    'apply.lead':'Entri a far parte della SVSS. Compili il modulo – la contatteremo dopo l’ammissione con le credenziali d’accesso.',
+    'apply.type':'Tipo di adesione','apply.company':'Azienda','apply.private':'Privato',
+    'apply.tariff':'Tariffa: Azienda CHF 280.– / anno · Privato CHF 50.– / anno · esente IVA.',
+    'apply.companyName':'Nome dell’azienda *','apply.birthdate':'Data di nascita','apply.first':'Nome *','apply.last':'Cognome *',
+    'apply.street':'Via','apply.zip':'NAP','apply.city':'Località','apply.email':'E-mail *',
+    'apply.phone':'Telefono fisso','apply.mobile':'Cellulare',
+    'apply.phoneHint':'È richiesto almeno un numero di telefono (fisso o cellulare).',
+    'apply.logo':'Logo (facoltativo)','apply.logoHint':'Facoltativo. Se il caricamento non riesce, aggiungeremo il logo dopo l’ammissione.',
+    'apply.billingToggle':'Indirizzo di fatturazione diverso','apply.billingName':'Nome / Azienda (fattura)',
+    'apply.billingEmail':'E-mail (fattura)','apply.submit':'Invia la candidatura','apply.thanks':'Grazie mille!',
+    'apply.thanksText':'La sua candidatura ci è pervenuta. Il comitato la esamina e la contatterà per i prossimi passi e le credenziali d’accesso.',
+    'apply.err.email':'Indicare un indirizzo e-mail.','apply.err.name':'Indicare nome e cognome.',
+    'apply.err.phone':'Indicare almeno un numero di telefono (fisso o cellulare).',
+    'apply.err.company':'Indicare il nome dell’azienda.','apply.err.send':'Errore durante l’invio: ',
+    'apply.errImg':'Selezionare un’immagine','apply.errImgRead':'Impossibile leggere l’immagine',
+    'foot.tagline':'Associazione svizzera per la sicurezza dei parchi giochi — per parchi gioco e impianti per il tempo libero sicuri e a misura di bambino.',
+    'foot.contact':'Contatto','foot.area':'Area','foot.join':'Diventare membro','foot.inquiry':'Inoltrare una richiesta',
+    'foot.memberLogin':'Accesso membri',
+    'company.back':'← Tutti i membri','company.notFound':'Azienda non trovata','company.backShort':'← Indietro',
+    'company.aboutFirm':'Informazioni sull’azienda','company.noDesc':'Questa azienda non ha ancora una descrizione.',
+    'company.noContact':'Nessun recapito.','company.team':'Team','company.teamTitle':'Collaboratori',
+    'company.references':'Referenze',
+    'company.contactPerson':'Persona di contatto','company.address':'Indirizzo','company.canton':'Cantone',
+    'company.phone':'Telefono','company.email':'E-mail','company.website':'Sito web','company.category':'Categoria',
+    'portal.myarea':'La mia area',
+    'portal.lead':'Gestisca qui i dati della sua azienda. Appaiono sulla sua pagina pubblica.',
+    'portal.companyName':'Nome dell’azienda','portal.contactPerson':'Persona di contatto','portal.category':'Categoria',
+    'portal.street':'Via','portal.zipCity':'NAP / Località','portal.canton':'Cantone','portal.phone':'Telefono',
+    'portal.email':'E-mail','portal.website':'Sito web','portal.logo':'Logo',
+    'portal.logoHint':'PNG o JPG — ridotto automaticamente e mostrato sulla home e sulla sua pagina aziendale. Dopo la selezione cliccare «Salva».',
+    'portal.tags':'Ambiti di attività','portal.tagsHint':'Selezioni gli ambiti pertinenti – appaiono come tag sulla sua pagina aziendale.',
+    'portal.description':'Descrizione','portal.richHint':'Formattazione: grassetto, titoli, elenchi, allineamento.',
+    'portal.gallery':'Immagini di riferimento','portal.galleryHint':'Mostri alcune immagini dei suoi progetti o impianti – appaiono sulla sua pagina aziendale.',
+    'portal.galleryHint2':'Possibili più immagini. Dopo il caricamento cliccare «Salva».','portal.galleryEmpty':'ancora nessuna immagine',
+    'portal.team':'Team / altri collaboratori',
+    'portal.teamHint':'Persone della sua azienda con funzione. L’e-mail è facoltativa – senza e-mail appaiono solo nome e funzione. Mostrato sulla sua pagina pubblica.',
+    'portal.addPerson':'+ Persona','portal.saveTeam':'Salva il team',
+    'portal.tmFirst':'Nome','portal.tmLast':'Cognome','portal.tmRole':'Funzione','portal.tmRolePh':'ad es. direttore',
+    'portal.tmEmail':'E-mail (facoltativa)','portal.changePw':'Cambia password','portal.newPw':'Nuova password',
+    'portal.repeatPw':'Ripeti','portal.save':'Salva','portal.loading':'Caricamento…',
+    'search.eyebrow':'Area membri','search.title':'Ricerca',
+    'search.lead':'Cerca tra le aziende membri, le notizie e i documenti (incl. contenuto PDF).',
+    'search.ph':'Termine di ricerca…','search.btn':'Cerca','search.running':'Ricerca in corso…',
+    'search.empty':'Inserire un termine di ricerca.','search.error':'Errore durante la ricerca: ',
+    'search.noHits':'Nessun risultato per','search.grpMembers':'Membri','search.grpNews':'Notizie','search.grpDocs':'Documenti',
+    'common.loading':'Caricamento…','common.switzerland':'Svizzera','common.errLoad':'Errore di caricamento. '
+  },
+  rm:{
+    'nav.members':'Commembers','nav.about':'Davart nus','nav.news':'Novitads','nav.courses':'Furmaziuns',
+    'nav.join':'Daventar commember','nav.inquiry':'Dumonda','nav.downloads':'Telechargiadas','nav.search':'Tschertga',
+    'nav.myarea':'Mia zona','nav.board':'Suprastanza','nav.login':'Login','nav.logout':'Sortir',
+    'hero.findExpert':'Chattar in spezialist →','hero.aboutBtn':'Davart la SVSS',
+    'sec.members':'Commembers','members.countSuffix':'firmas spezialisadas en l’uniun',
+    'members.lead':'Firmas spezialisadas verifitgadas per la planisaziun, la construcziun, l’inspecziun e la mantegnientscha da plazzas da gieu segiras.',
+    'members.private':'Commembers privats','members.show':'Mussar ils commembers','members.hide':'Zuppentar ils commembers',
+    'members.none':'Anc nagins commembers registrads.',
+    'members.privSupport':'sustegnan l’uniun.','members.privSupport1':'sustegna l’uniun.',
+    'about.eyebrow':'Davart la SVSS','about.defaultTitle':'Noss intent e noss böts',
+    'news.eyebrow':'Actualitads','news.title':'Novitads & occurrenzas','news.none':'Actualmain naginas novitads.',
+    'news.pdf':'Guardar il PDF','news.report':'Tar l’artitgel ↗',
+    'courses.eyebrow':'Furmaziun & perfecziunament','courses.nextTitle':'Proximas furmaziuns','courses.allBtn':'Tut las furmaziuns →',
+    'courses.title':'Furmaziuns','courses.regOpen':'Annunzia averta','courses.past':'passada',
+    'courses.details':'Detagls / Annunzia ↗','courses.none':'Actualmain n’èn anutgas furmaziuns publitgadas.',
+    'courses.lead':'Curs e datas davart la segirezza da plazzas da gieu ed inspecziuns tenor SN EN 1176.',
+    'courses.dateOpen':'Data anc averta',
+    'btn.download':'Telechargiar','btn.open':'Avrir ↗','btn.back':'Enavos','btn.send':'Trametter','btn.save':'Memorisar',
+    'login.title':'S’annunziar','login.sub':'Zona da commembers e suprastanza','login.user':'Num d’utilisader','login.pw':'Pled-clav',
+    'login.submit':'S’annunziar →','login.cancel':'Interrumper','login.error':'Num d’utilisader u pled-clav nuncorrect.',
+    'login.connError':'Errur da connexiun.',
+    'dl.title':'Telechargiadas','dl.lead':'Documents, protocols e colliaziuns utilas per ils commembers da la SVSS.',
+    'dl.eyebrow':'Zona da commembers','dl.empty':'Anc naginas endataziuns.',
+    'dl.cat.gv-protokolle':'Protocols da l’AG','dl.cat.wissenswertes':'Da savair','dl.cat.news':'Novitads',
+    'dl.cat.unfaelle':'Accidents','dl.cat.links':'Colliaziuns',
+    'inquiry.eyebrow':'Contact','inquiry.title':'Dumonda a la suprastanza',
+    'inquiry.lead':'Essas Vus betg commember, ma avais ina dumonda? Qua pudais Vus far ina <b>dumonda tecnica da segirezza</b> u dumandar <b>infurmaziuns davart plazzas da gieu u noss commembers</b>. La suprastanza tractescha Vossa dumonda e respunda per e-mail.',
+    'inquiry.topic':'Object','inquiry.topicChoose':'Tscherner p.pl.…',
+    'inquiry.topic.safety':'Dumonda tecnica da segirezza','inquiry.topic.playgrounds':'Infurmaziuns davart plazzas da gieu',
+    'inquiry.topic.members':'Infurmaziuns davart commembers','inquiry.topic.other':'Auter',
+    'inquiry.name':'Num','inquiry.email':'E-mail *','inquiry.subject':'Object','inquiry.question':'Vossa dumonda *',
+    'inquiry.questionPh':'Descrivi Voss object…','inquiry.images':'Maletgs (facultativ)',
+    'inquiry.imagesHint':'Facultativ, p.ex. fotos da l’implant. Max. 4 maletgs recumandads. Vegnan reducids automaticamain.',
+    'inquiry.submit':'Trametter la dumonda','inquiry.thanks':'Grazia fitg!',
+    'inquiry.thanksText':'Vossa dumonda è vegnida transmessa a la suprastanza. Vus survegnis ina resposta per e-mail.',
+    'inquiry.toHome':'A la pagina principala',
+    'inquiry.err.email':'Endatai p.pl. in’adressa d’e-mail.','inquiry.err.question':'Endatai p.pl. Vossa dumonda.',
+    'inquiry.err.send':'Errur cun trametter: ',
+    'apply.eyebrow':'Collavurar','apply.title':'Daventar commember',
+    'apply.lead':'Daventai part da la SVSS. Emplenii il formular – nus ans annunziain suenter l’admissiun cun las datas d’access.',
+    'apply.type':'Tip d’appartegnientscha','apply.company':'Firma','apply.private':'Persuna privata',
+    'apply.tariff':'Tarif: Firma CHF 280.– / onn · Privat CHF 50.– / onn · exonerà da la TVA.',
+    'apply.companyName':'Num da la firma *','apply.birthdate':'Data da naschientscha','apply.first':'Prenum *','apply.last':'Num *',
+    'apply.street':'Via','apply.zip':'NPA','apply.city':'Lieu','apply.email':'E-mail *',
+    'apply.phone':'Telefon fix','apply.mobile':'Mobil',
+    'apply.phoneHint':'Almain in numer da telefon (fix u mobil) è necessari.',
+    'apply.logo':'Logo (facultativ)','apply.logoHint':'Facultativ. Sche il chargiar na funcziunescha betg, agiuntain nus il logo suenter l’admissiun.',
+    'apply.billingToggle':'Adressa da facturaziun differenta','apply.billingName':'Num / Firma (factura)',
+    'apply.billingEmail':'E-mail (factura)','apply.submit':'Trametter la candidatura','apply.thanks':'Grazia fitg!',
+    'apply.thanksText':'Vossa candidatura è arrivada tar nus. La suprastanza la controllescha ed as annunzia tar Vus cun ils proxims pass e las datas d’access.',
+    'apply.err.email':'Endatai p.pl. in’adressa d’e-mail.','apply.err.name':'Endatai p.pl. prenum e num.',
+    'apply.err.phone':'Endatai p.pl. almain in numer da telefon (fix u mobil).',
+    'apply.err.company':'Endatai p.pl. il num da la firma.','apply.err.send':'Errur cun trametter: ',
+    'apply.errImg':'Tscherni in maletg','apply.errImgRead':'Impussibel da leger il maletg',
+    'foot.tagline':'Uniun svizra per plazzas da gieu segiras — per plazzas da gieu e da temp liber segiras ed adattadas als uffants.',
+    'foot.contact':'Contact','foot.area':'Zona','foot.join':'Daventar commember','foot.inquiry':'Far ina dumonda',
+    'foot.memberLogin':'Login per commembers',
+    'company.back':'← Tut ils commembers','company.notFound':'Firma betg chattada','company.backShort':'← Enavos',
+    'company.aboutFirm':'Davart la firma','company.noDesc':'Questa firma n’ha anc nagina descripziun.',
+    'company.noContact':'Naginas datas da contact.','company.team':'Team','company.teamTitle':'Collavuraturs',
+    'company.references':'Referenzas',
+    'company.contactPerson':'Persuna da contact','company.address':'Adressa','company.canton':'Chantun',
+    'company.phone':'Telefon','company.email':'E-mail','company.website':'Pagina d’internet','company.category':'Categoria',
+    'portal.myarea':'Mia zona',
+    'portal.lead':'Tgirai qua las indicaziuns da Vossa firma. Ellas cumparan sin Vossa sutpagina publica.',
+    'portal.companyName':'Num da la firma','portal.contactPerson':'Persuna da contact','portal.category':'Categoria',
+    'portal.street':'Via','portal.zipCity':'NPA / Lieu','portal.canton':'Chantun','portal.phone':'Telefon',
+    'portal.email':'E-mail','portal.website':'Pagina d’internet','portal.logo':'Logo',
+    'portal.logoHint':'PNG u JPG — vegn reducì automaticamain e cumpara sin la pagina principala e Vossa pagina da firma. Suenter la tscherna cliccar «Memorisar».',
+    'portal.tags':'Champs d’activitad','portal.tagsHint':'Tscherni ils champs adattads – els cumparan sco tags sin Vossa pagina da firma.',
+    'portal.description':'Descripziun','portal.richHint':'Formataziun: grass, titels, glistas, alingiament.',
+    'portal.gallery':'Maletgs da referenza','portal.galleryHint':'Mussai intgins maletgs da Voss projects u implants – els cumparan sin Vossa pagina da firma.',
+    'portal.galleryHint2':'Plirs maletgs pussaivels. Suenter il chargiar cliccar «Memorisar».','portal.galleryEmpty':'anc nagins maletgs',
+    'portal.team':'Team / ulteriurs collavuraturs',
+    'portal.teamHint':'Persunas da Vossa firma cun lur funcziun. L’e-mail è facultativa – senza e-mail cumparan mo num e funcziun. Vegn mussà sin Vossa pagina publica.',
+    'portal.addPerson':'+ Persuna','portal.saveTeam':'Memorisar il team',
+    'portal.tmFirst':'Prenum','portal.tmLast':'Num','portal.tmRole':'Funcziun','portal.tmRolePh':'p.ex. manader',
+    'portal.tmEmail':'E-mail (facultativa)','portal.changePw':'Midar il pled-clav','portal.newPw':'Nov pled-clav',
+    'portal.repeatPw':'Repeter','portal.save':'Memorisar','portal.loading':'Chargia…',
+    'search.eyebrow':'Zona da commembers','search.title':'Tschertga',
+    'search.lead':'Tschertgai en las firmas commembras, las novitads ed ils documents (incl. cuntegn PDF).',
+    'search.ph':'Term da tschertga…','search.btn':'Tschertgar','search.running':'Tschertga en curs…',
+    'search.empty':'Endatai p.pl. in term da tschertga.','search.error':'Errur durant la tschertga: ',
+    'search.noHits':'Nagins resultats per','search.grpMembers':'Commembers','search.grpNews':'Novitads','search.grpDocs':'Documents',
+    'common.loading':'Chargia…','common.switzerland':'Svizra','common.errLoad':'Errur cun chargiar. '
+  },
+  en:{
+    'nav.members':'Members','nav.about':'About','nav.news':'News','nav.courses':'Courses',
+    'nav.join':'Become a member','nav.inquiry':'Inquiry','nav.downloads':'Downloads','nav.search':'Search',
+    'nav.myarea':'My area','nav.board':'Board','nav.login':'Login','nav.logout':'Log out',
+    'hero.findExpert':'Find a specialist →','hero.aboutBtn':'About the SVSS',
+    'sec.members':'Members','members.countSuffix':'specialist companies in the association',
+    'members.lead':'Certified specialist companies for the planning, construction, inspection and maintenance of safe playgrounds.',
+    'members.private':'Private members','members.show':'Show members','members.hide':'Hide members',
+    'members.none':'No members registered yet.',
+    'members.privSupport':'support the association.','members.privSupport1':'supports the association.',
+    'about.eyebrow':'About the SVSS','about.defaultTitle':'Our purpose & our goals',
+    'news.eyebrow':'Latest','news.title':'News & events','news.none':'No news at the moment.',
+    'news.pdf':'View PDF','news.report':'To the report ↗',
+    'courses.eyebrow':'Education & training','courses.nextTitle':'Upcoming courses','courses.allBtn':'All courses →',
+    'courses.title':'Courses','courses.regOpen':'Registration open','courses.past':'past',
+    'courses.details':'Details / Registration ↗','courses.none':'No courses are currently scheduled.',
+    'courses.lead':'Courses and dates on playground safety and inspections according to SN EN 1176.',
+    'courses.dateOpen':'Date to be announced',
+    'btn.download':'Download','btn.open':'Open ↗','btn.back':'Back','btn.send':'Send','btn.save':'Save',
+    'login.title':'Sign in','login.sub':'Member and board area','login.user':'Username','login.pw':'Password',
+    'login.submit':'Sign in →','login.cancel':'Cancel','login.error':'Incorrect username or password.',
+    'login.connError':'Connection error.',
+    'dl.title':'Downloads','dl.lead':'Documents, minutes and useful links for SVSS members.',
+    'dl.eyebrow':'Member area','dl.empty':'No entries yet.',
+    'dl.cat.gv-protokolle':'AGM minutes','dl.cat.wissenswertes':'Good to know','dl.cat.news':'News',
+    'dl.cat.unfaelle':'Accidents','dl.cat.links':'Links',
+    'inquiry.eyebrow':'Contact','inquiry.title':'Inquiry to the board',
+    'inquiry.lead':'Not a member but have a question? Here you can submit a <b>safety-related inquiry</b> or request <b>information about playgrounds or our members</b>. The board will process your inquiry and reply by e-mail.',
+    'inquiry.topic':'Subject','inquiry.topicChoose':'Please choose…',
+    'inquiry.topic.safety':'Safety-related inquiry','inquiry.topic.playgrounds':'Information about playgrounds',
+    'inquiry.topic.members':'Information about members','inquiry.topic.other':'Other',
+    'inquiry.name':'Name','inquiry.email':'E-mail *','inquiry.subject':'Subject','inquiry.question':'Your question *',
+    'inquiry.questionPh':'Describe your request…','inquiry.images':'Images (optional)',
+    'inquiry.imagesHint':'Optional, e.g. photos of the facility. Max. 4 images recommended. Automatically resized.',
+    'inquiry.submit':'Send inquiry','inquiry.thanks':'Thank you!',
+    'inquiry.thanksText':'Your inquiry has been forwarded to the board. You will receive a reply by e-mail.',
+    'inquiry.toHome':'To the home page',
+    'inquiry.err.email':'Please enter an e-mail address.','inquiry.err.question':'Please enter your question.',
+    'inquiry.err.send':'Error while sending: ',
+    'apply.eyebrow':'Get involved','apply.title':'Become a member',
+    'apply.lead':'Join the SVSS. Fill in the form – we will contact you after admission with your login details.',
+    'apply.type':'Type of membership','apply.company':'Company','apply.private':'Private individual',
+    'apply.tariff':'Tariff: Company CHF 280.– / year · Private CHF 50.– / year · VAT-exempt.',
+    'apply.companyName':'Company name *','apply.birthdate':'Date of birth','apply.first':'First name *','apply.last':'Last name *',
+    'apply.street':'Street','apply.zip':'ZIP','apply.city':'City','apply.email':'E-mail *',
+    'apply.phone':'Landline phone','apply.mobile':'Mobile',
+    'apply.phoneHint':'At least one phone number (landline or mobile) is required.',
+    'apply.logo':'Logo (optional)','apply.logoHint':'Optional. If the upload fails, we will add the logo after admission.',
+    'apply.billingToggle':'Different billing address','apply.billingName':'Name / Company (billing)',
+    'apply.billingEmail':'E-mail (billing)','apply.submit':'Submit application','apply.thanks':'Thank you!',
+    'apply.thanksText':'Your application has reached us. The board will review it and contact you with the next steps and your login details.',
+    'apply.err.email':'Please enter an e-mail address.','apply.err.name':'Please enter first and last name.',
+    'apply.err.phone':'Please enter at least one phone number (landline or mobile).',
+    'apply.err.company':'Please enter the company name.','apply.err.send':'Error while sending: ',
+    'apply.errImg':'Please choose an image','apply.errImgRead':'Could not read the image',
+    'foot.tagline':'Swiss Association for Safe Playgrounds — for safe, child-friendly play and leisure facilities.',
+    'foot.contact':'Contact','foot.area':'Area','foot.join':'Become a member','foot.inquiry':'Submit an inquiry',
+    'foot.memberLogin':'Member login',
+    'company.back':'← All members','company.notFound':'Company not found','company.backShort':'← Back',
+    'company.aboutFirm':'About the company','company.noDesc':'This company has not added a description yet.',
+    'company.noContact':'No contact details.','company.team':'Team','company.teamTitle':'Team members',
+    'company.references':'References',
+    'company.contactPerson':'Contact person','company.address':'Address','company.canton':'Canton',
+    'company.phone':'Phone','company.email':'E-mail','company.website':'Website','company.category':'Category',
+    'portal.myarea':'My area',
+    'portal.lead':'Manage your company details here. They appear on your public subpage.',
+    'portal.companyName':'Company name','portal.contactPerson':'Contact person','portal.category':'Category',
+    'portal.street':'Street','portal.zipCity':'ZIP / City','portal.canton':'Canton','portal.phone':'Phone',
+    'portal.email':'E-mail','portal.website':'Website','portal.logo':'Logo',
+    'portal.logoHint':'PNG or JPG — automatically resized and shown on the home page and your company page. Click “Save” after choosing.',
+    'portal.tags':'Areas of activity','portal.tagsHint':'Select the relevant areas – they appear as tags on your company page.',
+    'portal.description':'Description','portal.richHint':'Formatting: bold, headings, lists, alignment.',
+    'portal.gallery':'Reference images','portal.galleryHint':'Show a few images of your projects or facilities – they appear on your company page.',
+    'portal.galleryHint2':'Multiple images possible. Click “Save” after uploading.','portal.galleryEmpty':'no images yet',
+    'portal.team':'Team / other staff',
+    'portal.teamHint':'People in your company with their role. E-mail is optional – without an e-mail only name and role appear. Shown on your public company page.',
+    'portal.addPerson':'+ Person','portal.saveTeam':'Save team',
+    'portal.tmFirst':'First name','portal.tmLast':'Last name','portal.tmRole':'Role','portal.tmRolePh':'e.g. Managing Director',
+    'portal.tmEmail':'E-mail (optional)','portal.changePw':'Change password','portal.newPw':'New password',
+    'portal.repeatPw':'Repeat','portal.save':'Save','portal.loading':'Loading…',
+    'search.eyebrow':'Member area','search.title':'Search',
+    'search.lead':'Search member companies, news and documents (incl. PDF content).',
+    'search.ph':'Search term…','search.btn':'Search','search.running':'Searching…',
+    'search.empty':'Please enter a search term.','search.error':'Error during search: ',
+    'search.noHits':'No results for','search.grpMembers':'Members','search.grpNews':'News','search.grpDocs':'Documents',
+    'common.loading':'Loading…','common.switzerland':'Switzerland','common.errLoad':'Error while loading. '
+  }
+};
+function t(k){ return (I18N[LANG]&&I18N[LANG][k]) || I18N.de[k] || k; }
+function setLang(l){
+  if(!I18N[l]) return;
+  LANG=l; localStorage.setItem('svss_lang',l);
+  try{ document.documentElement.lang=l; }catch(e){}
+  if(typeof SESSION!=='undefined' && SESSION && token()){ try{ rpc('set_my_lang',{p_token:token(),p_lang:l}); }catch(e){} }
+  route();
+}
+function langSwitcher(){
+  return `<span class="lang-switch">${LANGS.map(([code,label])=>
+    `<span class="lang-opt${LANG===code?' active':''}" onclick="setLang('${code}')">${label}</span>`
+  ).join('<span class="lang-sep">·</span>')}</span>`;
+}
 
 const TOKEN_KEY = 'svss_token';
 const FN_INVITE_URL = SUPA_URL + '/functions/v1/send-invites';
@@ -383,20 +846,26 @@ async function restoreSession(){
 }
 
 /* ---------- Auth ---------- */
-function openLogin(){ $('lg-err').textContent=''; $('lg-user').value=''; $('lg-pw').value=''; $('login-modal').classList.add('show'); setTimeout(()=>$('lg-user').focus(),50); }
+function openLogin(){
+  $('lg-err').textContent=''; $('lg-user').value=''; $('lg-pw').value='';
+  $('lg-title').textContent=t('login.title'); $('lg-sub').textContent=t('login.sub');
+  $('lg-l-user').textContent=t('login.user'); $('lg-l-pw').textContent=t('login.pw');
+  $('lg-submit').textContent=t('login.submit'); $('lg-cancel').textContent=t('login.cancel');
+  $('login-modal').classList.add('show'); setTimeout(()=>$('lg-user').focus(),50);
+}
 function closeLogin(){ $('login-modal').classList.remove('show'); }
 async function doLogin(){
   const u=$('lg-user').value.trim(), p=$('lg-pw').value;
   $('lg-err').textContent='';
   try{
     const r=await rpc('login',{p_user:u,p_pw:p});
-    if(!r.ok){ $('lg-err').textContent='Benutzername oder Passwort falsch.'; return; }
+    if(!r.ok){ $('lg-err').textContent=t('login.error'); return; }
     localStorage.setItem(TOKEN_KEY,r.token);
     SESSION={is_board:!!r.is_board,company_slug:r.company_slug,name:r.name};
     closeLogin();
     location.hash = r.company_slug ? '#/konto' : '#/vorstand';
     toast('Willkommen, '+r.name);
-  }catch(e){ $('lg-err').textContent='Verbindungsfehler.'; }
+  }catch(e){ $('lg-err').textContent=t('login.connError'); }
 }
 async function logout(){ try{await rpc('logout',{p_token:token()});}catch{} localStorage.removeItem(TOKEN_KEY); SESSION=null; location.hash='#/'; toast('Abgemeldet'); }
 
@@ -416,7 +885,7 @@ async function route(){
     else if(h==='#/anfrage'){ await ensurePublic(); renderInquiry(); }
     else if(h==='#/schulungen'){ await ensurePublic(); renderCourses(); }
     else { await ensurePublic(); renderHome(); }
-  }catch(e){ $('app').innerHTML='<div class="wrap" style="padding:60px 24px"><p>Fehler beim Laden. '+esc(e.message)+'</p></div>'; }
+  }catch(e){ $('app').innerHTML='<div class="wrap" style="padding:60px 24px"><p>'+t('common.errLoad')+esc(e.message)+'</p></div>'; }
   window.scrollTo(0,0);
 }
 let _pubLoaded=false;
@@ -425,23 +894,24 @@ async function ensurePublic(){ if(!configured())return; if(!_pubLoaded){ await l
 /* ---------- Shared chrome ---------- */
 function nav(){
   const acct = SESSION
-    ? `${SESSION.company_slug?`<a onclick="location.hash='#/konto'">Mein Bereich</a>`:''}${SESSION.is_board?`<a onclick="location.hash='#/vorstand'">Vorstand</a>`:''}<a onclick="logout()">Abmelden</a>`
-    : `<a onclick="openLogin()">Login</a>`;
+    ? `${SESSION.company_slug?`<a onclick="location.hash='#/konto'">${t('nav.myarea')}</a>`:''}${SESSION.is_board?`<a onclick="location.hash='#/vorstand'">${t('nav.board')}</a>`:''}<a onclick="logout()">${t('nav.logout')}</a>`
+    : `<a onclick="openLogin()">${t('nav.login')}</a>`;
   return `${localStorage.getItem(ADMIN_TOKEN_KEY)?`<div class="imp-banner">👤 Du bearbeitest als «${esc((SESSION&&SESSION.name)||'Mitglied')}» — <a onclick="stopImpersonate()">zurück zum Vorstand →</a></div>`:''}<header class="nav"><div class="wrap nav-in">
     <div class="logo" onclick="location.hash='#/'">
       <div class="mk">S</div><div class="tx"><b>SVSS</b><span>Sichere Spielplätze</span></div>
     </div>
     <button class="nav-burger" onclick="document.getElementById('navlinks').classList.toggle('open')">☰</button>
     <nav class="nav-links" id="navlinks">
-      <a onclick="goSection('mitglieder')">Mitglieder</a>
-      <a onclick="goSection('ueber')">Über uns</a>
-      <a onclick="goSection('news')">News</a>
-      <a onclick="location.hash='#/schulungen'">Schulungen</a>
-      <a onclick="location.hash='#/mitglied-werden'">Mitglied werden</a>
-      <a onclick="location.hash='#/anfrage'">Anfrage</a>
-      ${SESSION?`<a onclick="location.hash='#/downloads'">Downloads</a>`:''}
-      ${SESSION?`<a onclick="location.hash='#/suche'">Suche</a>`:''}
+      <a onclick="goSection('mitglieder')">${t('nav.members')}</a>
+      <a onclick="goSection('ueber')">${t('nav.about')}</a>
+      <a onclick="goSection('news')">${t('nav.news')}</a>
+      <a onclick="location.hash='#/schulungen'">${t('nav.courses')}</a>
+      <a onclick="location.hash='#/mitglied-werden'">${t('nav.join')}</a>
+      <a onclick="location.hash='#/anfrage'">${t('nav.inquiry')}</a>
+      ${SESSION?`<a onclick="location.hash='#/downloads'">${t('nav.downloads')}</a>`:''}
+      ${SESSION?`<a onclick="location.hash='#/suche'">${t('nav.search')}</a>`:''}
       ${acct}
+      ${langSwitcher()}
     </nav></div></header>`;
 }
 function goSection(id){ if(location.hash!=='#/'&&location.hash!==''){ location.hash='#/'; setTimeout(()=>document.getElementById(id)?.scrollIntoView({behavior:'smooth'}),300);} else document.getElementById(id)?.scrollIntoView({behavior:'smooth'}); document.getElementById('navlinks').classList.remove('open'); }
@@ -450,13 +920,13 @@ function footer(){
   return `<footer><div class="wrap">
     <div class="foot-top">
       <div style="max-width:300px"><div class="logo" style="margin-bottom:12px"><div class="mk" style="background:#fff;color:var(--gd)">S</div><div class="tx"><b style="color:#fff">SVSS</b><span>Sichere Spielplätze</span></div></div>
-        <p style="margin:0">Schweizerische Vereinigung Sichere Spielplätze — für sichere, kindgerechte Spiel- und Freizeitanlagen.</p></div>
-      <div><b style="color:#fff;display:block;margin-bottom:10px">Kontakt</b>
+        <p style="margin:0">${t('foot.tagline')}</p></div>
+      <div><b style="color:#fff;display:block;margin-bottom:10px">${t('foot.contact')}</b>
         <p style="margin:0">${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:''}</p></div>
-      <div><b style="color:#fff;display:block;margin-bottom:10px">Bereich</b>
-        <p style="margin:0"><a onclick="location.hash='#/mitglied-werden'" style="cursor:pointer">Mitglied werden</a></p>
-        <p style="margin:6px 0 0"><a onclick="location.hash='#/anfrage'" style="cursor:pointer">Anfrage stellen</a></p>
-        <p style="margin:6px 0 0"><a onclick="openLogin()" style="cursor:pointer">Mitglieder-Login</a></p></div>
+      <div><b style="color:#fff;display:block;margin-bottom:10px">${t('foot.area')}</b>
+        <p style="margin:0"><a onclick="location.hash='#/mitglied-werden'" style="cursor:pointer">${t('foot.join')}</a></p>
+        <p style="margin:6px 0 0"><a onclick="location.hash='#/anfrage'" style="cursor:pointer">${t('foot.inquiry')}</a></p>
+        <p style="margin:6px 0 0"><a onclick="openLogin()" style="cursor:pointer">${t('foot.memberLogin')}</a></p></div>
     </div>
     <div class="foot-bot"><span>© ${new Date().getFullYear()} SVSS</span><span>EN 1176 / 1177</span></div>
   </div></footer>`;
@@ -469,28 +939,28 @@ function renderHome(){
   const _today=new Date().toISOString().slice(0,10);
   const upcoming=(COURSES||[]).filter(c=>((c.date_end||c.date_start||'')>=_today)).slice(0,3);
   const coursesHome = upcoming.length?`<section id="schulungen-home" class="about"><div class="wrap">
-    <div class="eyebrow">Aus- & Weiterbildung</div><h2 class="sec-title">Nächste Schulungen</h2>
+    <div class="eyebrow">${t('courses.eyebrow')}</div><h2 class="sec-title">${t('courses.nextTitle')}</h2>
     <div class="news" style="margin-top:28px">${upcoming.map(c=>`<div class="nc">
       <div class="meta"><span class="date">${esc(fmtCourseDate(c.date_start,c.date_end))}</span></div>
       <h3>${esc(c.title)}</h3>
       <p>${esc([c.location,c.canton].filter(Boolean).join(' · '))}</p>
-      ${c.link?`<div class="nc-links"><a href="${esc(c.link)}" target="_blank" rel="noopener">Details / Anmeldung ↗</a></div>`:''}
+      ${c.link?`<div class="nc-links"><a href="${esc(c.link)}" target="_blank" rel="noopener">${t('courses.details')}</a></div>`:''}
     </div>`).join('')}</div>
-    <div style="margin-top:22px"><button class="btn btn-o" onclick="location.hash='#/schulungen'">Alle Schulungen →</button></div>
+    <div style="margin-top:22px"><button class="btn btn-o" onclick="location.hash='#/schulungen'">${t('courses.allBtn')}</button></div>
   </div></section>`:'';
   $('app').innerHTML = nav() + `
   <section class="hero" style="padding-bottom:96px"><div class="wrap">
     <h1>${esc(hero.title||'Sichere Spielplätze.')}<br><span class="accent">${esc(hero.title2||'Für alle Kinder.')}</span></h1>
     <p>${esc(hero.intro||'')}</p>
-    <div class="cta"><button class="btn btn-light" onclick="goSection('mitglieder')">Fachperson finden →</button>
-      <button class="btn btn-line" onclick="goSection('ueber')">Über die SVSS</button></div>
+    <div class="cta"><button class="btn btn-light" onclick="goSection('mitglieder')">${t('hero.findExpert')}</button>
+      <button class="btn btn-line" onclick="goSection('ueber')">${t('hero.aboutBtn')}</button></div>
   </div></section>
   <div class="stats"><div class="wrap"><div class="stats-in">
     ${stats.map(s=>`<div class="stat"><div class="n">${esc(s.n)}</div><div class="l">${esc(s.l)}</div></div>`).join('')}
   </div></div></div>
 
   <section id="ueber" class="about"><div class="wrap">
-    <div class="eyebrow">Über die SVSS</div><h2 class="sec-title">${esc(about.title||'Unser Zweck & unsere Ziele')}</h2>
+    <div class="eyebrow">${t('about.eyebrow')}</div><h2 class="sec-title">${esc(about.title||t('about.defaultTitle'))}</h2>
     <p class="lead">${esc(about.text||'')}</p>
     ${board.length?`<div class="vorstand-grid" id="vorstand-grid">${board.map(v=>`<div class="vb"><div class="av">${v.photo?`<img src="${esc(v.photo)}" alt="">`:esc(initials(v.name))}</div><b>${esc(v.name)}</b><span>${esc(v.function||'')}</span></div>`).join('')}</div>`:''}
   </div></section>
@@ -498,8 +968,8 @@ function renderHome(){
   ${renderMembersSection()}
 
   <section id="news" class="about"><div class="wrap">
-    <div class="eyebrow">Aktuelles</div><h2 class="sec-title">News & Veranstaltungen</h2>
-    <div class="news">${news.map(n=>`<div class="nc">${n.image?`<img class="nc-img" src="${esc(n.image)}" alt="">`:''}<div class="meta"><span class="date">${esc(n.date||'')}</span><span class="tag">${esc(n.tag||'')}</span></div><h3>${esc(n.title||'')}</h3><div class="rich">${renderRich(n.text||'')}</div>${(n.pdf||(n.link&&/^https?:\/\//i.test(n.link)))?`<div class="nc-links">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener">PDF ansehen</a>`:''}${n.link&&/^https?:\/\//i.test(n.link)?`<a href="${esc(n.link)}" target="_blank" rel="noopener">Zum Bericht ↗</a>`:''}</div>`:''}</div>`).join('')||'<p class="lead">Aktuell keine Meldungen.</p>'}</div>
+    <div class="eyebrow">${t('news.eyebrow')}</div><h2 class="sec-title">${t('news.title')}</h2>
+    <div class="news">${news.map(n=>`<div class="nc">${n.image?`<img class="nc-img" src="${esc(n.image)}" alt="">`:''}<div class="meta"><span class="date">${esc(n.date||'')}</span><span class="tag">${esc(n.tag||'')}</span></div><h3>${esc(n.title||'')}</h3><div class="rich">${renderRich(n.text||'')}</div>${(n.pdf||(n.link&&/^https?:\/\//i.test(n.link)))?`<div class="nc-links">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener">${t('news.pdf')}</a>`:''}${n.link&&/^https?:\/\//i.test(n.link)?`<a href="${esc(n.link)}" target="_blank" rel="noopener">${t('news.report')}</a>`:''}</div>`:''}</div>`).join('')||`<p class="lead">${t('news.none')}</p>`}</div>
   </div></section>${coursesHome}` + footer();
   requestAnimationFrame(layoutBoardGrid);
 }
@@ -518,7 +988,7 @@ function toggleMembers(){
   const el=document.getElementById('member-list'), b=document.getElementById('member-toggle-btn');
   if(!el) return;
   const open=el.classList.toggle('open');
-  if(b){ const n=b.getAttribute('data-n')||''; b.textContent = open ? 'Mitglieder ausblenden ▴' : ('Mitglieder anzeigen ('+n+') ▾'); }
+  if(b){ const n=b.getAttribute('data-n')||''; b.textContent = open ? (t('members.hide')+' ▴') : (t('members.show')+' ('+n+') ▾'); }
 }
 function renderMembersSection(){
   const coll=new Intl.Collator('de',{sensitivity:'base'});
@@ -532,13 +1002,13 @@ function renderMembersSection(){
     return `<span class="tag" style="font-size:13px;padding:6px 13px;background:var(--white);border:1px solid var(--border);color:var(--soft)">${esc(p.name)}${loc?` <span style="color:var(--muted)">· ${esc(loc)}</span>`:''}</span>`;
   }).join('');
   return `<section id="mitglieder"><div class="wrap">
-    <div class="eyebrow">Mitglieder</div><h2 class="sec-title">${firms.length} Fachfirmen im Verband${sortBtn}</h2>
-    <p class="lead">Geprüfte Fachfirmen für Planung, Bau, Inspektion und Unterhalt sicherer Spielplätze.</p>
-    <button class="member-toggle" id="member-toggle-btn" data-n="${firms.length+privs.length}" onclick="toggleMembers()">Mitglieder anzeigen (${firms.length+privs.length}) ▾</button>
+    <div class="eyebrow">${t('sec.members')}</div><h2 class="sec-title">${firms.length} ${t('members.countSuffix')}${sortBtn}</h2>
+    <p class="lead">${t('members.lead')}</p>
+    <button class="member-toggle" id="member-toggle-btn" data-n="${firms.length+privs.length}" onclick="toggleMembers()">${t('members.show')} (${firms.length+privs.length}) ▾</button>
     <div class="member-list" id="member-list">
-    <div class="grid">${firms.map(firmCard).join('')||'<p class="lead">Noch keine Mitglieder erfasst.</p>'}</div>
-    ${privs.length?`<div style="margin-top:46px"><h3 style="font-family:'DM Serif Display',serif;font-size:24px;margin:0 0 6px">Privatmitglieder</h3>
-      <p class="lead" style="margin-top:0;margin-bottom:18px">${privs.length} Privatmitglied${privs.length===1?'':'er'} unterstützen den Verband.</p>
+    <div class="grid">${firms.map(firmCard).join('')||`<p class="lead">${t('members.none')}</p>`}</div>
+    ${privs.length?`<div style="margin-top:46px"><h3 style="font-family:'DM Serif Display',serif;font-size:24px;margin:0 0 6px">${t('members.private')}</h3>
+      <p class="lead" style="margin-top:0;margin-bottom:18px">${privs.length} ${t('members.private')} · ${privs.length===1?t('members.privSupport1'):t('members.privSupport')}</p>
       <div class="tags" style="gap:8px">${privChips}</div></div>`:''}
     </div>
   </div></section>`;
@@ -548,7 +1018,7 @@ function firmCard(c){
   return `<div class="firm" onclick="location.hash='#/firma/${encodeURIComponent(c.slug)}'">
     <div class="lg">${c.logo_url?`<img src="${esc(c.logo_url)}" alt="">`:`<div class="ph">${esc(initials(c.name))}</div>`}</div>
     <h3>${esc(c.name)}</h3>
-    <div class="loc">${esc(loc||c.canton||'Schweiz')}</div>
+    <div class="loc">${esc(loc||c.canton||t('common.switzerland'))}</div>
     ${(c.tags&&c.tags.length)?`<div class="tags">${c.tags.slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
   </div>`;
 }
@@ -556,14 +1026,14 @@ function firmCard(c){
 /* ---------- COMPANY SUBPAGE ---------- */
 function renderCompany(slug){
   const c=COMPANIES.find(x=>x.slug===slug);
-  if(!c){ $('app').innerHTML=nav()+`<div class="wrap" style="padding:80px 24px"><span class="back" onclick="location.hash='#/'">← Zurück</span><h1 style="margin-top:20px">Firma nicht gefunden</h1></div>`+footer(); return; }
-  const rows=[['Ansprechperson',c.contact_person],['Adresse',[c.street,[c.zip,c.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')],
-    ['Kanton',c.canton],['Telefon',c.phone],['E-Mail',c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:''],
-    ['Website',c.website?`<a href="${esc(c.website)}" target="_blank" rel="noopener">${esc(c.website.replace(/^https?:\/\//,''))}</a>`:''],
-    ['Kategorie',c.category]].filter(r=>r[1]);
+  if(!c){ $('app').innerHTML=nav()+`<div class="wrap" style="padding:80px 24px"><span class="back" onclick="location.hash='#/'">${t('company.backShort')}</span><h1 style="margin-top:20px">${t('company.notFound')}</h1></div>`+footer(); return; }
+  const rows=[[t('company.contactPerson'),c.contact_person],[t('company.address'),[c.street,[c.zip,c.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')],
+    [t('company.canton'),c.canton],[t('company.phone'),c.phone],[t('company.email'),c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:''],
+    [t('company.website'),c.website?`<a href="${esc(c.website)}" target="_blank" rel="noopener">${esc(c.website.replace(/^https?:\/\//,''))}</a>`:''],
+    [t('company.category'),c.category]].filter(r=>r[1]);
   $('app').innerHTML = nav() + `
   <div class="sub-hero"><div class="wrap">
-    <span class="back" onclick="location.hash='#/'">← Alle Mitglieder</span>
+    <span class="back" onclick="location.hash='#/'">${t('company.back')}</span>
     <div class="sub-head" style="margin-top:18px">
       <div class="lg">${c.logo_url?`<img src="${esc(c.logo_url)}" alt="">`:`<div class="ph">${esc(initials(c.name))}</div>`}</div>
       <div><h1 style="font-size:36px">${esc(c.name)}</h1>
@@ -571,14 +1041,14 @@ function renderCompany(slug){
     </div>
   </div></div>
   <section><div class="wrap"><div class="sub-grid">
-    <div>${c.description?`<div class="eyebrow">Über die Firma</div><div class="rich lead" style="max-width:640px">${renderRich(c.description)}</div>`:'<p class="lead">Diese Firma hat noch keine Beschreibung hinterlegt.</p>'}</div>
-    <div><div class="panel" style="margin:0">${rows.map(r=>`<div class="info-row"><span class="k">${esc(r[0])}</span><span>${r[1]}</span></div>`).join('')||'<p style="color:var(--muted)">Keine Kontaktdaten.</p>'}</div></div>
-  </div></div></section>${(Array.isArray(c.team)&&c.team.length)?`<section class="about"><div class="wrap"><div class="eyebrow">Team</div><h2 class="sec-title" style="margin-bottom:8px">Mitarbeitende</h2><div class="team-pub">${c.team.map(p=>{const nm=[p.first,p.last].filter(Boolean).join(' ').trim();if(!nm&&!p.role)return '';return `<div class="team-card"><b>${esc(nm||'—')}</b>${p.role?`<span class="role">${esc(p.role)}</span>`:''}${p.email?`<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>`:''}</div>`;}).join('')}</div></div></section>`:''}${(c.gallery&&c.gallery.length)?`<section${(Array.isArray(c.team)&&c.team.length)?'':' class="about"'}><div class="wrap"><div class="eyebrow">Referenzen</div><div class="gal-pub">${c.gallery.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join('')}</div></div></section>`:''}` + footer();
+    <div>${c.description?`<div class="eyebrow">${t('company.aboutFirm')}</div><div class="rich lead" style="max-width:640px">${renderRich(c.description)}</div>`:`<p class="lead">${t('company.noDesc')}</p>`}</div>
+    <div><div class="panel" style="margin:0">${rows.map(r=>`<div class="info-row"><span class="k">${esc(r[0])}</span><span>${r[1]}</span></div>`).join('')||`<p style="color:var(--muted)">${t('company.noContact')}</p>`}</div></div>
+  </div></div></section>${(Array.isArray(c.team)&&c.team.length)?`<section class="about"><div class="wrap"><div class="eyebrow">${t('company.team')}</div><h2 class="sec-title" style="margin-bottom:8px">${t('company.teamTitle')}</h2><div class="team-pub">${c.team.map(p=>{const nm=[p.first,p.last].filter(Boolean).join(' ').trim();if(!nm&&!p.role)return '';return `<div class="team-card"><b>${esc(nm||'—')}</b>${p.role?`<span class="role">${esc(p.role)}</span>`:''}${p.email?`<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>`:''}</div>`;}).join('')}</div></div></section>`:''}${(c.gallery&&c.gallery.length)?`<section${(Array.isArray(c.team)&&c.team.length)?'':' class="about"'}><div class="wrap"><div class="eyebrow">${t('company.references')}</div><div class="gal-pub">${c.gallery.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join('')}</div></div></section>`:''}` + footer();
 }
 
 /* ---------- MEMBER PORTAL ---------- */
 async function renderPortal(){
-  $('app').innerHTML = nav() + `<section><div class="wrap" id="portal-body"><p class="lead">Lade…</p></div></section>` + footer();
+  $('app').innerHTML = nav() + `<section><div class="wrap" id="portal-body"><p class="lead">${t('portal.loading')}</p></div></section>` + footer();
   let c={};
   try{ const rows=await sel('companies',{select:'*',slug:'eq.'+SESSION.company_slug}); c=rows[0]||{}; }catch{}
   MYGALLERY = (c&&Array.isArray(c.gallery))?c.gallery.slice():[];
@@ -587,8 +1057,8 @@ async function renderPortal(){
   MYBOARDPHOTO = (bp&&bp.photo)||'';
   const f=(k,v)=>`<input id="p-${k}" value="${esc(v||'')}">`;
   $('portal-body').innerHTML = `
-    <div class="eyebrow">Mein Bereich</div><h2 class="sec-title">${esc(c.name||SESSION.name)}</h2>
-    <p class="lead">Pflege hier die Angaben deiner Firma. Sie erscheinen auf deiner öffentlichen Unterseite.</p>
+    <div class="eyebrow">${t('portal.myarea')}</div><h2 class="sec-title">${esc(c.name||SESSION.name)}</h2>
+    <p class="lead">${t('portal.lead')}</p>
     ${SESSION.is_board?`
     <div class="panel" style="margin-top:30px;border-color:var(--accent)">
       <h2 style="font-size:18px">Mein Vorstandsprofil</h2>
@@ -606,63 +1076,63 @@ async function renderPortal(){
     </div>`:''}
     <div class="panel" style="margin-top:30px">
       <div class="form-grid">
-        <div class="full"><label>Firmenname</label>${f('name',c.name)}</div>
-        <div><label>Ansprechperson</label>${f('contact_person',c.contact_person)}</div>
-        <div><label>Kategorie</label>${f('category',c.category)}</div>
-        <div><label>Strasse</label>${f('street',c.street)}</div>
-        <div><label>PLZ / Ort</label><div style="display:flex;gap:8px"><input id="p-zip" style="max-width:90px" value="${esc(c.zip||'')}"><input id="p-city" value="${esc(c.city||'')}"></div></div>
-        <div><label>Kanton</label>${f('canton',c.canton)}</div>
-        <div><label>Telefon</label>${f('phone',c.phone)}</div>
-        <div><label>E-Mail</label>${f('email',c.email)}</div>
-        <div><label>Website</label>${f('website',c.website)}</div>
-        <div class="full"><label>Logo</label>
+        <div class="full"><label>${t('portal.companyName')}</label>${f('name',c.name)}</div>
+        <div><label>${t('portal.contactPerson')}</label>${f('contact_person',c.contact_person)}</div>
+        <div><label>${t('portal.category')}</label>${f('category',c.category)}</div>
+        <div><label>${t('portal.street')}</label>${f('street',c.street)}</div>
+        <div><label>${t('portal.zipCity')}</label><div style="display:flex;gap:8px"><input id="p-zip" style="max-width:90px" value="${esc(c.zip||'')}"><input id="p-city" value="${esc(c.city||'')}"></div></div>
+        <div><label>${t('portal.canton')}</label>${f('canton',c.canton)}</div>
+        <div><label>${t('portal.phone')}</label>${f('phone',c.phone)}</div>
+        <div><label>${t('portal.email')}</label>${f('email',c.email)}</div>
+        <div><label>${t('portal.website')}</label>${f('website',c.website)}</div>
+        <div class="full"><label>${t('portal.logo')}</label>
           <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
             <div id="p-logo-prev" style="width:64px;height:64px;border-radius:12px;background:var(--gl);display:grid;place-items:center;overflow:hidden;border:1px solid var(--border);flex:none">${c.logo_url?`<img src="${esc(c.logo_url)}" style="width:100%;height:100%;object-fit:contain">`:`<span style="color:var(--gm);font-weight:700">${esc(initials(c.name||SESSION.name))}</span>`}</div>
             <input type="file" id="p-logo-file" accept="image/*" onchange="onLogoPick(event)">
             <button type="button" class="btn-sm btn-o" onclick="clearLogo()">Entfernen</button>
           </div>
           <input type="hidden" id="p-logo_url" value="${esc(c.logo_url||'')}">
-          <p class="ph" style="margin-top:8px">PNG oder JPG — wird automatisch verkleinert und erscheint auf der Startseite und Ihrer Firmenseite. Nach dem Wählen «Speichern» klicken.</p>
+          <p class="ph" style="margin-top:8px">${t('portal.logoHint')}</p>
         </div>
-        <div class="full"><label>Tätigkeitsbereiche</label>
-          <div id="p-tags-box" class="tag-pick">${[...new Set([...TAG_CATALOG,...((c.tags)||[])])].map(t=>`<label class="tag-opt"><input type="checkbox" class="tag-check" value="${esc(t)}" ${((c.tags)||[]).includes(t)?'checked':''}><span>${esc(t)}</span></label>`).join('')}</div>
-          <p class="ph" style="margin-top:6px">Wählen Sie die zutreffenden Bereiche – sie erscheinen als Tags auf Ihrer Firmenseite.</p>
+        <div class="full"><label>${t('portal.tags')}</label>
+          <div id="p-tags-box" class="tag-pick">${[...new Set([...TAG_CATALOG,...((c.tags)||[])])].map(tg=>`<label class="tag-opt"><input type="checkbox" class="tag-check" value="${esc(tg)}" ${((c.tags)||[]).includes(tg)?'checked':''}><span>${esc(tg)}</span></label>`).join('')}</div>
+          <p class="ph" style="margin-top:6px">${t('portal.tagsHint')}</p>
         </div>
-        <div class="full"><label>Beschreibung</label>
+        <div class="full"><label>${t('portal.description')}</label>
           <div class="quill-wrap"><div id="p-description-ed"></div></div>
-          <p class="quill-hint">Formatierung: fett, Überschriften, Aufzählungen, Ausrichtung.</p>
+          <p class="quill-hint">${t('portal.richHint')}</p>
         </div>
       </div>
-      <button class="btn btn-p" style="margin-top:18px" onclick="saveMyCompany()">Speichern</button>
+      <button class="btn btn-p" style="margin-top:18px" onclick="saveMyCompany()">${t('portal.save')}</button>
     </div>
     <div class="panel">
-      <h2 style="font-size:18px">Referenzbilder</h2>
-      <p class="ph">Zeig ein paar Bilder deiner Projekte oder Anlagen – sie erscheinen auf deiner Firmenseite.</p>
+      <h2 style="font-size:18px">${t('portal.gallery')}</h2>
+      <p class="ph">${t('portal.galleryHint')}</p>
       <div id="gallery-strip" class="gal-strip"></div>
       <input type="file" accept="image/*" multiple onchange="uploadGallery(this)">
-      <p class="ph" style="margin-top:6px">Mehrere Bilder möglich. Nach dem Hochladen «Speichern» klicken.</p>
+      <p class="ph" style="margin-top:6px">${t('portal.galleryHint2')}</p>
     </div>
     <div class="panel">
-      <h2 style="font-size:18px">Team / weitere Mitarbeiter</h2>
-      <p class="ph">Personen Ihrer Firma mit Funktion. E-Mail ist optional – ohne E-Mail erscheinen nur Name und Funktion. Wird auf Ihrer öffentlichen Firmenseite angezeigt.</p>
+      <h2 style="font-size:18px">${t('portal.team')}</h2>
+      <p class="ph">${t('portal.teamHint')}</p>
       <div id="team-rows">${MYTEAM.map(teamRow).join('')}</div>
-      <button type="button" class="btn-sm btn-o" style="margin-top:10px" onclick="addTeamRow()">+ Person</button>
-      <div><button class="btn btn-p" style="margin-top:14px" onclick="saveTeam()">Team speichern</button></div>
+      <button type="button" class="btn-sm btn-o" style="margin-top:10px" onclick="addTeamRow()">${t('portal.addPerson')}</button>
+      <div><button class="btn btn-p" style="margin-top:14px" onclick="saveTeam()">${t('portal.saveTeam')}</button></div>
     </div>
     <div class="panel">
-      <h2 style="font-size:18px">Passwort ändern</h2>
-      <div class="form-grid"><div><label>Neues Passwort</label><input id="np1" type="password"></div>
-        <div><label>Wiederholen</label><input id="np2" type="password"></div></div>
-      <button class="btn btn-o" style="margin-top:14px" onclick="changePw()">Passwort ändern</button>
+      <h2 style="font-size:18px">${t('portal.changePw')}</h2>
+      <div class="form-grid"><div><label>${t('portal.newPw')}</label><input id="np1" type="password"></div>
+        <div><label>${t('portal.repeatPw')}</label><input id="np2" type="password"></div></div>
+      <button class="btn btn-o" style="margin-top:14px" onclick="changePw()">${t('portal.changePw')}</button>
     </div>`;
   renderGalleryStrip();
   mountQuill('p-description-ed', c.description||'');
 }
 function teamRow(p){p=p||{};return `<div class="form-grid team-row" style="margin-bottom:10px;align-items:end">
-  <div><label>Vorname</label><input class="tm-first" value="${esc(p.first||'')}"></div>
-  <div><label>Nachname</label><input class="tm-last" value="${esc(p.last||'')}"></div>
-  <div><label>Funktion</label><input class="tm-role" value="${esc(p.role||'')}" placeholder="z.B. Geschäftsführer"></div>
-  <div><label>E-Mail (optional)</label><div style="display:flex;gap:8px"><input class="tm-email" value="${esc(p.email||'')}"><button type="button" class="btn-sm btn-a" title="Entfernen" onclick="this.closest('.team-row').remove()">×</button></div></div>
+  <div><label>${t('portal.tmFirst')}</label><input class="tm-first" value="${esc(p.first||'')}"></div>
+  <div><label>${t('portal.tmLast')}</label><input class="tm-last" value="${esc(p.last||'')}"></div>
+  <div><label>${t('portal.tmRole')}</label><input class="tm-role" value="${esc(p.role||'')}" placeholder="${t('portal.tmRolePh')}"></div>
+  <div><label>${t('portal.tmEmail')}</label><div style="display:flex;gap:8px"><input class="tm-email" value="${esc(p.email||'')}"><button type="button" class="btn-sm btn-a" title="Entfernen" onclick="this.closest('.team-row').remove()">×</button></div></div>
 </div>`;}
 function addTeamRow(){ $('team-rows').insertAdjacentHTML('beforeend', teamRow({})); }
 async function saveTeam(){
@@ -1277,16 +1747,17 @@ function clearNewsMedia(btn,kind){
 }
 
 /* ---------- DOWNLOADS ---------- */
-const DOC_CATS = [['gv-protokolle','GV-Protokolle'],['wissenswertes','Wissenswertes'],['news','News'],['unfaelle','Unfälle'],['links','Links']];
-function docCatLabel(k){ const f=DOC_CATS.find(c=>c[0]===k); return f?f[1]:(k||'Dokumente'); }
+const DOC_CATS = ['gv-protokolle','wissenswertes','news','unfaelle','links'];
+function docCatLabel(k){ return I18N[LANG]&&I18N[LANG]['dl.cat.'+k] ? t('dl.cat.'+k) : (k||'Dokumente'); }
 async function renderDownloads(){
-  $('app').innerHTML = nav() + `<section><div class="wrap" id="dl-body"><p class="lead">Lade…</p></div></section>` + footer();
+  $('app').innerHTML = nav() + `<section><div class="wrap" id="dl-body"><p class="lead">${t('common.loading')}</p></div></section>` + footer();
   let docs=[];
   try{ docs = await rpc('documents_list',{p_token:token()}); if(!Array.isArray(docs)) docs=[]; }
   catch(e){ $('dl-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
   const isBoard = !!(SESSION&&SESSION.is_board);
   const byCat={}; docs.forEach(d=>{ (byCat[d.category]=byCat[d.category]||[]).push(d); });
-  const sections = DOC_CATS.map(([key,label])=>{
+  const sections = DOC_CATS.map((key)=>{
+    const label = docCatLabel(key);
     const list = byCat[key]||[];
     const isLinks = key==='links';
     const items = list.map(d=>{
@@ -1299,17 +1770,17 @@ async function renderDownloads(){
             ${isVideo?`<span style="position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.25)"><span style="width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;font-size:16px">▶</span></span>`:''}
           </a>
           <span style="flex:1"><a href="${esc(d.file_url)}" target="_blank" rel="noopener" style="font-weight:600;color:var(--text)">${esc(d.title||d.file_name||'Dokument')}</a>${d.file_size?` <span style="color:var(--muted);font-size:12px">(${(d.file_size/1024/1024).toFixed(2)} MB)</span>`:''}</span>
-          <a href="${esc(d.file_url)}" target="_blank" rel="noopener" class="btn-sm btn-o" style="text-decoration:none">${d.is_link?'Öffnen ↗':'Herunterladen'}</a>
+          <a href="${esc(d.file_url)}" target="_blank" rel="noopener" class="btn-sm btn-o" style="text-decoration:none">${d.is_link?t('btn.open'):t('btn.download')}</a>
           ${isBoard?`<button class="btn-sm btn-a" style="margin-left:8px" onclick="delDoc('${esc(d.id)}')">Löschen</button>`:''}
         </div>`;
       }
       return `<div class="info-row" style="align-items:center;gap:14px">
         ${d.is_link?'':fileTypeBadge(d.file_name,d.file_url)}
         <span style="flex:1">${esc(d.title||d.file_name||'Dokument')}${d.file_size?` <span style="color:var(--muted);font-size:12px">(${(d.file_size/1024/1024).toFixed(2)} MB)</span>`:''}</span>
-        <a href="${esc(d.file_url)}" target="_blank" rel="noopener" class="btn-sm btn-o" style="text-decoration:none">${d.is_link?'Öffnen ↗':'Herunterladen'}</a>
+        <a href="${esc(d.file_url)}" target="_blank" rel="noopener" class="btn-sm btn-o" style="text-decoration:none">${d.is_link?t('btn.open'):t('btn.download')}</a>
         ${isBoard?`<button class="btn-sm btn-a" style="margin-left:8px" onclick="delDoc('${esc(d.id)}')">Löschen</button>`:''}
       </div>`;
-    }).join('') || '<p style="color:var(--muted);font-size:14px;margin:6px 0">Noch keine Einträge.</p>';
+    }).join('') || `<p style="color:var(--muted);font-size:14px;margin:6px 0">${t('dl.empty')}</p>`;
     const adder = isBoard?`<div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
         <div class="form-grid">
           <div class="full"><label>Titel</label><input id="dl-title-${key}" placeholder="Bezeichnung"></div>
@@ -1324,8 +1795,8 @@ async function renderDownloads(){
         </div></div>`:'';
     return `<div class="panel"><h2 style="font-size:18px">${esc(label)}</h2>${items}${adder}</div>`;
   }).join('');
-  $('dl-body').innerHTML = `<div class="eyebrow">Mitgliederbereich</div><h2 class="sec-title">Downloads</h2>
-    <p class="lead">Dokumente, Protokolle und nützliche Links für SVSS-Mitglieder.</p>
+  $('dl-body').innerHTML = `<div class="eyebrow">${t('dl.eyebrow')}</div><h2 class="sec-title">${t('dl.title')}</h2>
+    <p class="lead">${t('dl.lead')}</p>
     <div style="margin-top:30px">${sections}</div>`;
 }
 async function delDoc(id){
@@ -1555,12 +2026,14 @@ async function protocolAenderung(id){
 /* ---------- SCHULUNGEN #/schulungen (öffentlich + Vorstand erfasst) ---------- */
 let COURSE_EDIT=null;
 function fmtCourseDate(s,e){
-  if(!s) return 'Datum offen';
-  const f=d=>new Date(d+'T00:00:00').toLocaleDateString('de-CH',{day:'2-digit',month:'short',year:'numeric'});
+  if(!s) return t('courses.dateOpen');
+  const localeMap={de:'de-CH',fr:'fr-CH',it:'it-CH',rm:'rm-CH',en:'en-GB'};
+  const loc=localeMap[LANG]||'de-CH';
+  const f=d=>new Date(d+'T00:00:00').toLocaleDateString(loc,{day:'2-digit',month:'short',year:'numeric'});
   return (e&&e!==s)?(f(s)+' – '+f(e)):f(s);
 }
 async function renderCourses(){
-  $('app').innerHTML = nav() + `<section><div class="wrap" id="crs-body"><p class="lead">Lade…</p></div></section>` + footer();
+  $('app').innerHTML = nav() + `<section><div class="wrap" id="crs-body"><p class="lead">${t('common.loading')}</p></div></section>` + footer();
   let list=[];
   try{ list=await rpc('courses_list',{}); if(!Array.isArray(list)) list=[]; }
   catch(e){ $('crs-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
@@ -1571,23 +2044,23 @@ async function renderCourses(){
     return `<div class="panel" style="${past?'opacity:.55;':''}display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
       <div style="flex:none;min-width:130px">
         <div style="font-family:'DM Serif Display',serif;font-size:19px;color:var(--gm);line-height:1.2">${esc(fmtCourseDate(c.date_start,c.date_end))}</div>
-        <div style="margin-top:6px">${past?'<span class="badge" style="background:var(--sand-d);color:var(--soft)">vergangen</span>':'<span class="badge active">Anmeldung offen</span>'}</div>
+        <div style="margin-top:6px">${past?`<span class="badge" style="background:var(--sand-d);color:var(--soft)">${t('courses.past')}</span>`:`<span class="badge active">${t('courses.regOpen')}</span>`}</div>
       </div>
       <div style="flex:1;min-width:240px">
         <h3 style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:17px;margin:0 0 4px">${esc(c.title)}</h3>
         <div style="color:var(--muted);font-size:14px">${esc([c.location,c.canton].filter(Boolean).join(' · '))}${c.price?' · '+esc(c.price):''}</div>
         ${c.description?`<p style="font-size:14px;margin:8px 0 0">${esc(c.description)}</p>`:''}
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-          ${c.link?`<a href="${esc(c.link)}" target="_blank" rel="noopener" class="btn btn-p btn-sm" style="text-decoration:none">Details / Anmeldung ↗</a>`:''}
+          ${c.link?`<a href="${esc(c.link)}" target="_blank" rel="noopener" class="btn btn-p btn-sm" style="text-decoration:none">${t('courses.details')}</a>`:''}
           ${isBoard?`<button class="btn-sm btn-o" onclick="editCourse('${esc(c.id)}')">Bearbeiten</button><button class="btn-sm btn-a" onclick="delCourse('${esc(c.id)}')">Löschen</button>`:''}
         </div>
       </div>
     </div>`;
-  }).join('') || '<p class="lead">Aktuell sind keine Schulungen ausgeschrieben.</p>';
+  }).join('') || `<p class="lead">${t('courses.none')}</p>`;
   const editC = COURSE_EDIT ? list.find(c=>c.id===COURSE_EDIT) : null;
   const form = isBoard ? courseForm(editC||{}) : '';
-  $('crs-body').innerHTML=`<div class="eyebrow">Aus- & Weiterbildung</div><h2 class="sec-title">Schulungen</h2>
-    <p class="lead">Kurse und Termine rund um Spielplatzsicherheit und Inspektionen nach SN EN 1176.</p>
+  $('crs-body').innerHTML=`<div class="eyebrow">${t('courses.eyebrow')}</div><h2 class="sec-title">${t('courses.title')}</h2>
+    <p class="lead">${t('courses.lead')}</p>
     <div style="margin-top:30px;display:flex;flex-direction:column;gap:14px">${cards}</div>${form}`;
   if(editC){ const f=$('cf-title'); if(f) f.scrollIntoView({behavior:'smooth',block:'center'}); }
 }
@@ -1627,30 +2100,30 @@ async function saveCourse(id){
 function renderInquiry(){
   INQ_IMAGES=[];
   $('app').innerHTML = nav() + `<section><div class="wrap" style="max-width:820px">
-    <div class="eyebrow">Kontakt</div><h2 class="sec-title">Anfrage an den Vorstand</h2>
-    <p class="lead">Sie sind kein Mitglied, haben aber eine Frage? Hier können Sie eine <b>sicherheitstechnische Anfrage</b> stellen oder <b>Infos zu Spielplätzen oder unseren Mitgliedern</b> anfordern. Der Vorstand bearbeitet Ihre Anfrage und antwortet Ihnen per E-Mail.</p>
+    <div class="eyebrow">${t('inquiry.eyebrow')}</div><h2 class="sec-title">${t('inquiry.title')}</h2>
+    <p class="lead">${t('inquiry.lead')}</p>
     <div id="inq-done" class="hidden"></div>
     <div class="panel" id="inq-form" style="margin-top:30px">
       <div class="form-grid">
-        <div class="full"><label>Anliegen</label><select id="inq-topic">
-          <option value="">Bitte wählen…</option>
-          <option>Sicherheitstechnische Anfrage</option>
-          <option>Infos zu Spielplätzen</option>
-          <option>Infos zu Mitgliedern</option>
-          <option>Sonstiges</option>
+        <div class="full"><label>${t('inquiry.topic')}</label><select id="inq-topic">
+          <option value="">${t('inquiry.topicChoose')}</option>
+          <option value="Sicherheitstechnische Anfrage">${t('inquiry.topic.safety')}</option>
+          <option value="Infos zu Spielplätzen">${t('inquiry.topic.playgrounds')}</option>
+          <option value="Infos zu Mitgliedern">${t('inquiry.topic.members')}</option>
+          <option value="Sonstiges">${t('inquiry.topic.other')}</option>
         </select></div>
-        <div><label>Name</label><input id="inq-name"></div>
-        <div><label>E-Mail *</label><input id="inq-email" type="email"></div>
-        <div class="full"><label>Betreff</label><input id="inq-subject"></div>
-        <div class="full"><label>Ihre Frage *</label><textarea id="inq-question" rows="7" placeholder="Beschreiben Sie Ihr Anliegen…"></textarea></div>
-        <div class="full"><label>Bilder (optional)</label>
+        <div><label>${t('inquiry.name')}</label><input id="inq-name"></div>
+        <div><label>${t('inquiry.email')}</label><input id="inq-email" type="email"></div>
+        <div class="full"><label>${t('inquiry.subject')}</label><input id="inq-subject"></div>
+        <div class="full"><label>${t('inquiry.question')}</label><textarea id="inq-question" rows="7" placeholder="${t('inquiry.questionPh')}"></textarea></div>
+        <div class="full"><label>${t('inquiry.images')}</label>
           <div id="inq-img-strip" class="gal-strip"></div>
           <input type="file" accept="image/*" multiple onchange="onInquiryImages(this)">
-          <p class="ph" style="margin-top:6px">Optional, z.B. Fotos der Anlage. Empfohlen max. 4 Bilder. Werden automatisch verkleinert.</p>
+          <p class="ph" style="margin-top:6px">${t('inquiry.imagesHint')}</p>
         </div>
       </div>
       <div class="err" id="inq-err"></div>
-      <button class="btn btn-p" style="margin-top:16px" onclick="submitInquiry()">Anfrage absenden</button>
+      <button class="btn btn-p" style="margin-top:16px" onclick="submitInquiry()">${t('inquiry.submit')}</button>
     </div>
   </div></section>` + footer();
   renderInquiryImgStrip();
@@ -1676,7 +2149,7 @@ async function onInquiryImages(input){
   input.value='';
 }
 function inquiryErrMsg(m){
-  const map={ email_required:'Bitte eine E-Mail-Adresse angeben.', question_required:'Bitte Ihre Frage angeben.' };
+  const map={ email_required:t('inquiry.err.email'), question_required:t('inquiry.err.question') };
   return map[m]||('Fehler: '+m);
 }
 async function submitInquiry(){
@@ -1690,13 +2163,13 @@ async function submitInquiry(){
     INQ_IMAGES=[];
     $('inq-form').classList.add('hidden');
     const done=$('inq-done'); done.classList.remove('hidden');
-    done.innerHTML=`<div class="panel" style="border-color:var(--gs);margin-top:30px"><h2 style="font-size:20px;color:var(--gm)">Vielen Dank!</h2>
-      <p class="lead" style="margin-top:8px">Ihre Anfrage wurde an den Vorstand übermittelt. Sie erhalten eine Antwort per E-Mail.</p>
-      <button class="btn btn-o" style="margin-top:10px" onclick="location.hash='#/'">Zur Startseite</button></div>`;
+    done.innerHTML=`<div class="panel" style="border-color:var(--gs);margin-top:30px"><h2 style="font-size:20px;color:var(--gm)">${t('inquiry.thanks')}</h2>
+      <p class="lead" style="margin-top:8px">${t('inquiry.thanksText')}</p>
+      <button class="btn btn-o" style="margin-top:10px" onclick="location.hash='#/'">${t('inquiry.toHome')}</button></div>`;
     window.scrollTo(0,0);
   }catch(e){
     const key=(e.message||'').replace(/[^a-z_]/gi,'').match(/(email_required|question_required)/);
-    $('inq-err').textContent = key?inquiryErrMsg(key[0]):('Fehler beim Absenden: '+e.message);
+    $('inq-err').textContent = key?inquiryErrMsg(key[0]):(t('inquiry.err.send')+e.message);
   }
 }
 
@@ -1883,11 +2356,11 @@ function searchSnippet(s){
 }
 function renderSearch(){
   $('app').innerHTML = nav() + `<section><div class="wrap">
-    <div class="eyebrow">Mitgliederbereich</div><h2 class="sec-title">Suche</h2>
-    <p class="lead">Durchsuche Mitgliederfirmen, News und Dokumente (inkl. PDF-Inhalt).</p>
+    <div class="eyebrow">${t('search.eyebrow')}</div><h2 class="sec-title">${t('search.title')}</h2>
+    <p class="lead">${t('search.lead')}</p>
     <div class="search-bar">
-      <input id="search-q" placeholder="Suchbegriff…" autocomplete="off">
-      <button class="btn btn-p" onclick="doSearch()">Suchen</button>
+      <input id="search-q" placeholder="${t('search.ph')}" autocomplete="off">
+      <button class="btn btn-p" onclick="doSearch()">${t('search.btn')}</button>
     </div>
     <div id="search-results"></div>
   </div></section>` + footer();
@@ -1897,20 +2370,20 @@ function renderSearch(){
 async function doSearch(){
   const inp=$('search-q'); const q=inp?inp.value.trim():'';
   const out=$('search-results'); if(!out) return;
-  if(!q){ out.innerHTML='<p class="search-empty">Bitte einen Suchbegriff eingeben.</p>'; return; }
-  out.innerHTML='<p class="lead" style="margin-top:24px">Suche läuft…</p>';
+  if(!q){ out.innerHTML='<p class="search-empty">'+t('search.empty')+'</p>'; return; }
+  out.innerHTML='<p class="lead" style="margin-top:24px">'+t('search.running')+'</p>';
   let r;
   try{ r=await rpc('search_members',{p_token:token(),p_q:q}); }
-  catch(e){ out.innerHTML='<p class="search-empty">Fehler bei der Suche: '+esc(e.message)+'</p>'; return; }
+  catch(e){ out.innerHTML='<p class="search-empty">'+t('search.error')+esc(e.message)+'</p>'; return; }
   r=r||{};
   const companies=Array.isArray(r.companies)?r.companies:[];
   const news=Array.isArray(r.news)?r.news:[];
   const documents=Array.isArray(r.documents)?r.documents:[];
   const total=companies.length+news.length+documents.length;
-  if(!total){ out.innerHTML='<p class="search-empty">Keine Treffer für «'+esc(q)+'».</p>'; return; }
+  if(!total){ out.innerHTML='<p class="search-empty">'+t('search.noHits')+' «'+esc(q)+'».</p>'; return; }
   let html='';
   if(companies.length){
-    html+='<div class="search-group"><h3>Mitglieder <span class="cnt">'+companies.length+'</span></h3>'+
+    html+='<div class="search-group"><h3>'+t('search.grpMembers')+' <span class="cnt">'+companies.length+'</span></h3>'+
       companies.map(c=>{
         const loc=esc(c.city||'');
         return '<div class="search-hit">'+
@@ -1921,7 +2394,7 @@ async function doSearch(){
       }).join('')+'</div>';
   }
   if(news.length){
-    html+='<div class="search-group"><h3>News <span class="cnt">'+news.length+'</span></h3>'+
+    html+='<div class="search-group"><h3>'+t('search.grpNews')+' <span class="cnt">'+news.length+'</span></h3>'+
       news.map(n=>{
         return '<div class="search-hit">'+
           '<div class="ht-title">'+esc(n.title||'')+'</div>'+
@@ -1931,7 +2404,7 @@ async function doSearch(){
       }).join('')+'</div>';
   }
   if(documents.length){
-    html+='<div class="search-group"><h3>Dokumente <span class="cnt">'+documents.length+'</span></h3>'+
+    html+='<div class="search-group"><h3>'+t('search.grpDocs')+' <span class="cnt">'+documents.length+'</span></h3>'+
       documents.map(d=>{
         const cat=docCatLabel(d.category);
         const link=d.file_url?'<a class="ht-title" href="'+esc(d.file_url)+'" target="_blank" rel="noopener">'+esc(d.title||'Dokument')+(d.is_link?' ↗':'')+'</a>':'<span class="ht-title">'+esc(d.title||'Dokument')+'</span>';
@@ -1976,51 +2449,51 @@ let APPLY_LOGO='';
 function renderApply(){
   APPLY_LOGO='';
   $('app').innerHTML = nav() + `<section><div class="wrap" style="max-width:820px">
-    <div class="eyebrow">Mitwirken</div><h2 class="sec-title">Mitglied werden</h2>
-    <p class="lead">Werden Sie Teil der SVSS. Füllen Sie das Formular aus – wir melden uns nach der Aufnahme mit den Zugangsdaten.</p>
+    <div class="eyebrow">${t('apply.eyebrow')}</div><h2 class="sec-title">${t('apply.title')}</h2>
+    <p class="lead">${t('apply.lead')}</p>
     <div id="apply-done" class="hidden"></div>
     <div class="panel" id="apply-form" style="margin-top:30px">
-      <div class="fg"><label>Art der Mitgliedschaft</label>
+      <div class="fg"><label>${t('apply.type')}</label>
         <div style="display:flex;gap:18px;margin-top:4px">
-          <label style="display:flex;align-items:center;gap:7px;font-weight:500"><input type="radio" name="ap-type" value="firma" checked style="width:auto" onchange="applyTypeChange()"> Firma</label>
-          <label style="display:flex;align-items:center;gap:7px;font-weight:500"><input type="radio" name="ap-type" value="privat" style="width:auto" onchange="applyTypeChange()"> Privatperson</label>
+          <label style="display:flex;align-items:center;gap:7px;font-weight:500"><input type="radio" name="ap-type" value="firma" checked style="width:auto" onchange="applyTypeChange()"> ${t('apply.company')}</label>
+          <label style="display:flex;align-items:center;gap:7px;font-weight:500"><input type="radio" name="ap-type" value="privat" style="width:auto" onchange="applyTypeChange()"> ${t('apply.private')}</label>
         </div>
-        <p class="ph" style="margin-top:6px">Tarif: Firma CHF 280.– / Jahr · Privat CHF 50.– / Jahr · MwSt-befreit.</p>
+        <p class="ph" style="margin-top:6px">${t('apply.tariff')}</p>
       </div>
       <div class="form-grid">
-        <div class="full" id="ap-company-wrap"><label>Firmenname *</label><input id="ap-company"></div>
-        <div id="ap-birth-wrap" class="full hidden"><label>Geburtsdatum</label><input id="ap-birthdate" type="date"></div>
-        <div><label>Vorname *</label><input id="ap-first"></div>
-        <div><label>Nachname *</label><input id="ap-last"></div>
-        <div class="full"><label>Strasse</label><input id="ap-street"></div>
-        <div><label>PLZ</label><input id="ap-zip"></div>
-        <div><label>Ort</label><input id="ap-city"></div>
-        <div><label>E-Mail *</label><input id="ap-email" type="email"></div>
-        <div><label>Telefon Festnetz</label><input id="ap-phone"></div>
-        <div><label>Mobil</label><input id="ap-mobile"></div>
-        <div class="full"><p class="ph" style="margin:0">Mindestens eine Telefonnummer (Festnetz oder Mobil) ist erforderlich.</p></div>
-        <div class="full"><label>Logo (optional)</label>
+        <div class="full" id="ap-company-wrap"><label>${t('apply.companyName')}</label><input id="ap-company"></div>
+        <div id="ap-birth-wrap" class="full hidden"><label>${t('apply.birthdate')}</label><input id="ap-birthdate" type="date"></div>
+        <div><label>${t('apply.first')}</label><input id="ap-first"></div>
+        <div><label>${t('apply.last')}</label><input id="ap-last"></div>
+        <div class="full"><label>${t('apply.street')}</label><input id="ap-street"></div>
+        <div><label>${t('apply.zip')}</label><input id="ap-zip"></div>
+        <div><label>${t('apply.city')}</label><input id="ap-city"></div>
+        <div><label>${t('apply.email')}</label><input id="ap-email" type="email"></div>
+        <div><label>${t('apply.phone')}</label><input id="ap-phone"></div>
+        <div><label>${t('apply.mobile')}</label><input id="ap-mobile"></div>
+        <div class="full"><p class="ph" style="margin:0">${t('apply.phoneHint')}</p></div>
+        <div class="full"><label>${t('apply.logo')}</label>
           <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
             <div id="ap-logo-prev" style="width:56px;height:56px;border-radius:10px;background:var(--gl);display:grid;place-items:center;overflow:hidden;border:1px solid var(--border);flex:none"><span style="color:var(--muted);font-size:12px">–</span></div>
             <input type="file" id="ap-logo-file" accept="image/*" onchange="onApplyLogo(event)">
           </div>
-          <p class="ph" style="margin-top:8px">Optional. Falls das Hochladen nicht klappt, reichen wir das Logo nach der Aufnahme nach.</p>
+          <p class="ph" style="margin-top:8px">${t('apply.logoHint')}</p>
         </div>
       </div>
       <div style="margin-top:10px">
-        <label style="display:flex;align-items:center;gap:7px;font-weight:500;font-size:14px"><input type="checkbox" id="ap-billing-toggle" style="width:auto" onchange="document.getElementById('ap-billing').classList.toggle('hidden',!this.checked)"> Abweichende Rechnungsadresse</label>
+        <label style="display:flex;align-items:center;gap:7px;font-weight:500;font-size:14px"><input type="checkbox" id="ap-billing-toggle" style="width:auto" onchange="document.getElementById('ap-billing').classList.toggle('hidden',!this.checked)"> ${t('apply.billingToggle')}</label>
       </div>
       <div id="ap-billing" class="hidden" style="margin-top:14px">
         <div class="form-grid">
-          <div class="full"><label>Name / Firma (Rechnung)</label><input id="ap-bn"></div>
-          <div class="full"><label>Strasse</label><input id="ap-bstreet"></div>
-          <div><label>PLZ</label><input id="ap-bzip"></div>
-          <div><label>Ort</label><input id="ap-bcity"></div>
-          <div class="full"><label>E-Mail (Rechnung)</label><input id="ap-bemail" type="email"></div>
+          <div class="full"><label>${t('apply.billingName')}</label><input id="ap-bn"></div>
+          <div class="full"><label>${t('apply.street')}</label><input id="ap-bstreet"></div>
+          <div><label>${t('apply.zip')}</label><input id="ap-bzip"></div>
+          <div><label>${t('apply.city')}</label><input id="ap-bcity"></div>
+          <div class="full"><label>${t('apply.billingEmail')}</label><input id="ap-bemail" type="email"></div>
         </div>
       </div>
       <div class="err" id="ap-err"></div>
-      <button class="btn btn-p" style="margin-top:16px" onclick="submitApply()">Bewerbung absenden</button>
+      <button class="btn btn-p" style="margin-top:16px" onclick="submitApply()">${t('apply.submit')}</button>
     </div>
   </div></section>` + footer();
 }
@@ -2031,7 +2504,7 @@ function applyTypeChange(){
 }
 function onApplyLogo(e){
   const file=e.target.files&&e.target.files[0]; if(!file) return;
-  if(!file.type.startsWith('image/')){ toast('Bitte ein Bild wählen','err'); return; }
+  if(!file.type.startsWith('image/')){ toast(t('apply.errImg'),'err'); return; }
   const fr=new FileReader();
   fr.onload=()=>{ const img=new Image(); img.onload=()=>{
     const max=320; let w=img.width,h=img.height;
@@ -2039,13 +2512,13 @@ function onApplyLogo(e){
     const cv=document.createElement('canvas'); cv.width=w; cv.height=h; cv.getContext('2d').drawImage(img,0,0,w,h);
     APPLY_LOGO=cv.toDataURL('image/png');
     const pv=$('ap-logo-prev'); if(pv) pv.innerHTML='<img src="'+APPLY_LOGO+'" style="width:100%;height:100%;object-fit:contain">';
-  }; img.onerror=()=>toast('Bild konnte nicht gelesen werden','err'); img.src=fr.result; };
+  }; img.onerror=()=>toast(t('apply.errImgRead'),'err'); img.src=fr.result; };
   fr.readAsDataURL(file);
 }
 function applyErrMsg(m){
-  const map={ email_required:'Bitte eine E-Mail-Adresse angeben.', name_required:'Bitte Vor- und Nachname angeben.',
-    phone_required:'Bitte mindestens eine Telefonnummer (Festnetz oder Mobil) angeben.',
-    company_name_required:'Bitte den Firmennamen angeben.' };
+  const map={ email_required:t('apply.err.email'), name_required:t('apply.err.name'),
+    phone_required:t('apply.err.phone'),
+    company_name_required:t('apply.err.company') };
   return map[m]||('Fehler: '+m);
 }
 async function submitApply(){
@@ -2069,13 +2542,13 @@ async function submitApply(){
     await rpc('apply_membership',args);
     $('apply-form').classList.add('hidden');
     const done=$('apply-done'); done.classList.remove('hidden');
-    done.innerHTML=`<div class="panel" style="border-color:var(--gs);margin-top:30px"><h2 style="font-size:20px;color:var(--gm)">Vielen Dank!</h2>
-      <p class="lead" style="margin-top:8px">Ihre Bewerbung ist bei uns eingegangen. Der Vorstand prüft sie und meldet sich bei Ihnen mit den weiteren Schritten und Zugangsdaten.</p>
-      <button class="btn btn-o" style="margin-top:10px" onclick="location.hash='#/'">Zur Startseite</button></div>`;
+    done.innerHTML=`<div class="panel" style="border-color:var(--gs);margin-top:30px"><h2 style="font-size:20px;color:var(--gm)">${t('apply.thanks')}</h2>
+      <p class="lead" style="margin-top:8px">${t('apply.thanksText')}</p>
+      <button class="btn btn-o" style="margin-top:10px" onclick="location.hash='#/'">${t('inquiry.toHome')}</button></div>`;
     window.scrollTo(0,0);
   }catch(e){
     const key=(e.message||'').replace(/[^a-z_]/gi,'').match(/(email_required|name_required|phone_required|company_name_required)/);
-    $('ap-err').textContent = key?applyErrMsg(key[0]):('Fehler beim Absenden: '+e.message);
+    $('ap-err').textContent = key?applyErrMsg(key[0]):(t('apply.err.send')+e.message);
   }
 }
 
@@ -2083,6 +2556,7 @@ async function submitApply(){
 $('lg-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 $('login-modal').addEventListener('click',e=>{if(e.target.id==='login-modal')closeLogin();});
 window.addEventListener('hashchange',route);
+try{ document.documentElement.lang=LANG; }catch(e){}
 (async function(){ if(configured()){ try{await restoreSession();}catch{} } route(); })();
 </script>
 </body>
