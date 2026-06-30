@@ -403,6 +403,7 @@ async function route(){
     else if(h==='#/downloads'){ if(!SESSION){openLogin();location.hash='#/';return;} await ensurePublic(); renderDownloads(); }
     else if(h==='#/suche'){ if(!SESSION){openLogin();location.hash='#/';return;} await ensurePublic(); renderSearch(); }
     else if(h==='#/mitglied-werden'){ await ensurePublic(); renderApply(); }
+    else if(h==='#/anfrage'){ await ensurePublic(); renderInquiry(); }
     else { await ensurePublic(); renderHome(); }
   }catch(e){ $('app').innerHTML='<div class="wrap" style="padding:60px 24px"><p>Fehler beim Laden. '+esc(e.message)+'</p></div>'; }
   window.scrollTo(0,0);
@@ -425,6 +426,7 @@ function nav(){
       <a onclick="goSection('ueber')">Über uns</a>
       <a onclick="goSection('news')">News</a>
       <a onclick="location.hash='#/mitglied-werden'">Mitglied werden</a>
+      <a onclick="location.hash='#/anfrage'">Anfrage</a>
       ${SESSION?`<a onclick="location.hash='#/downloads'">Downloads</a>`:''}
       ${SESSION?`<a onclick="location.hash='#/suche'">Suche</a>`:''}
       ${acct}
@@ -441,6 +443,7 @@ function footer(){
         <p style="margin:0">${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:''}</p></div>
       <div><b style="color:#fff;display:block;margin-bottom:10px">Bereich</b>
         <p style="margin:0"><a onclick="location.hash='#/mitglied-werden'" style="cursor:pointer">Mitglied werden</a></p>
+        <p style="margin:6px 0 0"><a onclick="location.hash='#/anfrage'" style="cursor:pointer">Anfrage stellen</a></p>
         <p style="margin:6px 0 0"><a onclick="openLogin()" style="cursor:pointer">Mitglieder-Login</a></p></div>
     </div>
     <div class="foot-bot"><span>© ${new Date().getFullYear()} SVSS</span><span>EN 1176 / 1177</span></div>
@@ -716,8 +719,10 @@ async function changePw(){
 /* ---------- BOARD ADMIN ---------- */
 let ADMIN={companies:[],accounts:[]}, adminTab='members';
 let PROTO_PENDING=0; // Anzahl Protokolle, bei denen die eigene Visierung offen ist (Tab-Zähler)
+let INQ_PENDING=0; // Anzahl Anfragen mit offener eigener Visierung (Tab-Zähler)
 async function renderAdmin(){
   const protoLabel = 'Visierung'+(PROTO_PENDING>0?(' ('+PROTO_PENDING+')'):'');
+  const inqLabel = 'Anfragen'+(INQ_PENDING>0?(' ('+INQ_PENDING+')'):'');
   $('app').innerHTML = nav() + `<section><div class="wrap">
     <div class="eyebrow">Vorstand</div><h2 class="sec-title">Verwaltung</h2>
     <div class="tabs" style="margin-top:24px">
@@ -725,6 +730,7 @@ async function renderAdmin(){
       <button class="tab ${adminTab==='content'?'active':''}" onclick="adminTab='content';renderAdmin()">Inhalte</button>
       <button class="tab ${adminTab==='news'?'active':''}" onclick="adminTab='news';renderAdmin()">News</button>
       <button class="tab ${adminTab==='protocols'?'active':''}" onclick="adminTab='protocols';renderAdmin()">${protoLabel}</button>
+      <button class="tab ${adminTab==='inquiries'?'active':''}" onclick="adminTab='inquiries';renderAdmin()">${inqLabel}</button>
       <button class="tab ${adminTab==='applications'?'active':''}" onclick="adminTab='applications';renderAdmin()">Bewerbungen</button>
       <button class="tab ${adminTab==='fees'?'active':''}" onclick="adminTab='fees';renderAdmin()">Beiträge</button>
     </div>
@@ -734,6 +740,7 @@ async function renderAdmin(){
   if(adminTab==='fees'){ renderAdminFees(); return; }
   if(adminTab==='news'){ renderAdminNews(); return; }
   if(adminTab==='protocols'){ renderAdminProtocols(); return; }
+  if(adminTab==='inquiries'){ renderAdminInquiries(); return; }
   try{ ADMIN=await rpc('board_list',{p_token:token()}); }catch(e){ $('admin-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
   adminTab==='content'?renderAdminContent():renderAdminMembers();
 }
@@ -1436,6 +1443,205 @@ async function protocolAenderung(id){
   if(!proposed.trim()){ toast('Bitte den bearbeiteten Protokolltext angeben','err'); return; }
   try{ await rpc('board_protocol_review',{p_token:token(),p_id:id,p_decision:'aenderung',p_proposed_text:proposed,p_comment:comment||null}); toast('Änderung beantragt ✓'); renderAdminProtocols(); }
   catch(e){ toast('Fehler: '+e.message,'err'); }
+}
+
+/* ====================================================================
+   ANFRAGEN (Nichtmitglieder) — öffentliches Formular + kollaborativer
+   Antwort-Prozess (analog Protokoll-Visierung, farbiger Wort-Diff)
+   ==================================================================== */
+
+/* ---------- A) Öffentliches Anfrageformular #/anfrage ---------- */
+function renderInquiry(){
+  $('app').innerHTML = nav() + `<section><div class="wrap" style="max-width:820px">
+    <div class="eyebrow">Kontakt</div><h2 class="sec-title">Anfrage an den Vorstand</h2>
+    <p class="lead">Sie haben eine Frage rund um sichere Spielplätze? Stellen Sie hier Ihre Anfrage – der Vorstand bearbeitet sie und antwortet Ihnen per E-Mail.</p>
+    <div id="inq-done" class="hidden"></div>
+    <div class="panel" id="inq-form" style="margin-top:30px">
+      <div class="form-grid">
+        <div><label>Name</label><input id="inq-name"></div>
+        <div><label>E-Mail *</label><input id="inq-email" type="email"></div>
+        <div class="full"><label>Betreff</label><input id="inq-subject"></div>
+        <div class="full"><label>Ihre Frage *</label><textarea id="inq-question" rows="7" placeholder="Beschreiben Sie Ihr Anliegen…"></textarea></div>
+      </div>
+      <div class="err" id="inq-err"></div>
+      <button class="btn btn-p" style="margin-top:16px" onclick="submitInquiry()">Anfrage absenden</button>
+    </div>
+  </div></section>` + footer();
+}
+function inquiryErrMsg(m){
+  const map={ email_required:'Bitte eine E-Mail-Adresse angeben.', question_required:'Bitte Ihre Frage angeben.' };
+  return map[m]||('Fehler: '+m);
+}
+async function submitInquiry(){
+  $('inq-err').textContent='';
+  const v=id=>($(id).value||'').trim();
+  const name=v('inq-name'), email=v('inq-email'), subject=v('inq-subject'), question=v('inq-question');
+  if(!email){ $('inq-err').textContent=inquiryErrMsg('email_required'); return; }
+  if(!question){ $('inq-err').textContent=inquiryErrMsg('question_required'); return; }
+  try{
+    await rpc('submit_inquiry',{ p_name:name||null, p_email:email, p_subject:subject||null, p_question:question });
+    $('inq-form').classList.add('hidden');
+    const done=$('inq-done'); done.classList.remove('hidden');
+    done.innerHTML=`<div class="panel" style="border-color:var(--gs);margin-top:30px"><h2 style="font-size:20px;color:var(--gm)">Vielen Dank!</h2>
+      <p class="lead" style="margin-top:8px">Ihre Anfrage wurde an den Vorstand übermittelt. Sie erhalten eine Antwort per E-Mail.</p>
+      <button class="btn btn-o" style="margin-top:10px" onclick="location.hash='#/'">Zur Startseite</button></div>`;
+    window.scrollTo(0,0);
+  }catch(e){
+    const key=(e.message||'').replace(/[^a-z_]/gi,'').match(/(email_required|question_required)/);
+    $('inq-err').textContent = key?inquiryErrMsg(key[0]):('Fehler beim Absenden: '+e.message);
+  }
+}
+
+/* ---------- B) Admin-Tab: Anfragen ---------- */
+const INQ_STATUS={ offen:['Offen','background:var(--sand-d);color:var(--soft)'],
+  in_arbeit:['In Arbeit','background:#e3ecf7;color:#2d5a8a'],
+  aenderungen:['Änderungen beantragt','background:#fbe7df;color:var(--accent)'],
+  visiert:['Visiert','background:var(--gl);color:var(--gm)'],
+  beantwortet:['Beantwortet','background:var(--gl);color:var(--gm)'] };
+function inqBadge(st){ const s=INQ_STATUS[st]||INQ_STATUS.offen; return `<span class="badge" style="${s[1]}">${esc(s[0])}</span>`; }
+async function renderAdminInquiries(){
+  let list=[];
+  try{ list=await rpc('board_inquiries_list',{p_token:token()}); if(!Array.isArray(list)) list=[]; }
+  catch(e){ $('admin-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
+  INQ_PENDING = list.filter(p=>p.status!=='beantwortet' && p.my_status && p.my_status!=='visiert').length;
+  const tabBtns=[...document.querySelectorAll('.tabs .tab')].filter(b=>/^Anfragen/.test(b.textContent));
+  if(tabBtns[0]) tabBtns[0].textContent='Anfragen'+(INQ_PENDING>0?(' ('+INQ_PENDING+')'):'');
+  const fmtDate=d=>d?new Date(d).toLocaleDateString('de-CH'):'';
+  const rows = list.map(p=>{
+    const mine = p.status!=='beantwortet' && p.my_status && p.my_status!=='visiert';
+    const who=[p.inquirer_name,p.inquirer_email].filter(Boolean).join(' · ');
+    return `<tr style="cursor:pointer" onclick="renderInquiryReview('${esc(p.id)}')">
+      <td><b>${esc(p.subject||'Anfrage')}</b><br><span class="ht-meta" style="color:var(--muted);font-size:13px">${esc(who)}</span>${mine?'<br><span class="badge" style="background:#fbe7df;color:var(--accent)">Deine Visierung ausstehend</span>':''}</td>
+      <td>${esc(fmtDate(p.created_at))}</td>
+      <td>${inqBadge(p.status)}</td>
+      <td>${esc((p.n_visiert!=null?p.n_visiert:0))}/${esc((p.n_total!=null?p.n_total:0))} visiert${p.n_aenderung?` · ${esc(p.n_aenderung)} Änderung${p.n_aenderung===1?'':'en'}`:''}</td>
+      <td class="r" onclick="event.stopPropagation()">
+        <button class="btn-sm btn-o" onclick="renderInquiryReview('${esc(p.id)}')">Öffnen</button>
+        <button class="btn-sm btn-a" style="margin-left:6px" onclick="delInquiry('${esc(p.id)}')">Löschen</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="color:var(--muted)">Noch keine Anfragen. Nichtmitglieder stellen Anfragen über das öffentliche Formular unter «Anfrage».</td></tr>';
+  $('admin-body').innerHTML = `
+    <div class="panel">
+      <h2 style="font-size:18px">Anfragen von Nichtmitgliedern</h2>
+      <p class="ph">Anfragen über das öffentliche Formular. Der Vorstand erarbeitet gemeinsam eine Antwort, visiert sie (Änderungen werden farbig pro Person dargestellt) und sendet sie dann per E-Mail an den Fragesteller.</p>
+    </div>
+    <div class="panel" style="padding:0;overflow:hidden">
+      <table><thead><tr><th>Anfrage</th><th>Datum</th><th>Status</th><th>Fortschritt</th><th class="r">Aktion</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+}
+async function delInquiry(id){
+  if(!confirm('Diese Anfrage und alle Visierungs-Aufgaben wirklich löschen?')) return;
+  try{ await rpc('board_inquiry_delete',{p_token:token(),p_id:id}); toast('Gelöscht ✓'); renderAdminInquiries(); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
+}
+
+/* ---------- C) Detailansicht renderInquiryReview(id) ---------- */
+async function renderInquiryReview(id){
+  adminTab='inquiries';
+  $('admin-body').innerHTML='<p class="lead">Lade…</p>';
+  let r;
+  try{ r=await rpc('board_inquiry_get',{p_token:token(),p_id:id}); }
+  catch(e){ $('admin-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
+  r=r||{};
+  const q=r.inquiry||{}, me=r.me||'', reviews=Array.isArray(r.reviews)?r.reviews:[];
+  const fmtDate=d=>d?new Date(d).toLocaleString('de-CH'):'';
+  const myReview=reviews.find(x=>x.username===me)||null;
+  const answered = q.status==='beantwortet';
+  const draft = q.draft_answer||'';
+  // Änderungsblöcke (farbig, Wort-Diff) pro Review mit proposed_text
+  const changeBlocks = reviews.filter(x=>x.proposed_text).map(x=>`
+    <div class="panel" style="border-left:4px solid ${esc(x.color)};margin-bottom:14px">
+      <div style="font-weight:700;color:${esc(x.color)};margin-bottom:8px">Änderungsvorschlag von ${esc(x.name||x.username)}</div>
+      <div style="white-space:pre-wrap;font-size:14px;line-height:1.6">${wordDiffHtml(draft, x.proposed_text||'', x.color)}</div>
+      ${x.comment?`<p class="ph" style="margin:12px 0 0">Kommentar: ${esc(x.comment)}</p>`:''}
+    </div>`).join('');
+  // Legende
+  const legend = reviews.map(x=>{
+    const stTxt = x.status==='visiert'?'visiert ✓' : (x.status==='aenderung'?'Änderung beantragt' : 'offen');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px">
+      <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:${esc(x.color)};flex:none"></span>
+      <span style="flex:1">${esc(x.name||x.username)}${x.username===me?' <span style="color:var(--muted)">(du)</span>':''}</span>
+      <span style="color:var(--muted)">${esc(stTxt)}</span>
+    </div>`;
+  }).join('') || '<p class="ph">Keine Reviewer.</p>';
+  const who=[q.inquirer_name,q.inquirer_email].filter(Boolean).join(' · ');
+  const canAct = !!myReview && !answered;
+  $('admin-body').innerHTML = `
+    <p style="margin:0 0 14px"><span class="back" onclick="renderAdminInquiries()">← Zurück zur Anfragen-Liste</span></p>
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap">
+        <div>
+          <h2 style="font-size:20px;margin:0 0 6px">${esc(q.subject||'Anfrage')}</h2>
+          <p class="ph" style="margin:0">Von ${esc(q.inquirer_name||'—')} · <a href="mailto:${esc(q.inquirer_email||'')}">${esc(q.inquirer_email||'')}</a> · ${esc(fmtDate(q.created_at))}</p>
+        </div>
+        <div>${inqBadge(q.status)}</div>
+      </div>
+      ${answered?`<p style="margin:14px 0 0;padding:10px 14px;background:var(--gl);color:var(--gm);border-radius:var(--r);font-size:14px;font-weight:600">✓ Beantwortet am ${esc(fmtDate(q.answered_at))}${q.answered_by?` von ${esc(q.answered_by)}`:''}</p>`:''}
+    </div>
+    <div class="panel">
+      <h2 style="font-size:18px">Die Frage</h2>
+      <div style="white-space:pre-wrap;font-size:14px;line-height:1.6;border:1px solid var(--border);border-radius:var(--r);padding:14px;background:var(--sand)">${esc(q.question||'(keine Frage)')}</div>
+    </div>
+    <div class="panel">
+      <h2 style="font-size:18px">Antwort-Entwurf</h2>
+      ${answered
+        ? `<div style="white-space:pre-wrap;font-size:14px;line-height:1.6;border:1px solid var(--border);border-radius:var(--r);padding:14px;background:var(--sand)">${esc(draft||'(kein Entwurf)')}</div>`
+        : `<p class="ph">Der Verfasser des Entwurfs gilt automatisch als visiert; die anderen müssen visieren.</p>
+           <textarea id="inq-draft" rows="10">${esc(draft)}</textarea>
+           <button class="btn btn-p" style="margin-top:12px" onclick="inquirySaveDraft('${esc(q.id)}')">Entwurf speichern</button>`}
+    </div>
+    ${changeBlocks?`<div><h2 style="font-size:18px;margin:0 0 12px">Änderungsvorschläge</h2>${changeBlocks}</div>`:''}
+    <div class="panel">
+      <h2 style="font-size:18px">Reviewer</h2>
+      ${legend}
+    </div>
+    ${canAct?`<div class="panel">
+      <h2 style="font-size:18px">Deine Visierung</h2>
+      <p class="ph">Dein Status: ${myReview.status==='visiert'?'visiert ✓':(myReview.status==='aenderung'?'Änderung beantragt':'offen')}</p>
+      <button class="btn btn-p" onclick="inquiryVisieren('${esc(q.id)}')">Visieren ✓</button>
+      <button class="btn btn-o" style="margin-left:8px" onclick="inquiryToggleChange()">Änderung beantragen</button>
+      <div id="inq-change-box" class="hidden" style="margin-top:16px">
+        <label style="display:block;font-size:12.5px;font-weight:600;color:var(--soft);margin-bottom:5px">Bearbeiteter Antworttext (Volltext)</label>
+        <textarea id="inq-proposed" rows="10">${esc(draft)}</textarea>
+        <label style="display:block;font-size:12.5px;font-weight:600;color:var(--soft);margin:12px 0 5px">Kommentar (optional)</label>
+        <textarea id="inq-comment" rows="2" placeholder="Begründung der Änderung…"></textarea>
+        <button class="btn btn-a" style="margin-top:12px" onclick="inquiryAenderung('${esc(q.id)}')">Änderung beantragen</button>
+      </div>
+    </div>`:(answered?'':'<div class="panel"><p class="ph" style="margin:0">Du bist für diese Anfrage nicht als Reviewer erfasst.</p></div>')}
+    ${answered?'':`<div class="panel" style="border-color:var(--accent)">
+      <h2 style="font-size:18px">Antwort an Fragesteller senden</h2>
+      <p class="ph">Sendet den aktuellen Antwort-Entwurf per E-Mail an ${esc(q.inquirer_email||'den Fragesteller')}. ${q.status!=='visiert'?'<b style="color:var(--accent)">Achtung: noch nicht vollständig visiert.</b>':''}</p>
+      <button class="btn btn-a" onclick="inquirySend('${esc(q.id)}','${esc(q.status||'')}')">Antwort senden →</button>
+    </div>`}`;
+}
+function inquiryToggleChange(){ const b=$('inq-change-box'); if(b){ b.classList.toggle('hidden'); if(!b.classList.contains('hidden')){ const ta=$('inq-proposed'); if(ta) ta.focus(); } } }
+async function inquirySaveDraft(id){
+  const draft=($('inq-draft')&&$('inq-draft').value)||'';
+  try{ await rpc('board_inquiry_set_draft',{p_token:token(),p_id:id,p_draft:draft}); toast('Entwurf gespeichert ✓'); renderInquiryReview(id); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
+}
+async function inquiryVisieren(id){
+  try{ await rpc('board_inquiry_review',{p_token:token(),p_id:id,p_decision:'visiert',p_proposed_text:null,p_comment:null}); toast('Visiert ✓'); renderInquiryReview(id); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
+}
+async function inquiryAenderung(id){
+  const proposed=($('inq-proposed')&&$('inq-proposed').value)||'';
+  const comment=($('inq-comment')&&$('inq-comment').value.trim())||'';
+  if(!proposed.trim()){ toast('Bitte den bearbeiteten Antworttext angeben','err'); return; }
+  try{ await rpc('board_inquiry_review',{p_token:token(),p_id:id,p_decision:'aenderung',p_proposed_text:proposed,p_comment:comment||null}); toast('Änderung beantragt ✓'); renderInquiryReview(id); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
+}
+async function inquirySend(id,status){
+  if(status!=='visiert'){ if(!confirm('Die Antwort ist noch nicht vollständig visiert – trotzdem an den Fragesteller senden?')) return; }
+  else { if(!confirm('Antwort jetzt per E-Mail an den Fragesteller senden?')) return; }
+  try{
+    const r=await fetch(SUPA_URL+'/functions/v1/inquiry-answer',{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),id})});
+    let d={}; try{d=await r.json();}catch(e){}
+    if(!r.ok||d.error){ toast(d.error||('Fehler '+r.status),'err'); return; }
+    toast('Antwort an '+(d.to||'Fragesteller')+' gesendet ✓');
+    renderInquiryReview(id);
+  }catch(e){ toast('Sende-Fehler: '+(e.message||e),'err'); }
 }
 
 /* ---------- VOLLTEXTSUCHE (Mitglieder) ---------- */
