@@ -472,7 +472,7 @@ function renderHome(){
   <section id="ueber" class="about"><div class="wrap">
     <div class="eyebrow">Über die SVSS</div><h2 class="sec-title">${esc(about.title||'Unser Zweck & unsere Ziele')}</h2>
     <p class="lead">${esc(about.text||'')}</p>
-    ${board.length?`<div class="vorstand-grid">${board.map(v=>`<div class="vb"><div class="av">${v.photo?`<img src="${esc(v.photo)}" alt="">`:esc(initials(v.name))}</div><b>${esc(v.name)}</b><span>${esc(v.function||'')}</span></div>`).join('')}</div>`:''}
+    ${board.length?`<div class="vorstand-grid" id="vorstand-grid">${board.map(v=>`<div class="vb"><div class="av">${v.photo?`<img src="${esc(v.photo)}" alt="">`:esc(initials(v.name))}</div><b>${esc(v.name)}</b><span>${esc(v.function||'')}</span></div>`).join('')}</div>`:''}
   </div></section>
 
   ${renderMembersSection()}
@@ -481,7 +481,19 @@ function renderHome(){
     <div class="eyebrow">Aktuelles</div><h2 class="sec-title">News & Veranstaltungen</h2>
     <div class="news">${news.map(n=>`<div class="nc">${n.image?`<img class="nc-img" src="${esc(n.image)}" alt="">`:''}<div class="meta"><span class="date">${esc(n.date||'')}</span><span class="tag">${esc(n.tag||'')}</span></div><h3>${esc(n.title||'')}</h3><div class="rich">${renderRich(n.text||'')}</div>${(n.pdf||(n.link&&/^https?:\/\//i.test(n.link)))?`<div class="nc-links">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener">PDF ansehen</a>`:''}${n.link&&/^https?:\/\//i.test(n.link)?`<a href="${esc(n.link)}" target="_blank" rel="noopener">Zum Bericht ↗</a>`:''}</div>`:''}</div>`).join('')||'<p class="lead">Aktuell keine Meldungen.</p>'}</div>
   </div></section>` + footer();
+  requestAnimationFrame(layoutBoardGrid);
 }
+// Spaltenzahl so wählen, dass nie genau EINE Person allein in der letzten Zeile steht.
+function layoutBoardGrid(){
+  const g=document.getElementById('vorstand-grid'); if(!g) return;
+  const n=g.children.length; if(!n) return;
+  if(window.innerWidth<=560){ g.style.gridTemplateColumns='1fr'; return; } // Mobile: normale Stapelung
+  const w=g.clientWidth||g.offsetWidth||900;
+  let cols=Math.max(1, Math.min(n, Math.floor((w+24)/(175+24)))); // wie viele Karten à ~175px + 24px gap passen
+  while(cols>1 && (n % cols)===1) cols--;  // Einzel-Waise vermeiden → mind. 2 in letzter Zeile
+  g.style.gridTemplateColumns='repeat('+cols+',minmax(0,1fr))';
+}
+if(!window.__boardGridResize){ window.__boardGridResize=true; let _t; window.addEventListener('resize',()=>{ clearTimeout(_t); _t=setTimeout(layoutBoardGrid,120); }); }
 function renderMembersSection(){
   const firms = COMPANIES.filter(c=>c.member_type!=='privat');
   const privs = COMPANIES.filter(c=>c.member_type==='privat');
