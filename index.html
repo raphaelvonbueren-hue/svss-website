@@ -715,13 +715,16 @@ async function changePw(){
 
 /* ---------- BOARD ADMIN ---------- */
 let ADMIN={companies:[],accounts:[]}, adminTab='members';
+let PROTO_PENDING=0; // Anzahl Protokolle, bei denen die eigene Visierung offen ist (Tab-Zähler)
 async function renderAdmin(){
+  const protoLabel = 'Visierung'+(PROTO_PENDING>0?(' ('+PROTO_PENDING+')'):'');
   $('app').innerHTML = nav() + `<section><div class="wrap">
     <div class="eyebrow">Vorstand</div><h2 class="sec-title">Verwaltung</h2>
     <div class="tabs" style="margin-top:24px">
       <button class="tab ${adminTab==='members'?'active':''}" onclick="adminTab='members';renderAdmin()">Mitglieder</button>
       <button class="tab ${adminTab==='content'?'active':''}" onclick="adminTab='content';renderAdmin()">Inhalte</button>
       <button class="tab ${adminTab==='news'?'active':''}" onclick="adminTab='news';renderAdmin()">News</button>
+      <button class="tab ${adminTab==='protocols'?'active':''}" onclick="adminTab='protocols';renderAdmin()">${protoLabel}</button>
       <button class="tab ${adminTab==='applications'?'active':''}" onclick="adminTab='applications';renderAdmin()">Bewerbungen</button>
       <button class="tab ${adminTab==='fees'?'active':''}" onclick="adminTab='fees';renderAdmin()">Beiträge</button>
     </div>
@@ -730,6 +733,7 @@ async function renderAdmin(){
   if(adminTab==='applications'){ renderAdminApplications(); return; }
   if(adminTab==='fees'){ renderAdminFees(); return; }
   if(adminTab==='news'){ renderAdminNews(); return; }
+  if(adminTab==='protocols'){ renderAdminProtocols(); return; }
   try{ ADMIN=await rpc('board_list',{p_token:token()}); }catch(e){ $('admin-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
   adminTab==='content'?renderAdminContent():renderAdminMembers();
 }
@@ -1281,8 +1285,157 @@ async function addDocFile(cat){
     let contentText='';
     if(file.type==='application/pdf'){ toast('Text wird indexiert… (kann bei grossen PDFs etwas dauern)'); contentText=await extractPdfText(file); }
     await rpc('board_doc_add',{p_token:token(),p_category:cat,p_title:title||file.name,p_file_url:d.url,p_is_link:false,p_file_name:file.name,p_file_size:file.size||null,p_content_text:contentText||null});
-    toast('Datei hochgeladen ✓'); renderDownloads();
+    toast('Datei hochgeladen ✓');
+    // GV-Protokoll: Visierungs-Workflow auslösen (nur PDFs mit extrahiertem Text)
+    if(cat==='gv-protokolle' && contentText){
+      const docTitle=title||file.name||'Protokoll';
+      try{
+        await rpc('board_protocol_create',{p_token:token(),p_title:docTitle,p_file_url:d.url,p_base_text:contentText,p_document_id:null});
+        try{ await fetch(SUPA_URL+'/functions/v1/protocol-notify',{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),title:docTitle})}); }
+        catch(e){ toast('Benachrichtigung fehlgeschlagen: '+(e.message||e),'err'); }
+        toast('Protokoll zur Visierung an den Vorstand gesendet ✓');
+      }catch(e){ toast('Visierung konnte nicht gestartet werden: '+(e.message||e),'err'); }
+    }
+    renderDownloads();
   }catch(e){ toast('Upload-Fehler: '+(e.message||e)+' — alternativ als Link hinzufügen','err'); }
+}
+
+/* ---------- PROTOKOLL-VISIERUNG (Vorstand) ---------- */
+function _esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function _tok(t){return (t||'').split(/(\s+)/);} // behält Whitespace
+function wordDiffHtml(base, proposed, color){
+  const a=_tok(base), b=_tok(proposed), n=a.length, m=b.length;
+  const dp=Array.from({length:n+1},()=>new Array(m+1).fill(0));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)
+    dp[i][j]= a[i]===b[j] ? dp[i+1][j+1]+1 : Math.max(dp[i+1][j],dp[i][j+1]);
+  let i=0,j=0,out='';
+  const ins=s=>`<span style="color:${color};text-decoration:underline;background:${color}1a">${_esc(s)}</span>`;
+  const del=s=>`<span style="color:${color};text-decoration:line-through;opacity:.8">${_esc(s)}</span>`;
+  while(i<n&&j<m){
+    if(a[i]===b[j]){ out+=_esc(a[i]); i++; j++; }
+    else if(dp[i+1][j]>=dp[i][j+1]){ out+=del(a[i]); i++; }
+    else { out+=ins(b[j]); j++; }
+  }
+  while(i<n){ out+=del(a[i++]); }
+  while(j<m){ out+=ins(b[j++]); }
+  return out;
+}
+const PROTO_STATUS={ offen:['Offen','background:var(--sand-d);color:var(--soft)'],
+  aenderungen:['Änderungen beantragt','background:#fbe7df;color:var(--accent)'],
+  visiert:['Visiert','background:var(--gl);color:var(--gm)'] };
+function protoBadge(st){ const s=PROTO_STATUS[st]||PROTO_STATUS.offen; return `<span class="badge" style="${s[1]}">${esc(s[0])}</span>`; }
+async function renderAdminProtocols(){
+  let list=[];
+  try{ list=await rpc('board_protocols_list',{p_token:token()}); if(!Array.isArray(list)) list=[]; }
+  catch(e){ $('admin-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
+  PROTO_PENDING = list.filter(p=>p.my_status && p.my_status!=='visiert').length;
+  // Tab-Label aktualisieren (ohne Neu-Render): Zähler im Tab-Button setzen
+  const tabBtns=[...document.querySelectorAll('.tabs .tab')].filter(b=>/^Visierung/.test(b.textContent));
+  if(tabBtns[0]) tabBtns[0].textContent='Visierung'+(PROTO_PENDING>0?(' ('+PROTO_PENDING+')'):'');
+  const fmtDate=d=>d?new Date(d).toLocaleDateString('de-CH'):'';
+  const rows = list.map(p=>{
+    const mine = p.my_status && p.my_status!=='visiert';
+    return `<tr style="cursor:pointer" onclick="renderProtocolReview('${esc(p.id)}')">
+      <td><b>${esc(p.title||'Protokoll')}</b>${mine?'<br><span class="badge" style="background:#fbe7df;color:var(--accent)">Deine Visierung ausstehend</span>':''}</td>
+      <td>${esc(fmtDate(p.created_at))}</td>
+      <td>${protoBadge(p.status)}</td>
+      <td>${esc((p.n_visiert!=null?p.n_visiert:0))}/${esc((p.n_total!=null?p.n_total:0))} visiert${p.n_aenderung?` · ${esc(p.n_aenderung)} Änderung${p.n_aenderung===1?'':'en'}`:''}</td>
+      <td class="r" onclick="event.stopPropagation()">
+        <button class="btn-sm btn-o" onclick="renderProtocolReview('${esc(p.id)}')">Öffnen</button>
+        <button class="btn-sm btn-a" style="margin-left:6px" onclick="delProtocol('${esc(p.id)}')">Löschen</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="color:var(--muted)">Noch keine Protokolle zur Visierung. Lade ein GV-Protokoll unter «Downloads» hoch.</td></tr>';
+  $('admin-body').innerHTML = `
+    <div class="panel">
+      <h2 style="font-size:18px">Protokoll-Visierung</h2>
+      <p class="ph">Hochgeladene GV-Protokolle. Jedes Vorstandsmitglied visiert das Protokoll oder beantragt eine Änderung. Änderungen werden farbig pro Person dargestellt.</p>
+    </div>
+    <div class="panel" style="padding:0;overflow:hidden">
+      <table><thead><tr><th>Protokoll</th><th>Datum</th><th>Status</th><th>Fortschritt</th><th class="r">Aktion</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+}
+async function delProtocol(id){
+  if(!confirm('Dieses Protokoll und alle Visierungs-Aufgaben wirklich löschen?')) return;
+  try{ await rpc('board_protocol_delete',{p_token:token(),p_id:id}); toast('Gelöscht ✓'); renderAdminProtocols(); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
+}
+async function renderProtocolReview(id){
+  adminTab='protocols';
+  $('admin-body').innerHTML='<p class="lead">Lade…</p>';
+  let r;
+  try{ r=await rpc('board_protocol_get',{p_token:token(),p_id:id}); }
+  catch(e){ $('admin-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
+  r=r||{};
+  const p=r.protocol||{}, me=r.me||'', reviews=Array.isArray(r.reviews)?r.reviews:[];
+  const fmtDate=d=>d?new Date(d).toLocaleString('de-CH'):'';
+  const myReview=reviews.find(x=>x.username===me)||null;
+  const isUploader = p.uploaded_by===me;
+  // Änderungsblöcke (farbig, Wort-Diff) pro Review mit proposed_text
+  const changeBlocks = reviews.filter(x=>x.proposed_text).map(x=>`
+    <div class="panel" style="border-left:4px solid ${esc(x.color)};margin-bottom:14px">
+      <div style="font-weight:700;color:${esc(x.color)};margin-bottom:8px">Änderungsvorschlag von ${esc(x.name||x.username)}</div>
+      <div style="white-space:pre-wrap;font-size:14px;line-height:1.6">${wordDiffHtml(p.base_text||'', x.proposed_text||'', x.color)}</div>
+      ${x.comment?`<p class="ph" style="margin:12px 0 0">Kommentar: ${esc(x.comment)}</p>`:''}
+    </div>`).join('');
+  // Legende
+  const legend = reviews.map(x=>{
+    const stTxt = x.status==='visiert'?'visiert ✓' : (x.status==='aenderung'?'Änderung beantragt' : 'offen');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px">
+      <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:${esc(x.color)};flex:none"></span>
+      <span style="flex:1">${esc(x.name||x.username)}${x.username===me?' <span style="color:var(--muted)">(du)</span>':''}</span>
+      <span style="color:var(--muted)">${esc(stTxt)}</span>
+    </div>`;
+  }).join('') || '<p class="ph">Keine Reviewer.</p>';
+  const canAct = !!myReview;
+  const reUpload = isUploader && myReview && myReview.status==='pending';
+  $('admin-body').innerHTML = `
+    <p style="margin:0 0 14px"><span class="back" onclick="renderAdminProtocols()">← Zurück zur Visierungs-Liste</span></p>
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap">
+        <div>
+          <h2 style="font-size:20px;margin:0 0 6px">${esc(p.title||'Protokoll')}</h2>
+          <p class="ph" style="margin:0">Hochgeladen von ${esc(p.uploaded_by||'—')} · ${esc(fmtDate(p.created_at))}</p>
+        </div>
+        <div>${protoBadge(p.status)}</div>
+      </div>
+      ${p.file_url?`<p style="margin:14px 0 0"><a href="${esc(p.file_url)}" target="_blank" rel="noopener" class="btn-sm btn-o" style="text-decoration:none">PDF ansehen ↗</a></p>`:''}
+      ${reUpload?`<p style="margin:14px 0 0;padding:10px 14px;background:#fbe7df;color:var(--accent);border-radius:var(--r);font-size:14px;font-weight:600">Es wurden Änderungen beantragt – bitte erneut visieren.</p>`:''}
+    </div>
+    <div class="panel">
+      <h2 style="font-size:18px">Protokolltext</h2>
+      <div style="white-space:pre-wrap;font-size:14px;line-height:1.6;max-height:340px;overflow:auto;border:1px solid var(--border);border-radius:var(--r);padding:14px;background:var(--sand)">${esc(p.base_text||'(kein Text)')}</div>
+    </div>
+    ${changeBlocks?`<div><h2 style="font-size:18px;margin:0 0 12px">Änderungsvorschläge</h2>${changeBlocks}</div>`:''}
+    <div class="panel">
+      <h2 style="font-size:18px">Reviewer</h2>
+      ${legend}
+    </div>
+    ${canAct?`<div class="panel">
+      <h2 style="font-size:18px">Deine Visierung</h2>
+      <p class="ph">Dein Status: ${myReview.status==='visiert'?'visiert ✓':(myReview.status==='aenderung'?'Änderung beantragt':'offen')}</p>
+      <button class="btn btn-p" onclick="protocolVisieren('${esc(p.id)}')">Visieren ✓</button>
+      <button class="btn btn-o" style="margin-left:8px" onclick="protocolToggleChange()">Änderung beantragen</button>
+      <div id="proto-change-box" class="hidden" style="margin-top:16px">
+        <label style="display:block;font-size:12.5px;font-weight:600;color:var(--soft);margin-bottom:5px">Bearbeiteter Protokolltext (Volltext)</label>
+        <textarea id="proto-proposed" rows="12">${esc(p.base_text||'')}</textarea>
+        <label style="display:block;font-size:12.5px;font-weight:600;color:var(--soft);margin:12px 0 5px">Kommentar (optional)</label>
+        <textarea id="proto-comment" rows="2" placeholder="Begründung der Änderung…"></textarea>
+        <button class="btn btn-a" style="margin-top:12px" onclick="protocolAenderung('${esc(p.id)}')">Änderung beantragen</button>
+      </div>
+    </div>`:'<div class="panel"><p class="ph" style="margin:0">Du bist für dieses Protokoll nicht als Reviewer erfasst.</p></div>'}`;
+}
+function protocolToggleChange(){ const b=$('proto-change-box'); if(b){ b.classList.toggle('hidden'); if(!b.classList.contains('hidden')){ const ta=$('proto-proposed'); if(ta) ta.focus(); } } }
+async function protocolVisieren(id){
+  try{ await rpc('board_protocol_review',{p_token:token(),p_id:id,p_decision:'visiert',p_proposed_text:null,p_comment:null}); toast('Visiert ✓'); renderAdminProtocols(); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
+}
+async function protocolAenderung(id){
+  const proposed=($('proto-proposed')&&$('proto-proposed').value)||'';
+  const comment=($('proto-comment')&&$('proto-comment').value.trim())||'';
+  if(!proposed.trim()){ toast('Bitte den bearbeiteten Protokolltext angeben','err'); return; }
+  try{ await rpc('board_protocol_review',{p_token:token(),p_id:id,p_decision:'aenderung',p_proposed_text:proposed,p_comment:comment||null}); toast('Änderung beantragt ✓'); renderAdminProtocols(); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
 }
 
 /* ---------- VOLLTEXTSUCHE (Mitglieder) ---------- */
