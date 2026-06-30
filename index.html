@@ -218,12 +218,16 @@
   #search-results b{background:var(--gp);color:var(--gd);font-weight:700;border-radius:3px;padding:0 2px}
   .search-empty{color:var(--muted);font-size:15px;margin-top:30px}
 
+  .member-toggle{display:none}
   @media(max-width:820px){
     .nav-links{display:none}.nav-burger{display:block}
     .nav-links.open{display:flex;position:absolute;top:68px;left:0;right:0;flex-direction:column;background:var(--cream);
       padding:18px 24px;gap:16px;border-bottom:1px solid var(--border)}
     .stats-in{grid-template-columns:repeat(2,1fr)}
     .sub-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}
+    .member-toggle{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:11px 20px;border-radius:30px;background:var(--gm);color:#fff;font-weight:600;font-size:14px}
+    .member-list{display:none}
+    .member-list.open{display:block}
   }
 </style>
 </head>
@@ -510,6 +514,12 @@ function layoutBoardGrid(){
   g.style.gridTemplateColumns='repeat('+cols+',minmax(0,1fr))';
 }
 if(!window.__boardGridResize){ window.__boardGridResize=true; let _t; window.addEventListener('resize',()=>{ clearTimeout(_t); _t=setTimeout(layoutBoardGrid,120); }); }
+function toggleMembers(){
+  const el=document.getElementById('member-list'), b=document.getElementById('member-toggle-btn');
+  if(!el) return;
+  const open=el.classList.toggle('open');
+  if(b){ const n=b.getAttribute('data-n')||''; b.textContent = open ? 'Mitglieder ausblenden ▴' : ('Mitglieder anzeigen ('+n+') ▾'); }
+}
 function renderMembersSection(){
   const coll=new Intl.Collator('de',{sensitivity:'base'});
   const dir=SORT_DIR==='desc'?-1:1;
@@ -524,10 +534,13 @@ function renderMembersSection(){
   return `<section id="mitglieder"><div class="wrap">
     <div class="eyebrow">Mitglieder</div><h2 class="sec-title">${firms.length} Fachfirmen im Verband${sortBtn}</h2>
     <p class="lead">Geprüfte Fachfirmen für Planung, Bau, Inspektion und Unterhalt sicherer Spielplätze.</p>
+    <button class="member-toggle" id="member-toggle-btn" data-n="${firms.length+privs.length}" onclick="toggleMembers()">Mitglieder anzeigen (${firms.length+privs.length}) ▾</button>
+    <div class="member-list" id="member-list">
     <div class="grid">${firms.map(firmCard).join('')||'<p class="lead">Noch keine Mitglieder erfasst.</p>'}</div>
     ${privs.length?`<div style="margin-top:46px"><h3 style="font-family:'DM Serif Display',serif;font-size:24px;margin:0 0 6px">Privatmitglieder</h3>
       <p class="lead" style="margin-top:0;margin-bottom:18px">${privs.length} Privatmitglied${privs.length===1?'':'er'} unterstützen den Verband.</p>
       <div class="tags" style="gap:8px">${privChips}</div></div>`:''}
+    </div>
   </div></section>`;
 }
 function firmCard(c){
