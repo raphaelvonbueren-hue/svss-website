@@ -727,11 +727,21 @@ async function preloadTr(strings){
   if(LANG==='de') return;
   const uniq=[...new Set((strings||[]).filter(s=>s&&String(s).trim()))];
   if(!uniq.length) return;
+  let hashes;
+  try{ hashes=await Promise.all(uniq.map(_sha256hex)); }catch(e){ return; }
+  // 1) Cache (Supabase) lesen
   try{
-    const hashes=await Promise.all(uniq.map(_sha256hex));
-    const map=await rpc('translations_get',{p_lang:LANG,p_hashes:hashes});
-    uniq.forEach((s,i)=>{ const v=map&&map[hashes[i]]; if(v) TRC[s]=v; });
+    const map=await rpc('translations_get',{p_lang:LANG,p_hashes:hashes})||{};
+    uniq.forEach((s,i)=>{ const v=map[hashes[i]]; if(v) TRC[s]=v; });
   }catch(e){}
+  // 2) Fehlende per Vercel-KI generieren (wird dort in den Cache geschrieben)
+  const missing=uniq.filter(s=>TRC[s]==null);
+  if(missing.length && TRANSLATE_API){
+    try{
+      const r=await fetch(TRANSLATE_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target:LANG,texts:missing})});
+      if(r.ok){ const d=await r.json(); if(d&&Array.isArray(d.translations)) missing.forEach((s,i)=>{ if(typeof d.translations[i]==='string') TRC[s]=d.translations[i]; }); }
+    }catch(e){}
+  }
 }
 function tr(s){ if(LANG==='de'||!s) return s; return (TRC[s]!=null?TRC[s]:s); }
 
@@ -740,6 +750,8 @@ const FN_INVITE_URL = SUPA_URL + '/functions/v1/send-invites';
 const FN_UPLOAD_URL = SUPA_URL + '/functions/v1/upload-media';
 const FN_IMPERSONATE_URL = SUPA_URL + '/functions/v1/impersonate';
 const ADMIN_TOKEN_KEY = 'svss_admin_token';
+// KI-Übersetzung über Vercel (AI Gateway). URL = Production-URL des Vercel-Projekts svss-website-2.
+const TRANSLATE_API = 'https://svss-website-2.vercel.app/api/translate';
 // Globaler Tag-Katalog (Tätigkeitsbereiche rund um Spielplätze) — auswählbar im Mitglied-Portal
 const TAG_CATALOG = [
   'Spielgeräte (Herstellung)','Verkauf & Handel','Planung & Gestaltung','Montage & Aufbau',
@@ -891,7 +903,7 @@ async function route(){
     $('config-warn').innerHTML='⚙ Noch nicht konfiguriert: trage oben im Code <b>SUPA_URL</b> und <b>SUPA_KEY</b> deines neuen Supabase-Projekts ein.';
   }
   try{
-    if(h.startsWith('#/firma/')){ await ensurePublic(); renderCompany(decodeURIComponent(h.slice(8))); }
+    if(h.startsWith('#/firma/')){ await ensurePublic(); await renderCompany(decodeURIComponent(h.slice(8))); }
     else if(h==='#/konto'){ if(!SESSION){openLogin();location.hash='#/';return;} if(!SESSION.company_slug){location.hash='#/vorstand';return;} renderPortal(); }
     else if(h==='#/vorstand'){ if(!SESSION||!SESSION.is_board){openLogin();location.hash='#/';return;} renderAdmin(); }
     else if(h==='#/downloads'){ if(!SESSION){openLogin();location.hash='#/';return;} await ensurePublic(); renderDownloads(); }
@@ -1040,9 +1052,10 @@ function firmCard(c){
 }
 
 /* ---------- COMPANY SUBPAGE ---------- */
-function renderCompany(slug){
+async function renderCompany(slug){
   const c=COMPANIES.find(x=>x.slug===slug);
   if(!c){ $('app').innerHTML=nav()+`<div class="wrap" style="padding:80px 24px"><span class="back" onclick="location.hash='#/'">${t('company.backShort')}</span><h1 style="margin-top:20px">${t('company.notFound')}</h1></div>`+footer(); return; }
+  await preloadTr([c.description, ...((c.team||[]).map(p=>p.role))]);
   const rows=[[t('company.contactPerson'),c.contact_person],[t('company.address'),[c.street,[c.zip,c.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')],
     [t('company.canton'),c.canton],[t('company.phone'),c.phone],[t('company.email'),c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:''],
     [t('company.website'),c.website?`<a href="${esc(c.website)}" target="_blank" rel="noopener">${esc(c.website.replace(/^https?:\/\//,''))}</a>`:''],
@@ -1057,9 +1070,9 @@ function renderCompany(slug){
     </div>
   </div></div>
   <section><div class="wrap"><div class="sub-grid">
-    <div>${c.description?`<div class="eyebrow">${t('company.aboutFirm')}</div><div class="rich lead" style="max-width:640px">${renderRich(c.description)}</div>`:`<p class="lead">${t('company.noDesc')}</p>`}</div>
+    <div>${c.description?`<div class="eyebrow">${t('company.aboutFirm')}</div><div class="rich lead" style="max-width:640px">${renderRich(tr(c.description))}</div>`:`<p class="lead">${t('company.noDesc')}</p>`}</div>
     <div><div class="panel" style="margin:0">${rows.map(r=>`<div class="info-row"><span class="k">${esc(r[0])}</span><span>${r[1]}</span></div>`).join('')||`<p style="color:var(--muted)">${t('company.noContact')}</p>`}</div></div>
-  </div></div></section>${(Array.isArray(c.team)&&c.team.length)?`<section class="about"><div class="wrap"><div class="eyebrow">${t('company.team')}</div><h2 class="sec-title" style="margin-bottom:8px">${t('company.teamTitle')}</h2><div class="team-pub">${c.team.map(p=>{const nm=[p.first,p.last].filter(Boolean).join(' ').trim();if(!nm&&!p.role)return '';return `<div class="team-card"><b>${esc(nm||'—')}</b>${p.role?`<span class="role">${esc(p.role)}</span>`:''}${p.email?`<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>`:''}</div>`;}).join('')}</div></div></section>`:''}${(c.gallery&&c.gallery.length)?`<section${(Array.isArray(c.team)&&c.team.length)?'':' class="about"'}><div class="wrap"><div class="eyebrow">${t('company.references')}</div><div class="gal-pub">${c.gallery.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join('')}</div></div></section>`:''}` + footer();
+  </div></div></section>${(Array.isArray(c.team)&&c.team.length)?`<section class="about"><div class="wrap"><div class="eyebrow">${t('company.team')}</div><h2 class="sec-title" style="margin-bottom:8px">${t('company.teamTitle')}</h2><div class="team-pub">${c.team.map(p=>{const nm=[p.first,p.last].filter(Boolean).join(' ').trim();if(!nm&&!p.role)return '';return `<div class="team-card"><b>${esc(nm||'—')}</b>${p.role?`<span class="role">${esc(tr(p.role))}</span>`:''}${p.email?`<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>`:''}</div>`;}).join('')}</div></div></section>`:''}${(c.gallery&&c.gallery.length)?`<section${(Array.isArray(c.team)&&c.team.length)?'':' class="about"'}><div class="wrap"><div class="eyebrow">${t('company.references')}</div><div class="gal-pub">${c.gallery.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join('')}</div></div></section>`:''}` + footer();
 }
 
 /* ---------- MEMBER PORTAL ---------- */
@@ -2058,6 +2071,7 @@ async function renderCourses(){
   let list=[];
   try{ list=await rpc('courses_list',{}); if(!Array.isArray(list)) list=[]; }
   catch(e){ $('crs-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
+  await preloadTr([...list.map(c=>c.title), ...list.map(c=>c.description).filter(Boolean)]);
   const isBoard=!!(SESSION&&SESSION.is_board);
   const today=new Date().toISOString().slice(0,10);
   const cards=list.map(c=>{
@@ -2068,9 +2082,9 @@ async function renderCourses(){
         <div style="margin-top:6px">${past?`<span class="badge" style="background:var(--sand-d);color:var(--soft)">${t('courses.past')}</span>`:`<span class="badge active">${t('courses.regOpen')}</span>`}</div>
       </div>
       <div style="flex:1;min-width:240px">
-        <h3 style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:17px;margin:0 0 4px">${esc(c.title)}</h3>
+        <h3 style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:17px;margin:0 0 4px">${esc(tr(c.title))}</h3>
         <div style="color:var(--muted);font-size:14px">${esc([c.location,c.canton].filter(Boolean).join(' · '))}${c.price?' · '+esc(c.price):''}</div>
-        ${c.description?`<p style="font-size:14px;margin:8px 0 0">${esc(c.description)}</p>`:''}
+        ${c.description?`<p style="font-size:14px;margin:8px 0 0">${esc(tr(c.description))}</p>`:''}
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           ${c.link?`<a href="${esc(c.link)}" target="_blank" rel="noopener" class="btn btn-p btn-sm" style="text-decoration:none">${t('courses.details')}</a>`:''}
           ${isBoard?`<button class="btn-sm btn-o" onclick="editCourse('${esc(c.id)}')">Bearbeiten</button><button class="btn-sm btn-a" onclick="delCourse('${esc(c.id)}')">Löschen</button>`:''}

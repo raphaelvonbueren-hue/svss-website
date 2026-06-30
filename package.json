@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "commonjs",
+  "description": "SVSS richis.ch — statische Seite (GitHub Pages) + Vercel-Function /api/translate für KI-Übersetzung"
+}
