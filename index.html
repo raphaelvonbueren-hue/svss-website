@@ -198,6 +198,26 @@
   .quill-wrap .ql-editor.ql-blank::before{color:var(--muted);font-style:normal}
   .quill-hint{font-size:12.5px;color:var(--muted);margin:6px 0 0}
 
+  /* SUCHE */
+  .search-bar{display:flex;gap:10px;margin-top:30px;flex-wrap:wrap}
+  .search-bar input{flex:1;min-width:200px}
+  .search-bar .btn{flex:none}
+  .search-group{margin-top:34px}
+  .search-group > h3{font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:22px;margin:0 0 14px;
+    display:flex;align-items:baseline;gap:10px}
+  .search-group > h3 .cnt{font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;color:var(--gm);
+    background:var(--gl);border-radius:20px;padding:2px 11px}
+  .search-hit{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:16px 20px;margin-bottom:12px;
+    transition:var(--t)}
+  .search-hit:hover{border-color:var(--gp);box-shadow:var(--sh-s)}
+  .search-hit .ht-title{font-weight:700;font-size:15.5px;color:var(--text)}
+  .search-hit a.ht-title{color:var(--gm);cursor:pointer}
+  .search-hit a.ht-title:hover{color:var(--gd);text-decoration:underline}
+  .search-hit .ht-meta{color:var(--muted);font-size:13px;margin-top:2px}
+  .search-hit .ht-snippet{color:var(--soft);font-size:14px;margin-top:7px;line-height:1.55}
+  #search-results b{background:var(--gp);color:var(--gd);font-weight:700;border-radius:3px;padding:0 2px}
+  .search-empty{color:var(--muted);font-size:15px;margin-top:30px}
+
   @media(max-width:820px){
     .nav-links{display:none}.nav-burger{display:block}
     .nav-links.open{display:flex;position:absolute;top:68px;left:0;right:0;flex-direction:column;background:var(--cream);
@@ -381,6 +401,7 @@ async function route(){
     else if(h==='#/konto'){ if(!SESSION){openLogin();location.hash='#/';return;} if(!SESSION.company_slug){location.hash='#/vorstand';return;} renderPortal(); }
     else if(h==='#/vorstand'){ if(!SESSION||!SESSION.is_board){openLogin();location.hash='#/';return;} renderAdmin(); }
     else if(h==='#/downloads'){ if(!SESSION){openLogin();location.hash='#/';return;} await ensurePublic(); renderDownloads(); }
+    else if(h==='#/suche'){ if(!SESSION){openLogin();location.hash='#/';return;} await ensurePublic(); renderSearch(); }
     else if(h==='#/mitglied-werden'){ await ensurePublic(); renderApply(); }
     else { await ensurePublic(); renderHome(); }
   }catch(e){ $('app').innerHTML='<div class="wrap" style="padding:60px 24px"><p>Fehler beim Laden. '+esc(e.message)+'</p></div>'; }
@@ -405,6 +426,7 @@ function nav(){
       <a onclick="goSection('news')">News</a>
       <a onclick="location.hash='#/mitglied-werden'">Mitglied werden</a>
       ${SESSION?`<a onclick="location.hash='#/downloads'">Downloads</a>`:''}
+      ${SESSION?`<a onclick="location.hash='#/suche'">Suche</a>`:''}
       ${acct}
     </nav></div></header>`;
 }
@@ -1256,9 +1278,108 @@ async function addDocFile(cat){
     const r=await fetch(FN_UPLOAD_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),filename:file.name||'datei',content_type:ctype,data_base64:dataB64})});
     let d={}; try{d=await r.json();}catch(e){}
     if(!r.ok||d.error||!d.url){ toast((d.error||('Fehler '+r.status))+' — alternativ als Link hinzufügen','err'); return; }
-    await rpc('board_doc_add',{p_token:token(),p_category:cat,p_title:title||file.name,p_file_url:d.url,p_is_link:false,p_file_name:file.name,p_file_size:file.size||null});
+    let contentText='';
+    if(file.type==='application/pdf'){ toast('Text wird indexiert… (kann bei grossen PDFs etwas dauern)'); contentText=await extractPdfText(file); }
+    await rpc('board_doc_add',{p_token:token(),p_category:cat,p_title:title||file.name,p_file_url:d.url,p_is_link:false,p_file_name:file.name,p_file_size:file.size||null,p_content_text:contentText||null});
     toast('Datei hochgeladen ✓'); renderDownloads();
   }catch(e){ toast('Upload-Fehler: '+(e.message||e)+' — alternativ als Link hinzufügen','err'); }
+}
+
+/* ---------- VOLLTEXTSUCHE (Mitglieder) ---------- */
+// Säubert ts_headline-Snippets: nur <b> erlauben (snippet ist NICHT vorab escaped).
+function searchSnippet(s){
+  if(!s) return '';
+  if(typeof DOMPurify==='undefined') return esc(s);
+  return DOMPurify.sanitize(String(s),{ALLOWED_TAGS:['b'],ALLOWED_ATTR:[]});
+}
+function renderSearch(){
+  $('app').innerHTML = nav() + `<section><div class="wrap">
+    <div class="eyebrow">Mitgliederbereich</div><h2 class="sec-title">Suche</h2>
+    <p class="lead">Durchsuche Mitgliederfirmen, News und Dokumente (inkl. PDF-Inhalt).</p>
+    <div class="search-bar">
+      <input id="search-q" placeholder="Suchbegriff…" autocomplete="off">
+      <button class="btn btn-p" onclick="doSearch()">Suchen</button>
+    </div>
+    <div id="search-results"></div>
+  </div></section>` + footer();
+  const inp=$('search-q');
+  if(inp){ inp.addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); }); setTimeout(()=>inp.focus(),50); }
+}
+async function doSearch(){
+  const inp=$('search-q'); const q=inp?inp.value.trim():'';
+  const out=$('search-results'); if(!out) return;
+  if(!q){ out.innerHTML='<p class="search-empty">Bitte einen Suchbegriff eingeben.</p>'; return; }
+  out.innerHTML='<p class="lead" style="margin-top:24px">Suche läuft…</p>';
+  let r;
+  try{ r=await rpc('search_members',{p_token:token(),p_q:q}); }
+  catch(e){ out.innerHTML='<p class="search-empty">Fehler bei der Suche: '+esc(e.message)+'</p>'; return; }
+  r=r||{};
+  const companies=Array.isArray(r.companies)?r.companies:[];
+  const news=Array.isArray(r.news)?r.news:[];
+  const documents=Array.isArray(r.documents)?r.documents:[];
+  const total=companies.length+news.length+documents.length;
+  if(!total){ out.innerHTML='<p class="search-empty">Keine Treffer für «'+esc(q)+'».</p>'; return; }
+  let html='';
+  if(companies.length){
+    html+='<div class="search-group"><h3>Mitglieder <span class="cnt">'+companies.length+'</span></h3>'+
+      companies.map(c=>{
+        const loc=esc(c.city||'');
+        return '<div class="search-hit">'+
+          '<a class="ht-title" onclick="location.hash=\'#/firma/'+encodeURIComponent(c.slug)+'\'">'+esc(c.name||'')+'</a>'+
+          (loc?'<div class="ht-meta">'+loc+'</div>':'')+
+          (c.snippet?'<div class="ht-snippet">'+searchSnippet(c.snippet)+'</div>':'')+
+        '</div>';
+      }).join('')+'</div>';
+  }
+  if(news.length){
+    html+='<div class="search-group"><h3>News <span class="cnt">'+news.length+'</span></h3>'+
+      news.map(n=>{
+        return '<div class="search-hit">'+
+          '<div class="ht-title">'+esc(n.title||'')+'</div>'+
+          (n.date?'<div class="ht-meta">'+esc(n.date)+'</div>':'')+
+          (n.snippet?'<div class="ht-snippet">'+searchSnippet(n.snippet)+'</div>':'')+
+        '</div>';
+      }).join('')+'</div>';
+  }
+  if(documents.length){
+    html+='<div class="search-group"><h3>Dokumente <span class="cnt">'+documents.length+'</span></h3>'+
+      documents.map(d=>{
+        const cat=docCatLabel(d.category);
+        const link=d.file_url?'<a class="ht-title" href="'+esc(d.file_url)+'" target="_blank" rel="noopener">'+esc(d.title||'Dokument')+(d.is_link?' ↗':'')+'</a>':'<span class="ht-title">'+esc(d.title||'Dokument')+'</span>';
+        return '<div class="search-hit">'+
+          link+
+          (cat?'<div class="ht-meta">'+esc(cat)+'</div>':'')+
+          (d.snippet?'<div class="ht-snippet">'+searchSnippet(d.snippet)+'</div>':'')+
+        '</div>';
+      }).join('')+'</div>';
+  }
+  out.innerHTML=html;
+}
+
+/* ---------- PDF-Textextraktion (pdf.js, dynamisch geladen) ---------- */
+let _pdfjsLib=null;
+async function getPdfjs(){
+  if(_pdfjsLib) return _pdfjsLib;
+  const lib=await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4/build/pdf.min.mjs');
+  lib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@4/build/pdf.worker.min.mjs';
+  _pdfjsLib=lib;
+  return lib;
+}
+// Extrahiert den Text aller Seiten eines PDF. Defensiv: bei Fehler/Nicht-PDF -> ''.
+async function extractPdfText(file){
+  try{
+    if(!file || file.type!=='application/pdf') return '';
+    const lib=await getPdfjs();
+    const buf=await file.arrayBuffer();
+    const pdf=await lib.getDocument({data:new Uint8Array(buf)}).promise;
+    let parts=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p);
+      const tc=await page.getTextContent();
+      parts.push(tc.items.map(it=>it.str).join(' '));
+    }
+    return parts.join('\n').replace(/\s+/g,' ').trim();
+  }catch(e){ return ''; }
 }
 
 /* ---------- MITGLIED WERDEN ---------- */
