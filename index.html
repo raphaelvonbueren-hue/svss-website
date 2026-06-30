@@ -2027,10 +2027,15 @@ async function protocolAenderung(id){
 let COURSE_EDIT=null;
 function fmtCourseDate(s,e){
   if(!s) return t('courses.dateOpen');
-  const localeMap={de:'de-CH',fr:'fr-CH',it:'it-CH',rm:'rm-CH',en:'en-GB'};
-  const loc=localeMap[LANG]||'de-CH';
-  const f=d=>new Date(d+'T00:00:00').toLocaleDateString(loc,{day:'2-digit',month:'short',year:'numeric'});
-  return (e&&e!==s)?(f(s)+' – '+f(e)):f(s);
+  const loc={de:'de-CH',fr:'fr-CH',it:'it-CH',rm:'rm-CH',en:'en-GB'}[LANG]||'de-CH';
+  const ds=new Date(s+'T00:00:00'), de=e?new Date(e+'T00:00:00'):null;
+  const full=d=>d.toLocaleDateString(loc,{day:'2-digit',month:'short',year:'numeric'});
+  if(!de || +de===+ds) return full(ds);
+  if(ds.getFullYear()===de.getFullYear()){
+    if(ds.getMonth()===de.getMonth()) return ds.toLocaleDateString(loc,{day:'2-digit'})+'–'+full(de);
+    return ds.toLocaleDateString(loc,{day:'2-digit',month:'short'})+' – '+full(de);
+  }
+  return full(ds)+' – '+full(de);
 }
 async function renderCourses(){
   $('app').innerHTML = nav() + `<section><div class="wrap" id="crs-body"><p class="lead">${t('common.loading')}</p></div></section>` + footer();
@@ -2042,8 +2047,8 @@ async function renderCourses(){
   const cards=list.map(c=>{
     const past=((c.date_end||c.date_start||'9999')<today);
     return `<div class="panel" style="${past?'opacity:.55;':''}display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
-      <div style="flex:none;min-width:130px">
-        <div style="font-family:'DM Serif Display',serif;font-size:19px;color:var(--gm);line-height:1.2">${esc(fmtCourseDate(c.date_start,c.date_end))}</div>
+      <div style="flex:0 0 150px;max-width:150px">
+        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--gm);line-height:1.25">${esc(fmtCourseDate(c.date_start,c.date_end))}</div>
         <div style="margin-top:6px">${past?`<span class="badge" style="background:var(--sand-d);color:var(--soft)">${t('courses.past')}</span>`:`<span class="badge active">${t('courses.regOpen')}</span>`}</div>
       </div>
       <div style="flex:1;min-width:240px">
