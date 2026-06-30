@@ -272,6 +272,7 @@ let BOARDPERSONS = [];       // Vorstands-Personen (Startseite)
 let MYBOARDPHOTO = '';       // Portrait im eigenen Vorstandsprofil
 let CONTENT = {};            // site_content keyed
 let COMPANIES = [];          // active companies (public)
+let INQ_IMAGES = [];         // Bilder (data-URLs) zur öffentlichen Anfrage
 
 const $ = (id)=>document.getElementById(id);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1240,11 +1241,26 @@ async function renderDownloads(){
   const sections = DOC_CATS.map(([key,label])=>{
     const list = byCat[key]||[];
     const isLinks = key==='links';
-    const items = list.map(d=>`<div class="info-row" style="align-items:center">
+    const items = list.map(d=>{
+      const thumb = d.thumbnail_url || '';
+      const isVideo = (d.kind==='video') || /youtube\.com|youtu\.be|vimeo\.com/i.test(d.file_url||'');
+      if(thumb){
+        return `<div class="dl-thumb-row" style="display:flex;align-items:center;gap:14px;padding:11px 0;border-bottom:1px solid var(--border)">
+          <a href="${esc(d.file_url)}" target="_blank" rel="noopener" style="flex:none;position:relative;display:block;width:140px;border-radius:8px;overflow:hidden;border:1px solid var(--border)">
+            <img src="${esc(thumb)}" alt="" loading="lazy" style="width:140px;height:88px;object-fit:cover;display:block">
+            ${isVideo?`<span style="position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.25)"><span style="width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;font-size:16px">▶</span></span>`:''}
+          </a>
+          <span style="flex:1"><a href="${esc(d.file_url)}" target="_blank" rel="noopener" style="font-weight:600;color:var(--text)">${esc(d.title||d.file_name||'Dokument')}</a>${d.file_size?` <span style="color:var(--muted);font-size:12px">(${(d.file_size/1024/1024).toFixed(2)} MB)</span>`:''}</span>
+          <a href="${esc(d.file_url)}" target="_blank" rel="noopener" class="btn-sm btn-o" style="text-decoration:none">${d.is_link?'Öffnen ↗':'Herunterladen'}</a>
+          ${isBoard?`<button class="btn-sm btn-a" style="margin-left:8px" onclick="delDoc('${esc(d.id)}')">Löschen</button>`:''}
+        </div>`;
+      }
+      return `<div class="info-row" style="align-items:center">
         <span style="flex:1">${esc(d.title||d.file_name||'Dokument')}${d.file_size?` <span style="color:var(--muted);font-size:12px">(${(d.file_size/1024/1024).toFixed(2)} MB)</span>`:''}</span>
         <a href="${esc(d.file_url)}" target="_blank" rel="noopener" class="btn-sm btn-o" style="text-decoration:none">${d.is_link?'Öffnen ↗':'Herunterladen'}</a>
         ${isBoard?`<button class="btn-sm btn-a" style="margin-left:8px" onclick="delDoc('${esc(d.id)}')">Löschen</button>`:''}
-      </div>`).join('') || '<p style="color:var(--muted);font-size:14px;margin:6px 0">Noch keine Einträge.</p>';
+      </div>`;
+    }).join('') || '<p style="color:var(--muted);font-size:14px;margin:6px 0">Noch keine Einträge.</p>';
     const adder = isBoard?`<div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
         <div class="form-grid">
           <div class="full"><label>Titel</label><input id="dl-title-${key}" placeholder="Bezeichnung"></div>
@@ -1269,11 +1285,22 @@ async function delDoc(id){
   catch(e){ toast('Fehler: '+e.message,'err'); }
 }
 async function addDocLink(cat,urlFieldId){
-  const title=($('dl-title-'+cat).value||'').trim();
+  let title=($('dl-title-'+cat).value||'').trim();
   const url=($(urlFieldId||('dl-url-'+cat)).value||'').trim();
   if(!url){ toast('Bitte eine URL angeben','err'); return; }
   if(!/^https?:\/\//i.test(url)){ toast('URL muss mit http(s):// beginnen','err'); return; }
-  try{ await rpc('board_doc_add',{p_token:token(),p_category:cat,p_title:title||url,p_file_url:url,p_is_link:true,p_file_name:null,p_file_size:null});
+  // Vorschaubild + ggf. Titel via Edge Function holen (nicht blockierend)
+  let image=null;
+  try{
+    toast('Vorschau wird geladen…');
+    const r=await fetch(SUPA_URL+'/functions/v1/link-preview',{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),url})});
+    let d={}; try{d=await r.json();}catch(e){}
+    if(r.ok && d && d.ok){
+      if(d.image) image=d.image;
+      if(!title && d.title) title=String(d.title).trim();
+    }
+  }catch(e){ /* Preview-Fehler nicht blockierend */ }
+  try{ await rpc('board_doc_add',{p_token:token(),p_category:cat,p_title:title||url,p_file_url:url,p_is_link:true,p_file_name:null,p_file_size:null,p_content_text:null,p_thumbnail_url:image});
     toast('Link hinzugefügt ✓'); renderDownloads(); }
   catch(e){ toast('Fehler: '+e.message,'err'); }
 }
@@ -1452,6 +1479,7 @@ async function protocolAenderung(id){
 
 /* ---------- A) Öffentliches Anfrageformular #/anfrage ---------- */
 function renderInquiry(){
+  INQ_IMAGES=[];
   $('app').innerHTML = nav() + `<section><div class="wrap" style="max-width:820px">
     <div class="eyebrow">Kontakt</div><h2 class="sec-title">Anfrage an den Vorstand</h2>
     <p class="lead">Sie haben eine Frage rund um sichere Spielplätze? Stellen Sie hier Ihre Anfrage – der Vorstand bearbeitet sie und antwortet Ihnen per E-Mail.</p>
@@ -1462,11 +1490,37 @@ function renderInquiry(){
         <div><label>E-Mail *</label><input id="inq-email" type="email"></div>
         <div class="full"><label>Betreff</label><input id="inq-subject"></div>
         <div class="full"><label>Ihre Frage *</label><textarea id="inq-question" rows="7" placeholder="Beschreiben Sie Ihr Anliegen…"></textarea></div>
+        <div class="full"><label>Bilder (optional)</label>
+          <div id="inq-img-strip" class="gal-strip"></div>
+          <input type="file" accept="image/*" multiple onchange="onInquiryImages(this)">
+          <p class="ph" style="margin-top:6px">Optional, z.B. Fotos der Anlage. Empfohlen max. 4 Bilder. Werden automatisch verkleinert.</p>
+        </div>
       </div>
       <div class="err" id="inq-err"></div>
       <button class="btn btn-p" style="margin-top:16px" onclick="submitInquiry()">Anfrage absenden</button>
     </div>
   </div></section>` + footer();
+  renderInquiryImgStrip();
+}
+function renderInquiryImgStrip(){
+  const el=$('inq-img-strip'); if(!el) return;
+  el.innerHTML = INQ_IMAGES.map((u,i)=>`<div class="gi"><img src="${esc(u)}" alt=""><button onclick="removeInquiryImage(${i})" title="Entfernen">×</button></div>`).join('');
+}
+function removeInquiryImage(i){ INQ_IMAGES.splice(i,1); renderInquiryImgStrip(); }
+async function onInquiryImages(input){
+  const files=[...(input.files||[])]; if(!files.length) return;
+  for(const file of files){
+    if(!file.type.startsWith('image/')) continue;
+    try{
+      const url=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(file);});
+      const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+      const max=1400;let w=img.width,h=img.height;if(w>=h){if(w>max){h=Math.round(h*max/w);w=max;}}else{if(h>max){w=Math.round(w*max/h);h=max;}}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
+      INQ_IMAGES.push(cv.toDataURL('image/jpeg',0.85));
+      renderInquiryImgStrip();
+    }catch(e){ toast('Bild-Fehler: '+(e.message||e),'err'); }
+  }
+  input.value='';
 }
 function inquiryErrMsg(m){
   const map={ email_required:'Bitte eine E-Mail-Adresse angeben.', question_required:'Bitte Ihre Frage angeben.' };
@@ -1479,7 +1533,8 @@ async function submitInquiry(){
   if(!email){ $('inq-err').textContent=inquiryErrMsg('email_required'); return; }
   if(!question){ $('inq-err').textContent=inquiryErrMsg('question_required'); return; }
   try{
-    await rpc('submit_inquiry',{ p_name:name||null, p_email:email, p_subject:subject||null, p_question:question });
+    await rpc('submit_inquiry',{ p_name:name||null, p_email:email, p_subject:subject||null, p_question:question, p_images:INQ_IMAGES });
+    INQ_IMAGES=[];
     $('inq-form').classList.add('hidden');
     const done=$('inq-done'); done.classList.remove('hidden');
     done.innerHTML=`<div class="panel" style="border-color:var(--gs);margin-top:30px"><h2 style="font-size:20px;color:var(--gm)">Vielen Dank!</h2>
@@ -1545,10 +1600,29 @@ async function renderInquiryReview(id){
   catch(e){ $('admin-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
   r=r||{};
   const q=r.inquiry||{}, me=r.me||'', reviews=Array.isArray(r.reviews)?r.reviews:[];
+  const images=Array.isArray(q.images)?q.images:[];
+  const events=Array.isArray(r.events)?r.events:[];
   const fmtDate=d=>d?new Date(d).toLocaleString('de-CH'):'';
   const myReview=reviews.find(x=>x.username===me)||null;
   const answered = q.status==='beantwortet';
   const draft = q.draft_answer||'';
+  const EVENT_LABELS={ eingereicht:'Eingereicht', entwurf:'Antwort-Entwurf gespeichert', visiert:'Visiert', aenderung:'Änderung beantragt', beantwortet:'Beantwortet' };
+  // Bilder der Anfrage (klickbar → grosse Ansicht in neuem Tab)
+  const imagesBlock = images.length?`<div class="panel">
+      <h2 style="font-size:18px">Beigefügte Bilder</h2>
+      <div class="gal-pub" style="margin-top:6px">${images.map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="" loading="lazy" style="cursor:zoom-in"></a>`).join('')}</div>
+    </div>`:'';
+  // Historie-Timeline
+  const timelineBlock = events.length?`<div class="panel">
+      <h2 style="font-size:18px">Verlauf</h2>
+      <div style="margin-top:6px">${events.map(ev=>{
+        const label=EVENT_LABELS[ev.action]||ev.action||'';
+        return `<div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">
+          <span style="color:var(--muted);font-size:13px;min-width:140px;flex:none">${esc(fmtDate(ev.at))}</span>
+          <span style="flex:1"><b>${esc(label)}</b>${ev.actor?` <span style="color:var(--muted)">· ${esc(ev.actor)}</span>`:''}${ev.detail?`<br><span style="color:var(--soft);font-size:13.5px">${esc(ev.detail)}</span>`:''}</span>
+        </div>`;
+      }).join('')}</div>
+    </div>`:'';
   // Änderungsblöcke (farbig, Wort-Diff) pro Review mit proposed_text
   const changeBlocks = reviews.filter(x=>x.proposed_text).map(x=>`
     <div class="panel" style="border-left:4px solid ${esc(x.color)};margin-bottom:14px">
@@ -1583,6 +1657,7 @@ async function renderInquiryReview(id){
       <h2 style="font-size:18px">Die Frage</h2>
       <div style="white-space:pre-wrap;font-size:14px;line-height:1.6;border:1px solid var(--border);border-radius:var(--r);padding:14px;background:var(--sand)">${esc(q.question||'(keine Frage)')}</div>
     </div>
+    ${imagesBlock}
     <div class="panel">
       <h2 style="font-size:18px">Antwort-Entwurf</h2>
       ${answered
@@ -1596,6 +1671,7 @@ async function renderInquiryReview(id){
       <h2 style="font-size:18px">Reviewer</h2>
       ${legend}
     </div>
+    ${timelineBlock}
     ${canAct?`<div class="panel">
       <h2 style="font-size:18px">Deine Visierung</h2>
       <p class="ph">Dein Status: ${myReview.status==='visiert'?'visiert ✓':(myReview.status==='aenderung'?'Änderung beantragt':'offen')}</p>
