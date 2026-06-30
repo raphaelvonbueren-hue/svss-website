@@ -1482,10 +1482,17 @@ function renderInquiry(){
   INQ_IMAGES=[];
   $('app').innerHTML = nav() + `<section><div class="wrap" style="max-width:820px">
     <div class="eyebrow">Kontakt</div><h2 class="sec-title">Anfrage an den Vorstand</h2>
-    <p class="lead">Sie haben eine Frage rund um sichere Spielplätze? Stellen Sie hier Ihre Anfrage – der Vorstand bearbeitet sie und antwortet Ihnen per E-Mail.</p>
+    <p class="lead">Sie sind kein Mitglied, haben aber eine Frage? Hier können Sie eine <b>sicherheitstechnische Anfrage</b> stellen oder <b>Infos zu Spielplätzen oder unseren Mitgliedern</b> anfordern. Der Vorstand bearbeitet Ihre Anfrage und antwortet Ihnen per E-Mail.</p>
     <div id="inq-done" class="hidden"></div>
     <div class="panel" id="inq-form" style="margin-top:30px">
       <div class="form-grid">
+        <div class="full"><label>Anliegen</label><select id="inq-topic">
+          <option value="">Bitte wählen…</option>
+          <option>Sicherheitstechnische Anfrage</option>
+          <option>Infos zu Spielplätzen</option>
+          <option>Infos zu Mitgliedern</option>
+          <option>Sonstiges</option>
+        </select></div>
         <div><label>Name</label><input id="inq-name"></div>
         <div><label>E-Mail *</label><input id="inq-email" type="email"></div>
         <div class="full"><label>Betreff</label><input id="inq-subject"></div>
@@ -1529,11 +1536,11 @@ function inquiryErrMsg(m){
 async function submitInquiry(){
   $('inq-err').textContent='';
   const v=id=>($(id).value||'').trim();
-  const name=v('inq-name'), email=v('inq-email'), subject=v('inq-subject'), question=v('inq-question');
+  const name=v('inq-name'), email=v('inq-email'), subject=v('inq-subject'), question=v('inq-question'), topic=v('inq-topic');
   if(!email){ $('inq-err').textContent=inquiryErrMsg('email_required'); return; }
   if(!question){ $('inq-err').textContent=inquiryErrMsg('question_required'); return; }
   try{
-    await rpc('submit_inquiry',{ p_name:name||null, p_email:email, p_subject:subject||null, p_question:question, p_images:INQ_IMAGES });
+    await rpc('submit_inquiry',{ p_name:name||null, p_email:email, p_subject:subject||null, p_question:question, p_images:INQ_IMAGES, p_topic:topic||null });
     INQ_IMAGES=[];
     $('inq-form').classList.add('hidden');
     const done=$('inq-done'); done.classList.remove('hidden');
@@ -1566,7 +1573,7 @@ async function renderAdminInquiries(){
     const mine = p.status!=='beantwortet' && p.my_status && p.my_status!=='visiert';
     const who=[p.inquirer_name,p.inquirer_email].filter(Boolean).join(' · ');
     return `<tr style="cursor:pointer" onclick="renderInquiryReview('${esc(p.id)}')">
-      <td><b>${esc(p.subject||'Anfrage')}</b><br><span class="ht-meta" style="color:var(--muted);font-size:13px">${esc(who)}</span>${mine?'<br><span class="badge" style="background:#fbe7df;color:var(--accent)">Deine Visierung ausstehend</span>':''}</td>
+      <td><b>${esc(p.subject||p.topic||'Anfrage')}</b>${p.topic?` <span class="tag">${esc(p.topic)}</span>`:''}<br><span class="ht-meta" style="color:var(--muted);font-size:13px">${esc(who)}</span>${mine?'<br><span class="badge" style="background:#fbe7df;color:var(--accent)">Deine Visierung ausstehend</span>':''}</td>
       <td>${esc(fmtDate(p.created_at))}</td>
       <td>${inqBadge(p.status)}</td>
       <td>${esc((p.n_visiert!=null?p.n_visiert:0))}/${esc((p.n_total!=null?p.n_total:0))} visiert${p.n_aenderung?` · ${esc(p.n_aenderung)} Änderung${p.n_aenderung===1?'':'en'}`:''}</td>
@@ -1646,7 +1653,8 @@ async function renderInquiryReview(id){
     <div class="panel">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap">
         <div>
-          <h2 style="font-size:20px;margin:0 0 6px">${esc(q.subject||'Anfrage')}</h2>
+          <h2 style="font-size:20px;margin:0 0 6px">${esc(q.subject||q.topic||'Anfrage')}</h2>
+          ${q.topic?`<p class="ph" style="margin:0 0 4px"><span class="tag">${esc(q.topic)}</span></p>`:''}
           <p class="ph" style="margin:0">Von ${esc(q.inquirer_name||'—')} · <a href="mailto:${esc(q.inquirer_email||'')}">${esc(q.inquirer_email||'')}</a> · ${esc(fmtDate(q.created_at))}</p>
         </div>
         <div>${inqBadge(q.status)}</div>
