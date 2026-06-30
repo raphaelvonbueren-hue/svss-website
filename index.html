@@ -92,7 +92,7 @@
   .about{background:var(--sand)}
   .vorstand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:24px;margin-top:36px}
   .vb{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:30px 22px;text-align:center}
-  .vb .av{width:104px;height:124px;border-radius:16px;overflow:hidden;background:var(--gp);color:var(--gd);display:grid;place-items:center;
+  .vb .av{width:140px;height:168px;border-radius:16px;overflow:hidden;background:var(--gp);color:var(--gd);display:grid;place-items:center;
     margin:0 auto 20px;font-family:'DM Serif Display',serif;font-size:30px}
   .vb b{display:block;font-size:15px;margin-bottom:5px}.vb span{color:var(--muted);font-size:13px}
   .vb .av img{width:100%;height:100%;object-fit:cover;border-radius:16px;display:block}
@@ -272,6 +272,8 @@ let BOARDPERSONS = [];       // Vorstands-Personen (Startseite)
 let MYBOARDPHOTO = '';       // Portrait im eigenen Vorstandsprofil
 let CONTENT = {};            // site_content keyed
 let COMPANIES = [];          // active companies (public)
+let COURSES = [];            // Schulungen (public)
+let SORT_DIR = 'asc';        // Sortierung Mitgliederliste
 let INQ_IMAGES = [];         // Bilder (data-URLs) zur öffentlichen Anfrage
 
 const $ = (id)=>document.getElementById(id);
@@ -356,13 +358,15 @@ async function sel(table,query){
 
 /* ---------- Daten laden ---------- */
 async function loadPublic(){
-  const [content, comps, board] = await Promise.all([
+  const [content, comps, board, courses] = await Promise.all([
     sel('site_content',{select:'*'}),
     sel('companies',{select:'*',status:'eq.active',order:'sort_order.asc'}),
-    rpc('public_board').catch(()=>[])
+    rpc('public_board').catch(()=>[]),
+    rpc('courses_list').catch(()=>[])
   ]);
   CONTENT={}; content.forEach(r=>CONTENT[r.key]=r.value);
   COMPANIES=comps;
+  COURSES = Array.isArray(courses)?courses:[];
   BOARDPERSONS = (Array.isArray(board)?board:[]).slice().sort((a,b)=>{
     const pa=/präsident/i.test(a.function||'')?0:1, pb=/präsident/i.test(b.function||'')?0:1;
     return pa-pb;
@@ -458,6 +462,18 @@ function initials(name){ return (name||'?').replace(/[^A-Za-zÄÖÜäöü0-9 ]/g
 /* ---------- HOME ---------- */
 function renderHome(){
   const hero=CONTENT.hero||{}, stats=CONTENT.stats||[], about=CONTENT.about||{}, board=BOARDPERSONS||[], news=CONTENT.news||[];
+  const _today=new Date().toISOString().slice(0,10);
+  const upcoming=(COURSES||[]).filter(c=>((c.date_end||c.date_start||'')>=_today)).slice(0,3);
+  const coursesHome = upcoming.length?`<section id="schulungen-home" class="about"><div class="wrap">
+    <div class="eyebrow">Aus- & Weiterbildung</div><h2 class="sec-title">Nächste Schulungen</h2>
+    <div class="news" style="margin-top:28px">${upcoming.map(c=>`<div class="nc">
+      <div class="meta"><span class="date">${esc(fmtCourseDate(c.date_start,c.date_end))}</span></div>
+      <h3>${esc(c.title)}</h3>
+      <p>${esc([c.location,c.canton].filter(Boolean).join(' · '))}</p>
+      ${c.link?`<div class="nc-links"><a href="${esc(c.link)}" target="_blank" rel="noopener">Details / Anmeldung ↗</a></div>`:''}
+    </div>`).join('')}</div>
+    <div style="margin-top:22px"><button class="btn btn-o" onclick="location.hash='#/schulungen'">Alle Schulungen →</button></div>
+  </div></section>`:'';
   $('app').innerHTML = nav() + `
   <section class="hero" style="padding-bottom:96px"><div class="wrap">
     <h1>${esc(hero.title||'Sichere Spielplätze.')}<br><span class="accent">${esc(hero.title2||'Für alle Kinder.')}</span></h1>
@@ -480,7 +496,7 @@ function renderHome(){
   <section id="news" class="about"><div class="wrap">
     <div class="eyebrow">Aktuelles</div><h2 class="sec-title">News & Veranstaltungen</h2>
     <div class="news">${news.map(n=>`<div class="nc">${n.image?`<img class="nc-img" src="${esc(n.image)}" alt="">`:''}<div class="meta"><span class="date">${esc(n.date||'')}</span><span class="tag">${esc(n.tag||'')}</span></div><h3>${esc(n.title||'')}</h3><div class="rich">${renderRich(n.text||'')}</div>${(n.pdf||(n.link&&/^https?:\/\//i.test(n.link)))?`<div class="nc-links">${n.pdf?`<a href="${esc(n.pdf)}" target="_blank" rel="noopener">PDF ansehen</a>`:''}${n.link&&/^https?:\/\//i.test(n.link)?`<a href="${esc(n.link)}" target="_blank" rel="noopener">Zum Bericht ↗</a>`:''}</div>`:''}</div>`).join('')||'<p class="lead">Aktuell keine Meldungen.</p>'}</div>
-  </div></section>` + footer();
+  </div></section>${coursesHome}` + footer();
   requestAnimationFrame(layoutBoardGrid);
 }
 // Spaltenzahl so wählen, dass nie genau EINE Person allein in der letzten Zeile steht.
@@ -495,14 +511,18 @@ function layoutBoardGrid(){
 }
 if(!window.__boardGridResize){ window.__boardGridResize=true; let _t; window.addEventListener('resize',()=>{ clearTimeout(_t); _t=setTimeout(layoutBoardGrid,120); }); }
 function renderMembersSection(){
-  const firms = COMPANIES.filter(c=>c.member_type!=='privat');
-  const privs = COMPANIES.filter(c=>c.member_type==='privat');
+  const coll=new Intl.Collator('de',{sensitivity:'base'});
+  const dir=SORT_DIR==='desc'?-1:1;
+  const byName=(a,b)=>dir*coll.compare(a.name||'',b.name||'');
+  const firms = COMPANIES.filter(c=>c.member_type!=='privat').slice().sort(byName);
+  const privs = COMPANIES.filter(c=>c.member_type==='privat').slice().sort(byName);
+  const sortBtn=`<button class="btn-sm btn-o" title="Reihenfolge umkehren" onclick="SORT_DIR=SORT_DIR==='asc'?'desc':'asc';renderHome();setTimeout(()=>document.getElementById('mitglieder')?.scrollIntoView(),0)" style="display:inline-flex;align-items:center;gap:6px;margin-left:14px;vertical-align:middle">${SORT_DIR==='asc'?'A→Z':'Z→A'} ⇅</button>`;
   const privChips = privs.map(p=>{
     const loc=[p.zip,p.city].filter(Boolean).join(' ')||p.city||'';
     return `<span class="tag" style="font-size:13px;padding:6px 13px;background:var(--white);border:1px solid var(--border);color:var(--soft)">${esc(p.name)}${loc?` <span style="color:var(--muted)">· ${esc(loc)}</span>`:''}</span>`;
   }).join('');
   return `<section id="mitglieder"><div class="wrap">
-    <div class="eyebrow">Mitglieder</div><h2 class="sec-title">${firms.length} Fachfirmen im Verband</h2>
+    <div class="eyebrow">Mitglieder</div><h2 class="sec-title">${firms.length} Fachfirmen im Verband${sortBtn}</h2>
     <p class="lead">Geprüfte Fachfirmen für Planung, Bau, Inspektion und Unterhalt sicherer Spielplätze.</p>
     <div class="grid">${firms.map(firmCard).join('')||'<p class="lead">Noch keine Mitglieder erfasst.</p>'}</div>
     ${privs.length?`<div style="margin-top:46px"><h3 style="font-family:'DM Serif Display',serif;font-size:24px;margin:0 0 6px">Privatmitglieder</h3>
