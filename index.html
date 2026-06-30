@@ -117,6 +117,11 @@
   .team-card b{font-size:15.5px}
   .team-card .role{color:var(--muted);font-size:13.5px}
   .team-card a{font-size:13.5px;margin-top:4px}
+  .tag-pick{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .tag-opt{display:inline-flex;align-items:center;gap:7px;background:var(--white);border:1px solid var(--border);border-radius:30px;padding:7px 14px;font-size:13.5px;cursor:pointer;user-select:none;width:auto}
+  .tag-opt:hover{border-color:var(--gs)}
+  .tag-opt input{width:auto;margin:0}
+  .tag-opt:has(input:checked){background:var(--gl);border-color:var(--gs);color:var(--gd);font-weight:600}
 
   /* FOOTER */
   footer{background:var(--gd);color:#a9c2af;padding:54px 0 30px;font-size:14px}
@@ -233,6 +238,13 @@ const FN_INVITE_URL = SUPA_URL + '/functions/v1/send-invites';
 const FN_UPLOAD_URL = SUPA_URL + '/functions/v1/upload-media';
 const FN_IMPERSONATE_URL = SUPA_URL + '/functions/v1/impersonate';
 const ADMIN_TOKEN_KEY = 'svss_admin_token';
+// Globaler Tag-Katalog (Tätigkeitsbereiche rund um Spielplätze) — auswählbar im Mitglied-Portal
+const TAG_CATALOG = [
+  'Spielgeräte (Herstellung)','Verkauf & Handel','Planung & Gestaltung','Montage & Aufbau',
+  'Fallschutzbeläge','Sportanlagen & Sportgeräte','Parkmobiliar','Gartenbau & Landschaftsbau',
+  'Wartung & Unterhalt','Reparatur & Instandsetzung','Prüfungen & Abnahmen','Inspektion & Kontrolle',
+  'Beratung & Expertise','Schulungen','Weiterbildungen','Inklusion & barrierefreie Anlagen'
+];
 let SESSION = null;          // {is_board, company_slug, name}
 let MYGALLERY = [];          // Referenzbilder im Mitglieder-Portal
 let MYTEAM = [];             // Team/Mitarbeiter im Mitglieder-Portal
@@ -538,7 +550,10 @@ async function renderPortal(){
           <input type="hidden" id="p-logo_url" value="${esc(c.logo_url||'')}">
           <p class="ph" style="margin-top:8px">PNG oder JPG — wird automatisch verkleinert und erscheint auf der Startseite und Ihrer Firmenseite. Nach dem Wählen «Speichern» klicken.</p>
         </div>
-        <div class="full"><label>Tags (mit Komma getrennt)</label><input id="p-tags" value="${esc((c.tags||[]).join(', '))}"></div>
+        <div class="full"><label>Tätigkeitsbereiche</label>
+          <div id="p-tags-box" class="tag-pick">${[...new Set([...TAG_CATALOG,...((c.tags)||[])])].map(t=>`<label class="tag-opt"><input type="checkbox" class="tag-check" value="${esc(t)}" ${((c.tags)||[]).includes(t)?'checked':''}><span>${esc(t)}</span></label>`).join('')}</div>
+          <p class="ph" style="margin-top:6px">Wählen Sie die zutreffenden Bereiche – sie erscheinen als Tags auf Ihrer Firmenseite.</p>
+        </div>
         <div class="full"><label>Beschreibung</label>
           <div class="quill-wrap"><div id="p-description-ed"></div></div>
           <p class="quill-hint">Formatierung: fett, Überschriften, Aufzählungen, Ausrichtung.</p>
@@ -618,7 +633,7 @@ async function saveMyCompany(){
   const patch={name:getVal('name'),contact_person:getVal('contact_person'),category:getVal('category'),
     street:getVal('street'),zip:getVal('zip'),city:getVal('city'),canton:getVal('canton'),phone:getVal('phone'),
     email:getVal('email'),website:getVal('website'),logo_url:getVal('logo_url'),description:quillHtml(QUILL_INSTANCES['p-description-ed']),
-    tags:getVal('tags').split(',').map(s=>s.trim()).filter(Boolean), gallery:MYGALLERY};
+    tags:[...document.querySelectorAll('#p-tags-box input.tag-check:checked')].map(x=>x.value), gallery:MYGALLERY};
   try{ await rpc('update_my_company',{p_token:token(),p_patch:patch}); _pubLoaded=false; toast('Gespeichert ✓'); }
   catch(e){ toast('Fehler: '+e.message,'err'); }
 }
