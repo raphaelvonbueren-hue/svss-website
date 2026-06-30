@@ -1256,7 +1256,8 @@ async function renderDownloads(){
           ${isBoard?`<button class="btn-sm btn-a" style="margin-left:8px" onclick="delDoc('${esc(d.id)}')">Löschen</button>`:''}
         </div>`;
       }
-      return `<div class="info-row" style="align-items:center">
+      return `<div class="info-row" style="align-items:center;gap:14px">
+        ${d.is_link?'':fileTypeBadge(d.file_name,d.file_url)}
         <span style="flex:1">${esc(d.title||d.file_name||'Dokument')}${d.file_size?` <span style="color:var(--muted);font-size:12px">(${(d.file_size/1024/1024).toFixed(2)} MB)</span>`:''}</span>
         <a href="${esc(d.file_url)}" target="_blank" rel="noopener" class="btn-sm btn-o" style="text-decoration:none">${d.is_link?'Öffnen ↗':'Herunterladen'}</a>
         ${isBoard?`<button class="btn-sm btn-a" style="margin-left:8px" onclick="delDoc('${esc(d.id)}')">Löschen</button>`:''}
@@ -1305,6 +1306,32 @@ async function addDocLink(cat,urlFieldId){
     toast('Link hinzugefügt ✓'); renderDownloads(); }
   catch(e){ toast('Fehler: '+e.message,'err'); }
 }
+// Rendert Seite 1 eines PDFs zu einem JPEG-Thumbnail (data-URL) und lädt es hoch → gibt URL zurück.
+async function uploadPdfThumb(file){
+  try{
+    const pdfjs=await getPdfjs(); if(!pdfjs) return null;
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjs.getDocument({data:buf}).promise;
+    const page=await pdf.getPage(1);
+    const v0=page.getViewport({scale:1});
+    const scale=Math.min(2.5, 560/v0.width);
+    const vp=page.getViewport({scale});
+    const cv=document.createElement('canvas'); cv.width=Math.round(vp.width); cv.height=Math.round(vp.height);
+    const ctx=cv.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    const b64=cv.toDataURL('image/jpeg',0.8).split(',')[1];
+    const r=await fetch(FN_UPLOAD_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),filename:(file.name||'doc').replace(/\.[^.]*$/,'')+'-thumb.jpg',content_type:'image/jpeg',data_base64:b64})});
+    const d=await r.json(); return (r.ok&&d.url)?d.url:null;
+  }catch(e){ return null; }
+}
+// Datei-Typ-Badge anhand Endung (für Dokumente ohne Vorschaubild)
+function fileTypeBadge(name,url){
+  const ext=((name||url||'').split('?')[0].match(/\.([a-z0-9]{2,5})$/i)||[])[1];
+  const e=(ext||'').toLowerCase();
+  const map={pdf:['PDF','#c8522a'],doc:['DOC','#1f6feb'],docx:['DOCX','#1f6feb'],ppt:['PPT','#d2691e'],pptx:['PPTX','#d2691e'],xls:['XLS','#15803d'],xlsx:['XLSX','#15803d']};
+  const [lbl,col]=map[e]||['DATEI','#6b7280'];
+  return `<span style="flex:none;width:54px;height:68px;border-radius:8px;border:1px solid var(--border);background:${col}14;color:${col};display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:.5px">${lbl}</span>`;
+}
 async function addDocFile(cat){
   const fileInput=$('dl-file-'+cat); const title=($('dl-title-'+cat).value||'').trim();
   const file=fileInput&&fileInput.files&&fileInput.files[0];
@@ -1317,9 +1344,9 @@ async function addDocFile(cat){
     const r=await fetch(FN_UPLOAD_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),filename:file.name||'datei',content_type:ctype,data_base64:dataB64})});
     let d={}; try{d=await r.json();}catch(e){}
     if(!r.ok||d.error||!d.url){ toast((d.error||('Fehler '+r.status))+' — alternativ als Link hinzufügen','err'); return; }
-    let contentText='';
-    if(file.type==='application/pdf'){ toast('Text wird indexiert… (kann bei grossen PDFs etwas dauern)'); contentText=await extractPdfText(file); }
-    await rpc('board_doc_add',{p_token:token(),p_category:cat,p_title:title||file.name,p_file_url:d.url,p_is_link:false,p_file_name:file.name,p_file_size:file.size||null,p_content_text:contentText||null});
+    let contentText='', thumbUrl=null;
+    if(file.type==='application/pdf'){ toast('Text wird indexiert… (kann bei grossen PDFs etwas dauern)'); contentText=await extractPdfText(file); thumbUrl=await uploadPdfThumb(file); }
+    await rpc('board_doc_add',{p_token:token(),p_category:cat,p_title:title||file.name,p_file_url:d.url,p_is_link:false,p_file_name:file.name,p_file_size:file.size||null,p_content_text:contentText||null,p_thumbnail_url:thumbUrl});
     toast('Datei hochgeladen ✓');
     // GV-Protokoll: Visierungs-Workflow auslösen (nur PDFs mit extrahiertem Text)
     if(cat==='gv-protokolle' && contentText){
