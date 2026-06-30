@@ -406,6 +406,7 @@ async function route(){
     else if(h==='#/suche'){ if(!SESSION){openLogin();location.hash='#/';return;} await ensurePublic(); renderSearch(); }
     else if(h==='#/mitglied-werden'){ await ensurePublic(); renderApply(); }
     else if(h==='#/anfrage'){ await ensurePublic(); renderInquiry(); }
+    else if(h==='#/schulungen'){ await ensurePublic(); renderCourses(); }
     else { await ensurePublic(); renderHome(); }
   }catch(e){ $('app').innerHTML='<div class="wrap" style="padding:60px 24px"><p>Fehler beim Laden. '+esc(e.message)+'</p></div>'; }
   window.scrollTo(0,0);
@@ -427,6 +428,7 @@ function nav(){
       <a onclick="goSection('mitglieder')">Mitglieder</a>
       <a onclick="goSection('ueber')">Über uns</a>
       <a onclick="goSection('news')">News</a>
+      <a onclick="location.hash='#/schulungen'">Schulungen</a>
       <a onclick="location.hash='#/mitglied-werden'">Mitglied werden</a>
       <a onclick="location.hash='#/anfrage'">Anfrage</a>
       ${SESSION?`<a onclick="location.hash='#/downloads'">Downloads</a>`:''}
@@ -1504,6 +1506,77 @@ async function protocolAenderung(id){
    ANFRAGEN (Nichtmitglieder) — öffentliches Formular + kollaborativer
    Antwort-Prozess (analog Protokoll-Visierung, farbiger Wort-Diff)
    ==================================================================== */
+
+/* ---------- SCHULUNGEN #/schulungen (öffentlich + Vorstand erfasst) ---------- */
+let COURSE_EDIT=null;
+function fmtCourseDate(s,e){
+  if(!s) return 'Datum offen';
+  const f=d=>new Date(d+'T00:00:00').toLocaleDateString('de-CH',{day:'2-digit',month:'short',year:'numeric'});
+  return (e&&e!==s)?(f(s)+' – '+f(e)):f(s);
+}
+async function renderCourses(){
+  $('app').innerHTML = nav() + `<section><div class="wrap" id="crs-body"><p class="lead">Lade…</p></div></section>` + footer();
+  let list=[];
+  try{ list=await rpc('courses_list',{}); if(!Array.isArray(list)) list=[]; }
+  catch(e){ $('crs-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
+  const isBoard=!!(SESSION&&SESSION.is_board);
+  const today=new Date().toISOString().slice(0,10);
+  const cards=list.map(c=>{
+    const past=((c.date_end||c.date_start||'9999')<today);
+    return `<div class="panel" style="${past?'opacity:.55;':''}display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
+      <div style="flex:none;min-width:130px">
+        <div style="font-family:'DM Serif Display',serif;font-size:19px;color:var(--gm);line-height:1.2">${esc(fmtCourseDate(c.date_start,c.date_end))}</div>
+        <div style="margin-top:6px">${past?'<span class="badge" style="background:var(--sand-d);color:var(--soft)">vergangen</span>':'<span class="badge active">Anmeldung offen</span>'}</div>
+      </div>
+      <div style="flex:1;min-width:240px">
+        <h3 style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:17px;margin:0 0 4px">${esc(c.title)}</h3>
+        <div style="color:var(--muted);font-size:14px">${esc([c.location,c.canton].filter(Boolean).join(' · '))}${c.price?' · '+esc(c.price):''}</div>
+        ${c.description?`<p style="font-size:14px;margin:8px 0 0">${esc(c.description)}</p>`:''}
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          ${c.link?`<a href="${esc(c.link)}" target="_blank" rel="noopener" class="btn btn-p btn-sm" style="text-decoration:none">Details / Anmeldung ↗</a>`:''}
+          ${isBoard?`<button class="btn-sm btn-o" onclick="editCourse('${esc(c.id)}')">Bearbeiten</button><button class="btn-sm btn-a" onclick="delCourse('${esc(c.id)}')">Löschen</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('') || '<p class="lead">Aktuell sind keine Schulungen ausgeschrieben.</p>';
+  const editC = COURSE_EDIT ? list.find(c=>c.id===COURSE_EDIT) : null;
+  const form = isBoard ? courseForm(editC||{}) : '';
+  $('crs-body').innerHTML=`<div class="eyebrow">Aus- & Weiterbildung</div><h2 class="sec-title">Schulungen</h2>
+    <p class="lead">Kurse und Termine rund um Spielplatzsicherheit und Inspektionen nach SN EN 1176.</p>
+    <div style="margin-top:30px;display:flex;flex-direction:column;gap:14px">${cards}</div>${form}`;
+  if(editC){ const f=$('cf-title'); if(f) f.scrollIntoView({behavior:'smooth',block:'center'}); }
+}
+function courseForm(c){
+  return `<div class="panel" style="margin-top:24px;border-color:var(--accent)">
+    <h2 style="font-size:18px">${c.id?'Schulung bearbeiten':'Schulung erfassen'} <span class="badge active" style="margin-left:6px">Vorstand</span></h2>
+    <div class="form-grid">
+      <div class="full"><label>Titel</label><input id="cf-title" value="${esc(c.title||'')}"></div>
+      <div><label>Datum von</label><input id="cf-start" type="date" value="${esc(c.date_start||'')}"></div>
+      <div><label>Datum bis (optional, mehrtägig)</label><input id="cf-end" type="date" value="${esc(c.date_end||'')}"></div>
+      <div><label>Ort</label><input id="cf-loc" value="${esc(c.location||'')}"></div>
+      <div><label>Kanton</label><input id="cf-canton" value="${esc(c.canton||'')}"></div>
+      <div><label>Preis (optional)</label><input id="cf-price" value="${esc(c.price||'')}" placeholder="z.B. CHF 450"></div>
+      <div><label>Link (Anmeldung/Details)</label><input id="cf-link" value="${esc(c.link||'')}" placeholder="https://…"></div>
+      <div class="full"><label>Beschreibung (optional)</label><textarea id="cf-desc" rows="2">${esc(c.description||'')}</textarea></div>
+    </div>
+    <button class="btn btn-p" style="margin-top:14px" onclick="saveCourse('${esc(c.id||'')}')">${c.id?'Speichern':'Hinzufügen'}</button>
+    ${c.id?`<button class="btn btn-o" style="margin-left:8px" onclick="COURSE_EDIT=null;renderCourses()">Abbrechen</button>`:''}
+  </div>`;
+}
+function editCourse(id){ COURSE_EDIT=id; renderCourses(); }
+async function delCourse(id){
+  if(!confirm('Diese Schulung wirklich löschen?')) return;
+  try{ await rpc('board_course_delete',{p_token:token(),p_id:id}); toast('Gelöscht ✓'); renderCourses(); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
+}
+async function saveCourse(id){
+  const patch={ title:$('cf-title').value.trim(), date_start:$('cf-start').value, date_end:$('cf-end').value,
+    location:$('cf-loc').value.trim(), canton:$('cf-canton').value.trim(), price:$('cf-price').value.trim(),
+    link:$('cf-link').value.trim(), description:$('cf-desc').value.trim() };
+  if(!patch.title){ toast('Titel ist nötig','err'); return; }
+  try{ await rpc('board_course_save',{p_token:token(),p_id:id||null,p_patch:patch}); COURSE_EDIT=null; toast('Gespeichert ✓'); renderCourses(); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
+}
 
 /* ---------- A) Öffentliches Anfrageformular #/anfrage ---------- */
 function renderInquiry(){
