@@ -1031,6 +1031,15 @@ function footer(){
 function initials(name){ return (name||'?').replace(/[^A-Za-zÄÖÜäöü0-9 ]/g,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?'; }
 
 /* ---------- HOME ---------- */
+// Dynamische Statistik-Platzhalter: {firmen}, {mitglieder}, {kantone} werden aus der Live-Firmenliste ersetzt
+function statVal(n){
+  if(typeof n!=='string' || n.indexOf('{')<0) return n;
+  const firms=COMPANIES.filter(c=>c.member_type!=='privat');
+  const kantone=new Set(firms.map(c=>(c.canton||'').trim()).filter(Boolean)).size;
+  return n.replace(/\{firmen\}/gi,firms.length)
+          .replace(/\{mitglieder\}/gi,COMPANIES.length)
+          .replace(/\{kantone\}/gi,kantone);
+}
 async function renderHome(){
   const hero=CONTENT.hero||{}, stats=CONTENT.stats||[], about=CONTENT.about||{}, board=BOARDPERSONS||[], news=CONTENT.news||[];
   const _today=new Date().toISOString().slice(0,10);
@@ -1054,7 +1063,7 @@ async function renderHome(){
       <button class="btn btn-line" onclick="goSection('ueber')">${t('hero.aboutBtn')}</button></div>
   </div></section>
   <div class="stats"><div class="wrap"><div class="stats-in">
-    ${stats.map(s=>`<div class="stat"><div class="n">${esc(s.n)}</div><div class="l">${esc(tr(s.l))}</div></div>`).join('')}
+    ${stats.map(s=>`<div class="stat"><div class="n">${esc(statVal(s.n))}</div><div class="l">${esc(tr(s.l))}</div></div>`).join('')}
   </div></div></div>
 
   <section id="ueber" class="about"><div class="wrap">
