@@ -314,6 +314,7 @@ const SUPA_KEY = 'sb_publishable_R5FUE8lNPrQag-p6rIJIJQ_9VXzPwj9';
    ====================================================================== */
 let LANG = localStorage.getItem('svss_lang') || 'de';
 const LANGS = [['de','DE'],['fr','FR'],['it','IT'],['rm','RM'],['en','EN']];
+const LANGNAMES = {de:'Deutsch',fr:'Français',it:'Italiano',rm:'Rumantsch',en:'English'};
 const I18N = {
   de:{
     'nav.members':'Mitglieder','nav.about':'Über uns','nav.news':'News','nav.courses':'Schulungen','nav.faq':'FAQ',
@@ -380,7 +381,7 @@ const I18N = {
     'company.references':'Referenzen',
     'company.contactPerson':'Ansprechperson','company.address':'Adresse','company.canton':'Kanton',
     'company.phone':'Telefon','company.email':'E-Mail','company.website':'Website','company.category':'Kategorie',
-    'portal.myarea':'Mein Bereich',
+    'portal.myarea':'Mein Bereich','portal.language':'Sprache','portal.langHint':'Ihre bevorzugte Sprache für die Website. Wird gespeichert und beim nächsten Login übernommen.',
     'portal.lead':'Pflege hier die Angaben deiner Firma. Sie erscheinen auf deiner öffentlichen Unterseite.',
     'portal.companyName':'Firmenname','portal.contactPerson':'Ansprechperson','portal.category':'Kategorie',
     'portal.street':'Strasse','portal.zipCity':'PLZ / Ort','portal.canton':'Kanton','portal.phone':'Telefon',
@@ -468,7 +469,7 @@ const I18N = {
     'company.references':'Références',
     'company.contactPerson':'Personne de contact','company.address':'Adresse','company.canton':'Canton',
     'company.phone':'Téléphone','company.email':'E-mail','company.website':'Site web','company.category':'Catégorie',
-    'portal.myarea':'Mon espace',
+    'portal.myarea':'Mon espace','portal.language':'Langue','portal.langHint':'Votre langue préférée pour le site. Enregistrée et reprise à la prochaine connexion.',
     'portal.lead':'Gérez ici les informations de votre entreprise. Elles apparaissent sur votre page publique.',
     'portal.companyName':'Nom de l’entreprise','portal.contactPerson':'Personne de contact','portal.category':'Catégorie',
     'portal.street':'Rue','portal.zipCity':'NPA / Lieu','portal.canton':'Canton','portal.phone':'Téléphone',
@@ -556,7 +557,7 @@ const I18N = {
     'company.references':'Referenze',
     'company.contactPerson':'Persona di contatto','company.address':'Indirizzo','company.canton':'Cantone',
     'company.phone':'Telefono','company.email':'E-mail','company.website':'Sito web','company.category':'Categoria',
-    'portal.myarea':'La mia area',
+    'portal.myarea':'La mia area','portal.language':'Lingua','portal.langHint':'La lingua preferita per il sito. Viene salvata e ripresa al prossimo accesso.',
     'portal.lead':'Gestisca qui i dati della sua azienda. Appaiono sulla sua pagina pubblica.',
     'portal.companyName':'Nome dell’azienda','portal.contactPerson':'Persona di contatto','portal.category':'Categoria',
     'portal.street':'Via','portal.zipCity':'NAP / Località','portal.canton':'Cantone','portal.phone':'Telefono',
@@ -644,7 +645,7 @@ const I18N = {
     'company.references':'Referenzas',
     'company.contactPerson':'Persuna da contact','company.address':'Adressa','company.canton':'Chantun',
     'company.phone':'Telefon','company.email':'E-mail','company.website':'Pagina d’internet','company.category':'Categoria',
-    'portal.myarea':'Mia zona',
+    'portal.myarea':'Mia zona','portal.language':'Lingua','portal.langHint':'Vossa lingua preferida per la website. Vegn memorisada e surpigliada la proxima giada.',
     'portal.lead':'Tgirai qua las indicaziuns da Vossa firma. Ellas cumparan sin Vossa sutpagina publica.',
     'portal.companyName':'Num da la firma','portal.contactPerson':'Persuna da contact','portal.category':'Categoria',
     'portal.street':'Via','portal.zipCity':'NPA / Lieu','portal.canton':'Chantun','portal.phone':'Telefon',
@@ -732,7 +733,7 @@ const I18N = {
     'company.references':'References',
     'company.contactPerson':'Contact person','company.address':'Address','company.canton':'Canton',
     'company.phone':'Phone','company.email':'E-mail','company.website':'Website','company.category':'Category',
-    'portal.myarea':'My area',
+    'portal.myarea':'My area','portal.language':'Language','portal.langHint':'Your preferred language for the site. Saved and applied on your next login.',
     'portal.lead':'Manage your company details here. They appear on your public subpage.',
     'portal.companyName':'Company name','portal.contactPerson':'Contact person','portal.category':'Category',
     'portal.street':'Street','portal.zipCity':'ZIP / City','portal.canton':'Canton','portal.phone':'Phone',
@@ -1193,6 +1194,10 @@ async function renderPortal(){
         <div><label>${t('portal.phone')}</label>${f('phone',c.phone)}</div>
         <div><label>${t('portal.email')}</label>${f('email',c.email)}</div>
         <div><label>${t('portal.website')}</label>${f('website',c.website)}</div>
+        <div><label>${t('portal.language')}</label>
+          <select id="p-lang" onchange="setLang(this.value)">${LANGS.map(([code])=>`<option value="${code}" ${LANG===code?'selected':''}>${LANGNAMES[code]||code}</option>`).join('')}</select>
+          <p class="ph" style="margin-top:6px">${t('portal.langHint')}</p>
+        </div>
         <div class="full"><label>${t('portal.logo')}</label>
           <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
             <div id="p-logo-prev" style="width:64px;height:64px;border-radius:12px;background:var(--gl);display:grid;place-items:center;overflow:hidden;border:1px solid var(--border);flex:none">${c.logo_url?`<img src="${esc(c.logo_url)}" style="width:100%;height:100%;object-fit:contain">`:`<span style="color:var(--gm);font-weight:700">${esc(initials(c.name||SESSION.name))}</span>`}</div>
