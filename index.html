@@ -902,6 +902,17 @@ async function sel(table,query){
 }
 
 /* ---------- Daten laden ---------- */
+// Feste Vorstands-Reihenfolge: Präsident, Vizepräsident, Kassier, Administration/Aktuar, dann übrige, Web/Social zuletzt.
+// Wichtig: "vize" VOR "präsident" prüfen, da "Vize-Präsident" das Wort "Präsident" enthält.
+function boardRank(p){
+  const f=(p&&p.function||'').toLowerCase();
+  if(/vize|vice/.test(f)) return 1;
+  if(/präsident|president|praesident/.test(f)) return 0;
+  if(/administrat|aktuar|sekret/.test(f)) return 2;
+  if(/kassier|kassa|finanz/.test(f)) return 3;
+  if(/web|social|media|kommunikation/.test(f)) return 9;
+  return 5;
+}
 async function loadPublic(){
   const [content, comps, board, courses] = await Promise.all([
     sel('site_content',{select:'*'}),
@@ -912,10 +923,7 @@ async function loadPublic(){
   CONTENT={}; content.forEach(r=>CONTENT[r.key]=r.value);
   COMPANIES=comps;
   COURSES = Array.isArray(courses)?courses:[];
-  BOARDPERSONS = (Array.isArray(board)?board:[]).slice().sort((a,b)=>{
-    const pa=/präsident/i.test(a.function||'')?0:1, pb=/präsident/i.test(b.function||'')?0:1;
-    return pa-pb;
-  });
+  BOARDPERSONS = (Array.isArray(board)?board:[]).slice().sort((a,b)=>boardRank(a)-boardRank(b));
   injectSeoJsonLd();
 }
 // schema.org JSON-LD für Kurse (EducationEvent) + Mitglieder-Verzeichnis — hält sich an die echten Daten.
