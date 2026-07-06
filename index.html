@@ -1893,7 +1893,7 @@ async function renderDownloads(){
           </a>
           <span style="flex:1"><a href="${esc(d.file_url)}" target="_blank" rel="noopener" style="font-weight:600;color:var(--text)">${esc(d.title||d.file_name||'Dokument')}</a>${d.file_size?` <span style="color:var(--muted);font-size:12px">(${(d.file_size/1024/1024).toFixed(2)} MB)</span>`:''}</span>
           <a href="${esc(d.file_url)}" target="_blank" rel="noopener" class="btn-sm btn-o" style="text-decoration:none">${d.is_link?t('btn.open'):t('btn.download')}</a>
-          ${isBoard&&!d.is_link?`<button class="btn-sm btn-o" style="margin-left:8px" onclick="sendDocToMembers('${esc(d.id)}')">📧 An Mitglieder</button>`:''}${isBoard?`<button class="btn-sm btn-a" style="margin-left:8px" onclick="delDoc('${esc(d.id)}')">Löschen</button>`:''}
+          ${isBoard&&!d.is_link?`<button class="btn-sm btn-o" style="margin-left:8px" onclick="sendDocToMembers('${esc(d.id)}',true)">📧 Test an mich</button><button class="btn-sm btn-o" style="margin-left:6px" onclick="sendDocToMembers('${esc(d.id)}',false)">📧 An alle</button>`:''}${isBoard?`<button class="btn-sm btn-a" style="margin-left:8px" onclick="delDoc('${esc(d.id)}')">Löschen</button>`:''}
         </div>`;
       }
       return `<div class="info-row" style="align-items:center;gap:14px">
@@ -2005,15 +2005,22 @@ async function addDocFile(cat){
   }catch(e){ toast('Upload-Fehler: '+(e.message||e)+' — alternativ als Link hinzufügen','err'); }
 }
 // Dokument (PDF) als E-Mail-Anhang an alle aktiven Mitglieder senden (nur Vorstand)
-async function sendDocToMembers(id){
-  if(!confirm('Dieses Dokument als PDF-Anhang an ALLE aktiven Mitglieder per E-Mail senden?\n\nDas kann nicht rückgängig gemacht werden.')) return;
+async function sendDocToMembers(id, test){
+  let testEmail=null;
+  if(test){
+    testEmail=(prompt('Test-E-Mail an welche Adresse senden?','')||'').trim();
+    if(!testEmail||!testEmail.includes('@')){ toast('Keine gültige E-Mail','err'); return; }
+  } else {
+    if(!confirm('Dieses Dokument als PDF-Anhang an ALLE aktiven Mitglieder per E-Mail senden?\n\nDas kann nicht rückgängig gemacht werden.')) return;
+  }
   try{
-    toast('Wird an alle Mitglieder gesendet… (kann kurz dauern)');
-    const r=await fetch(FN_NOTIFY_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),doc_id:id})});
+    toast(test?'Test wird gesendet…':'Wird an alle Mitglieder gesendet… (kann kurz dauern)');
+    const payload={token:token(),doc_id:id}; if(testEmail) payload.test_email=testEmail;
+    const r=await fetch(FN_NOTIFY_URL,{method:'POST',headers:{...heads()},body:JSON.stringify(payload)});
     let d={}; try{d=await r.json();}catch(e){}
     if(!r.ok||d.error){ toast('Fehler: '+(d.error||('HTTP '+r.status)),'err'); return; }
     const ok=d.sent||0, fail=d.failed||0;
-    toast(`Versand fertig: ${ok} zugestellt${fail?`, ${fail} fehlgeschlagen`:''} ✓`, fail?'err':'ok');
+    toast((test?`Test an ${testEmail}: `:'Versand fertig: ')+`${ok} zugestellt${fail?`, ${fail} fehlgeschlagen`:''} ✓`, fail?'err':'ok');
   }catch(e){ toast('Versand-Fehler: '+(e.message||e),'err'); }
 }
 

@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     const REPLY_TO = Deno.env.get("INVITE_REPLY_TO") ?? "svss@spielplatzsicherheit-schweiz.ch";
     if (!RESEND_API_KEY) return json({ error: "RESEND_API_KEY ist nicht gesetzt." }, 500);
 
-    const { token, doc_id } = await req.json();
+    const { token, doc_id, test_email } = await req.json();
     if (!token || !doc_id) return json({ error: "token und doc_id erforderlich." }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -70,19 +70,24 @@ Deno.serve(async (req) => {
     let filename = (doc.file_name || title).toString();
     if (!/\.[a-z0-9]{2,5}$/i.test(filename)) filename += ".pdf";
 
-    // 4) Empfänger: alle aktiven Mitglieder mit E-Mail
-    const { data: members, error: mErr } = await admin
-      .from("companies").select("name,email").eq("status", "active");
-    if (mErr) return json({ error: "DB-Fehler: " + mErr.message }, 500);
-    const emails = Array.from(new Set(
-      (members ?? [])
-        .map((m: { email?: string }) => (m.email || "").trim())
-        .filter((e: string) => e.includes("@"))
-    ));
+    // 4) Empfänger: entweder Test-Adresse (nur diese) oder alle aktiven Mitglieder mit E-Mail
+    let emails: string[];
+    if (test_email && String(test_email).includes("@")) {
+      emails = [String(test_email).trim()];
+    } else {
+      const { data: members, error: mErr } = await admin
+        .from("companies").select("name,email").eq("status", "active");
+      if (mErr) return json({ error: "DB-Fehler: " + mErr.message }, 500);
+      emails = Array.from(new Set(
+        (members ?? [])
+          .map((m: { email?: string }) => (m.email || "").trim())
+          .filter((e: string) => e.includes("@"))
+      ));
+    }
     if (!emails.length) return json({ error: "Keine Empfänger mit E-Mail gefunden.", sent: 0, failed: 0 }, 200);
 
     const isProtocol = doc.category === "gv-protokolle";
-    const subject = (isProtocol ? "Neues GV-Protokoll: " : "Neues Dokument: ") + title;
+    const subject = (test_email ? "[TEST] " : "") + (isProtocol ? "Neues GV-Protokoll: " : "Neues Dokument: ") + title;
     const body =
       `Liebe SVSS-Mitglieder\n\n` +
       (isProtocol
