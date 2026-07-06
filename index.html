@@ -331,6 +331,7 @@ const I18N = {
     'news.eyebrow':'Aktuelles','news.title':'News & Veranstaltungen','news.none':'Aktuell keine Meldungen.',
     'news.pdf':'PDF ansehen','news.report':'Zum Bericht ↗',
     'courses.eyebrow':'Aus- & Weiterbildung','courses.nextTitle':'Nächste Schulungen','courses.allBtn':'Alle Schulungen →',
+    'courses.provider':'Anbieter','courses.mineBadge':'Eigener Kurs','courses.memberHint':'Als Mitglied können Sie hier eigene Kurse aufschalten und bearbeiten. Sie erscheinen in der öffentlichen Übersicht und auf der Startseite.',
     'courses.title':'Schulungen','courses.regOpen':'Anmeldung offen','courses.past':'vergangen',
     'courses.details':'Details / Anmeldung ↗','courses.none':'Aktuell sind keine Schulungen ausgeschrieben.',
     'courses.lead':'Kurse und Termine rund um Spielplatzsicherheit und Inspektionen nach SN EN 1176.',
@@ -419,6 +420,7 @@ const I18N = {
     'news.eyebrow':'Actualités','news.title':'Actualités & événements','news.none':'Aucune actualité pour le moment.',
     'news.pdf':'Voir le PDF','news.report':'Vers l’article ↗',
     'courses.eyebrow':'Formation continue','courses.nextTitle':'Prochaines formations','courses.allBtn':'Toutes les formations →',
+    'courses.provider':'Prestataire','courses.mineBadge':'Votre cours','courses.memberHint':'En tant que membre, vous pouvez publier et gérer vos propres cours ici. Ils apparaissent dans l’aperçu public et sur la page d’accueil.',
     'courses.title':'Formations','courses.regOpen':'Inscriptions ouvertes','courses.past':'passée',
     'courses.details':'Détails / Inscription ↗','courses.none':'Aucune formation n’est actuellement proposée.',
     'courses.lead':'Cours et dates autour de la sécurité des aires de jeux et des inspections selon SN EN 1176.',
@@ -507,6 +509,7 @@ const I18N = {
     'news.eyebrow':'Attualità','news.title':'Notizie ed eventi','news.none':'Nessuna notizia al momento.',
     'news.pdf':'Vedi PDF','news.report':'All’articolo ↗',
     'courses.eyebrow':'Formazione e perfezionamento','courses.nextTitle':'Prossime formazioni','courses.allBtn':'Tutte le formazioni →',
+    'courses.provider':'Offerente','courses.mineBadge':'Corso proprio','courses.memberHint':'Come membro potete pubblicare e gestire qui i vostri corsi. Appariranno nella panoramica pubblica e sulla pagina iniziale.',
     'courses.title':'Formazioni','courses.regOpen':'Iscrizioni aperte','courses.past':'passata',
     'courses.details':'Dettagli / Iscrizione ↗','courses.none':'Al momento non sono previste formazioni.',
     'courses.lead':'Corsi e date sulla sicurezza dei parchi giochi e le ispezioni secondo SN EN 1176.',
@@ -595,6 +598,7 @@ const I18N = {
     'news.eyebrow':'Actualitads','news.title':'Novitads & occurrenzas','news.none':'Actualmain naginas novitads.',
     'news.pdf':'Guardar il PDF','news.report':'Tar l’artitgel ↗',
     'courses.eyebrow':'Furmaziun & perfecziunament','courses.nextTitle':'Proximas furmaziuns','courses.allBtn':'Tut las furmaziuns →',
+    'courses.provider':'Purschider','courses.mineBadge':'Agen curs','courses.memberHint':'Sco commember pudais Vus publitgar e administrar qua Voss agens curs. Els cumparan en la survista publica e sin la pagina da partenza.',
     'courses.title':'Furmaziuns','courses.regOpen':'Annunzia averta','courses.past':'passada',
     'courses.details':'Detagls / Annunzia ↗','courses.none':'Actualmain n’èn anutgas furmaziuns publitgadas.',
     'courses.lead':'Curs e datas davart la segirezza da plazzas da gieu ed inspecziuns tenor SN EN 1176.',
@@ -683,6 +687,7 @@ const I18N = {
     'news.eyebrow':'Latest','news.title':'News & events','news.none':'No news at the moment.',
     'news.pdf':'View PDF','news.report':'To the report ↗',
     'courses.eyebrow':'Education & training','courses.nextTitle':'Upcoming courses','courses.allBtn':'All courses →',
+    'courses.provider':'Provider','courses.mineBadge':'Your course','courses.memberHint':'As a member you can publish and manage your own courses here. They appear in the public overview and on the homepage.',
     'courses.title':'Courses','courses.regOpen':'Registration open','courses.past':'past',
     'courses.details':'Details / Registration ↗','courses.none':'No courses are currently scheduled.',
     'courses.lead':'Courses and dates on playground safety and inspections according to SN EN 1176.',
@@ -2227,9 +2232,14 @@ async function renderCourses(){
   catch(e){ $('crs-body').innerHTML='<p class="lead">Fehler: '+esc(e.message)+'</p>'; return; }
   await preloadTr([...list.map(c=>c.title), ...list.map(c=>c.description).filter(Boolean)]);
   const isBoard=!!(SESSION&&SESSION.is_board);
+  const isMember=!!(SESSION&&SESSION.company_slug);
   const today=new Date().toISOString().slice(0,10);
   const cards=list.map(c=>{
     const past=((c.date_end||c.date_start||'9999')<today);
+    const mine=!!(SESSION&&SESSION.company_slug&&c.owner_slug&&c.owner_slug===SESSION.company_slug);
+    const canEdit=isBoard||mine;
+    const provName=c.owner_slug?((COMPANIES.find(x=>x.slug===c.owner_slug)||{}).name||''):'';
+    const delFn=isBoard?'delCourse':'delMyCourse';
     return `<div class="panel" style="${past?'opacity:.55;':''}display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
       <div style="flex:0 0 150px;max-width:150px">
         <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--gm);line-height:1.25">${esc(fmtCourseDate(c.date_start,c.date_end))}</div>
@@ -2238,24 +2248,26 @@ async function renderCourses(){
       <div style="flex:1;min-width:240px">
         <h3 style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:17px;margin:0 0 4px">${esc(tr(c.title))}</h3>
         <div style="color:var(--muted);font-size:14px">${esc([c.location,c.canton].filter(Boolean).join(' · '))}${c.price?' · '+esc(c.price):''}</div>
+        ${provName?`<div style="color:var(--muted);font-size:13px;margin-top:2px">${t('courses.provider')}: ${esc(provName)}</div>`:''}
         ${c.description?`<p style="font-size:14px;margin:8px 0 0">${esc(tr(c.description))}</p>`:''}
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-          ${c.link?`<a href="${esc(c.link)}" target="_blank" rel="noopener" class="btn btn-p btn-sm" style="text-decoration:none">${t('courses.details')}</a>`:''}
-          ${isBoard?`<button class="btn-sm btn-o" onclick="editCourse('${esc(c.id)}')">Bearbeiten</button><button class="btn-sm btn-a" onclick="delCourse('${esc(c.id)}')">Löschen</button>`:''}
+          ${c.link?`<a href="${esc(/^https?:\/\//i.test(c.link)?c.link:'https://'+c.link)}" target="_blank" rel="noopener" class="btn btn-p btn-sm" style="text-decoration:none">${t('courses.details')}</a>`:''}
+          ${canEdit?`<button class="btn-sm btn-o" onclick="editCourse('${esc(c.id)}')">Bearbeiten</button><button class="btn-sm btn-a" onclick="${delFn}('${esc(c.id)}')">Löschen</button>`:''}
         </div>
       </div>
     </div>`;
   }).join('') || `<p class="lead">${t('courses.none')}</p>`;
   const editC = COURSE_EDIT ? list.find(c=>c.id===COURSE_EDIT) : null;
-  const form = isBoard ? courseForm(editC||{}) : '';
+  const form = (isBoard||isMember) ? courseForm(editC||{}, isBoard) : '';
   $('crs-body').innerHTML=`<div class="eyebrow">${t('courses.eyebrow')}</div><h2 class="sec-title">${t('courses.title')}</h2>
     <p class="lead">${t('courses.lead')}</p>
     <div style="margin-top:30px;display:flex;flex-direction:column;gap:14px">${cards}</div>${form}`;
   if(editC){ const f=$('cf-title'); if(f) f.scrollIntoView({behavior:'smooth',block:'center'}); }
 }
-function courseForm(c){
+function courseForm(c, isBoard){
   return `<div class="panel" style="margin-top:24px;border-color:var(--accent)">
-    <h2 style="font-size:18px">${c.id?'Schulung bearbeiten':'Schulung erfassen'} <span class="badge active" style="margin-left:6px">Vorstand</span></h2>
+    <h2 style="font-size:18px">${c.id?'Schulung bearbeiten':'Eigene Schulung aufschalten'} <span class="badge active" style="margin-left:6px">${isBoard?'Vorstand':t('courses.mineBadge')}</span></h2>
+    ${isBoard?'':`<p class="ph">${t('courses.memberHint')}</p>`}
     <div class="form-grid">
       <div class="full"><label>Titel</label><input id="cf-title" value="${esc(c.title||'')}"></div>
       <div><label>Datum von</label><input id="cf-start" type="date" value="${esc(c.date_start||'')}"></div>
@@ -2276,12 +2288,18 @@ async function delCourse(id){
   try{ await rpc('board_course_delete',{p_token:token(),p_id:id}); toast('Gelöscht ✓'); renderCourses(); }
   catch(e){ toast('Fehler: '+e.message,'err'); }
 }
+async function delMyCourse(id){
+  if(!confirm('Diese Schulung wirklich löschen?')) return;
+  try{ await rpc('member_course_delete',{p_token:token(),p_id:id}); toast('Gelöscht ✓'); renderCourses(); }
+  catch(e){ toast('Fehler: '+e.message,'err'); }
+}
 async function saveCourse(id){
   const patch={ title:$('cf-title').value.trim(), date_start:$('cf-start').value, date_end:$('cf-end').value,
     location:$('cf-loc').value.trim(), canton:$('cf-canton').value.trim(), price:$('cf-price').value.trim(),
     link:$('cf-link').value.trim(), description:$('cf-desc').value.trim() };
   if(!patch.title){ toast('Titel ist nötig','err'); return; }
-  try{ await rpc('board_course_save',{p_token:token(),p_id:id||null,p_patch:patch}); COURSE_EDIT=null; toast('Gespeichert ✓'); renderCourses(); }
+  const fn=(SESSION&&SESSION.is_board)?'board_course_save':'member_course_save';
+  try{ await rpc(fn,{p_token:token(),p_id:id||null,p_patch:patch}); COURSE_EDIT=null; toast('Gespeichert ✓'); renderCourses(); }
   catch(e){ toast('Fehler: '+e.message,'err'); }
 }
 
