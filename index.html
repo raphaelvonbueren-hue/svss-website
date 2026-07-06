@@ -798,6 +798,7 @@ function tr(s){ if(LANG==='de'||!s) return s; return (TRC[s]!=null?TRC[s]:s); }
 
 const TOKEN_KEY = 'svss_token';
 const FN_INVITE_URL = SUPA_URL + '/functions/v1/send-invites';
+const FN_NOTIFY_URL = SUPA_URL + '/functions/v1/notify-members';
 const FN_UPLOAD_URL = SUPA_URL + '/functions/v1/upload-media';
 const FN_IMPERSONATE_URL = SUPA_URL + '/functions/v1/impersonate';
 const ADMIN_TOKEN_KEY = 'svss_admin_token';
@@ -1892,7 +1893,7 @@ async function renderDownloads(){
           </a>
           <span style="flex:1"><a href="${esc(d.file_url)}" target="_blank" rel="noopener" style="font-weight:600;color:var(--text)">${esc(d.title||d.file_name||'Dokument')}</a>${d.file_size?` <span style="color:var(--muted);font-size:12px">(${(d.file_size/1024/1024).toFixed(2)} MB)</span>`:''}</span>
           <a href="${esc(d.file_url)}" target="_blank" rel="noopener" class="btn-sm btn-o" style="text-decoration:none">${d.is_link?t('btn.open'):t('btn.download')}</a>
-          ${isBoard?`<button class="btn-sm btn-a" style="margin-left:8px" onclick="delDoc('${esc(d.id)}')">Löschen</button>`:''}
+          ${isBoard&&!d.is_link?`<button class="btn-sm btn-o" style="margin-left:8px" onclick="sendDocToMembers('${esc(d.id)}')">📧 An Mitglieder</button>`:''}${isBoard?`<button class="btn-sm btn-a" style="margin-left:8px" onclick="delDoc('${esc(d.id)}')">Löschen</button>`:''}
         </div>`;
       }
       return `<div class="info-row" style="align-items:center;gap:14px">
@@ -1909,6 +1910,7 @@ async function renderDownloads(){
             ? `<div class="full"><label>URL</label><input id="dl-url-${key}" placeholder="https://…"></div>
                <div class="full"><button class="btn btn-p btn-sm" onclick="addDocLink('${key}')">Link hinzufügen</button></div>`
             : `<div class="full"><label>Datei (PDF o.ä.)</label><input type="file" id="dl-file-${key}"></div>
+               ${key==='gv-protokolle'?`<div class="full"><label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13.5px;cursor:pointer"><input type="checkbox" id="dl-noverify-${key}"> Bereits fertig/visiert – <b style="font-weight:600">keine</b> Visierung starten (danach «📧 An Mitglieder» senden)</label></div>`:''}
                <div class="full"><button class="btn btn-p btn-sm" onclick="addDocFile('${key}')">Datei hochladen</button>
                  <span style="font-size:12px;color:var(--muted);margin-left:10px">oder als Link hinzufügen:</span>
                  <input id="dl-alturl-${key}" placeholder="https://…" style="max-width:280px;display:inline-block;margin-left:6px;width:auto">
@@ -1987,8 +1989,10 @@ async function addDocFile(cat){
     if(file.type==='application/pdf'){ toast('Text wird indexiert… (kann bei grossen PDFs etwas dauern)'); contentText=await extractPdfText(file); thumbUrl=await uploadPdfThumb(file); }
     await rpc('board_doc_add',{p_token:token(),p_category:cat,p_title:title||file.name,p_file_url:d.url,p_is_link:false,p_file_name:file.name,p_file_size:file.size||null,p_content_text:contentText||null,p_thumbnail_url:thumbUrl});
     toast('Datei hochgeladen ✓');
-    // GV-Protokoll: Visierungs-Workflow auslösen (nur PDFs mit extrahiertem Text)
-    if(cat==='gv-protokolle' && contentText){
+    // GV-Protokoll: Visierungs-Workflow auslösen (nur PDFs mit Text, ausser als "fertig" markiert)
+    const skipVerify = cat==='gv-protokolle' && document.getElementById('dl-noverify-'+cat)?.checked;
+    if(cat==='gv-protokolle' && skipVerify){ toast('Fertiges Protokoll abgelegt ✓ — jetzt «📧 An Mitglieder» senden'); }
+    if(cat==='gv-protokolle' && contentText && !skipVerify){
       const docTitle=title||file.name||'Protokoll';
       try{
         await rpc('board_protocol_create',{p_token:token(),p_title:docTitle,p_file_url:d.url,p_base_text:contentText,p_document_id:null});
@@ -1999,6 +2003,18 @@ async function addDocFile(cat){
     }
     renderDownloads();
   }catch(e){ toast('Upload-Fehler: '+(e.message||e)+' — alternativ als Link hinzufügen','err'); }
+}
+// Dokument (PDF) als E-Mail-Anhang an alle aktiven Mitglieder senden (nur Vorstand)
+async function sendDocToMembers(id){
+  if(!confirm('Dieses Dokument als PDF-Anhang an ALLE aktiven Mitglieder per E-Mail senden?\n\nDas kann nicht rückgängig gemacht werden.')) return;
+  try{
+    toast('Wird an alle Mitglieder gesendet… (kann kurz dauern)');
+    const r=await fetch(FN_NOTIFY_URL,{method:'POST',headers:{...heads()},body:JSON.stringify({token:token(),doc_id:id})});
+    let d={}; try{d=await r.json();}catch(e){}
+    if(!r.ok||d.error){ toast('Fehler: '+(d.error||('HTTP '+r.status)),'err'); return; }
+    const ok=d.sent||0, fail=d.failed||0;
+    toast(`Versand fertig: ${ok} zugestellt${fail?`, ${fail} fehlgeschlagen`:''} ✓`, fail?'err':'ok');
+  }catch(e){ toast('Versand-Fehler: '+(e.message||e),'err'); }
 }
 
 /* ---------- PROTOKOLL-VISIERUNG (Vorstand) ---------- */
