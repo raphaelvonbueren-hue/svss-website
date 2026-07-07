@@ -362,7 +362,7 @@ const I18N = {
     'apply.eyebrow':'Mitwirken','apply.title':'Mitglied werden',
     'apply.lead':'Werden Sie Teil der SVSS. Füllen Sie das Formular aus – wir melden uns nach der Aufnahme mit den Zugangsdaten.',
     'apply.type':'Art der Mitgliedschaft','apply.company':'Firma','apply.private':'Privatperson',
-    'apply.tariff':'Tarif: Firma CHF 280.– / Jahr · Privat CHF 50.– / Jahr · MwSt-befreit.',
+    'apply.tariff':'Tarif: Firma CHF 280.– / Jahr · Privat CHF 100.– / Jahr · MwSt-befreit.',
     'apply.companyName':'Firmenname *','apply.birthdate':'Geburtsdatum','apply.first':'Vorname *','apply.last':'Nachname *',
     'apply.street':'Strasse','apply.zip':'PLZ','apply.city':'Ort','apply.email':'E-Mail *',
     'apply.phone':'Telefon Festnetz','apply.mobile':'Mobil',
@@ -451,7 +451,7 @@ const I18N = {
     'apply.eyebrow':'Participer','apply.title':'Devenir membre',
     'apply.lead':'Rejoignez la SVSS. Remplissez le formulaire – nous vous contacterons après votre admission avec vos identifiants.',
     'apply.type':'Type d’adhésion','apply.company':'Entreprise','apply.private':'Particulier',
-    'apply.tariff':'Tarif : Entreprise CHF 280.– / an · Particulier CHF 50.– / an · exonéré de TVA.',
+    'apply.tariff':'Tarif : Entreprise CHF 280.– / an · Particulier CHF 100.– / an · exonéré de TVA.',
     'apply.companyName':'Nom de l’entreprise *','apply.birthdate':'Date de naissance','apply.first':'Prénom *','apply.last':'Nom *',
     'apply.street':'Rue','apply.zip':'NPA','apply.city':'Lieu','apply.email':'E-mail *',
     'apply.phone':'Téléphone fixe','apply.mobile':'Mobile',
@@ -540,7 +540,7 @@ const I18N = {
     'apply.eyebrow':'Partecipare','apply.title':'Diventare membro',
     'apply.lead':'Entri a far parte della SVSS. Compili il modulo – la contatteremo dopo l’ammissione con le credenziali d’accesso.',
     'apply.type':'Tipo di adesione','apply.company':'Azienda','apply.private':'Privato',
-    'apply.tariff':'Tariffa: Azienda CHF 280.– / anno · Privato CHF 50.– / anno · esente IVA.',
+    'apply.tariff':'Tariffa: Azienda CHF 280.– / anno · Privato CHF 100.– / anno · esente IVA.',
     'apply.companyName':'Nome dell’azienda *','apply.birthdate':'Data di nascita','apply.first':'Nome *','apply.last':'Cognome *',
     'apply.street':'Via','apply.zip':'NAP','apply.city':'Località','apply.email':'E-mail *',
     'apply.phone':'Telefono fisso','apply.mobile':'Cellulare',
@@ -629,7 +629,7 @@ const I18N = {
     'apply.eyebrow':'Collavurar','apply.title':'Daventar commember',
     'apply.lead':'Daventai part da la SVSS. Emplenii il formular – nus ans annunziain suenter l’admissiun cun las datas d’access.',
     'apply.type':'Tip d’appartegnientscha','apply.company':'Firma','apply.private':'Persuna privata',
-    'apply.tariff':'Tarif: Firma CHF 280.– / onn · Privat CHF 50.– / onn · exonerà da la TVA.',
+    'apply.tariff':'Tarif: Firma CHF 280.– / onn · Privat CHF 100.– / onn · exonerà da la TVA.',
     'apply.companyName':'Num da la firma *','apply.birthdate':'Data da naschientscha','apply.first':'Prenum *','apply.last':'Num *',
     'apply.street':'Via','apply.zip':'NPA','apply.city':'Lieu','apply.email':'E-mail *',
     'apply.phone':'Telefon fix','apply.mobile':'Mobil',
@@ -718,7 +718,7 @@ const I18N = {
     'apply.eyebrow':'Get involved','apply.title':'Become a member',
     'apply.lead':'Join the SVSS. Fill in the form – we will contact you after admission with your login details.',
     'apply.type':'Type of membership','apply.company':'Company','apply.private':'Private individual',
-    'apply.tariff':'Tariff: Company CHF 280.– / year · Private CHF 50.– / year · VAT-exempt.',
+    'apply.tariff':'Tariff: Company CHF 280.– / year · Private CHF 100.– / year · VAT-exempt.',
     'apply.companyName':'Company name *','apply.birthdate':'Date of birth','apply.first':'First name *','apply.last':'Last name *',
     'apply.street':'Street','apply.zip':'ZIP','apply.city':'City','apply.email':'E-mail *',
     'apply.phone':'Landline phone','apply.mobile':'Mobile',
@@ -1464,7 +1464,7 @@ async function renderAdminFees(){
         <button class="btn btn-a" onclick="genFees()">Beiträge ${feeYear} erzeugen</button>
       </div>
       <p class="ph" style="margin-top:14px">${paid.length} bezahlt · ${open.length} offen · offen CHF ${fmtChf(sumOpen)} · total CHF ${fmtChf(sumTotal)}.
-        Tarif: Firma 280.– / Privat 50.– · MwSt-befreit.</p>
+        Tarif: Firma 280.– / Privat 100.– · MwSt-befreit.</p>
     </div>
     <div class="panel" style="padding:0;overflow:hidden">
       <table><thead><tr><th>Mitglied</th><th>Typ</th><th>Betrag</th><th>Status</th><th>Aktion</th><th class="r">Rechnung</th></tr></thead>
