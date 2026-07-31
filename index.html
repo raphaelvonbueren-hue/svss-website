@@ -264,6 +264,21 @@
   .faq-item[open] summary::after{content:'–'}
   .faq-item summary:hover{color:var(--gd)}
   .faq-a{padding:0 22px 20px;color:var(--soft);font-size:15.5px;line-height:1.6}
+  .course-cat.past{opacity:.6}
+  .course-cat-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap}
+  .course-cat-title{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gd);margin:0 0 4px;line-height:1.2}
+  .course-cat-prov{color:var(--muted);font-size:13px}
+  .course-cat-desc{font-size:14px;margin:8px 0 0;max-width:60ch;color:var(--soft)}
+  .course-days{flex:none;text-align:center;background:var(--gm);color:#fff;border-radius:16px;padding:12px 18px;min-width:82px;line-height:1}
+  .course-days b{display:block;font-family:'DM Serif Display',serif;font-size:30px}
+  .course-days span{display:block;font-size:11.5px;letter-spacing:.5px;margin-top:4px;text-transform:uppercase;opacity:.92}
+  .course-rows{margin-top:16px;display:flex;flex-direction:column}
+  .crs-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:11px 0;border-top:1px solid var(--line,#e6e2d8)}
+  .crs-row.past{opacity:.5}
+  .crs-date{flex:0 0 150px;font-family:'DM Serif Display',serif;font-size:16px;color:var(--gm)}
+  .crs-meta{flex:1;min-width:200px;color:var(--soft);font-size:14px}
+  .crs-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  @media(max-width:600px){.crs-date{flex-basis:100%}}
 </style>
 </head>
 <body>
@@ -334,7 +349,7 @@ const I18N = {
     'news.pdf':'PDF ansehen','news.report':'Zum Bericht ↗',
     'courses.eyebrow':'Aus- & Weiterbildung','courses.nextTitle':'Nächste Schulungen','courses.allBtn':'Alle Schulungen →',
     'courses.provider':'Anbieter','courses.mineBadge':'Eigener Kurs','courses.memberHint':'Als Mitglied können Sie hier eigene Kurse aufschalten und bearbeiten. Sie erscheinen in der öffentlichen Übersicht und auf der Startseite.',
-    'courses.title':'Schulungen','courses.regOpen':'Anmeldung offen','courses.past':'vergangen',
+    'courses.title':'Schulungen','courses.regOpen':'Anmeldung offen','courses.past':'vergangen','courses.day':'Tag','courses.days':'Tage',
     'courses.details':'Details / Anmeldung ↗','courses.none':'Aktuell sind keine Schulungen ausgeschrieben.',
     'courses.lead':'Kurse und Termine rund um Spielplatzsicherheit und Inspektionen nach SN EN 1176.',
     'courses.dateOpen':'Datum offen',
@@ -423,7 +438,7 @@ const I18N = {
     'news.pdf':'Voir le PDF','news.report':'Vers l’article ↗',
     'courses.eyebrow':'Formation continue','courses.nextTitle':'Prochaines formations','courses.allBtn':'Toutes les formations →',
     'courses.provider':'Prestataire','courses.mineBadge':'Votre cours','courses.memberHint':'En tant que membre, vous pouvez publier et gérer vos propres cours ici. Ils apparaissent dans l’aperçu public et sur la page d’accueil.',
-    'courses.title':'Formations','courses.regOpen':'Inscriptions ouvertes','courses.past':'passée',
+    'courses.title':'Formations','courses.regOpen':'Inscriptions ouvertes','courses.past':'passée','courses.day':'jour','courses.days':'jours',
     'courses.details':'Détails / Inscription ↗','courses.none':'Aucune formation n’est actuellement proposée.',
     'courses.lead':'Cours et dates autour de la sécurité des aires de jeux et des inspections selon SN EN 1176.',
     'courses.dateOpen':'Date à définir',
@@ -512,7 +527,7 @@ const I18N = {
     'news.pdf':'Vedi PDF','news.report':'All’articolo ↗',
     'courses.eyebrow':'Formazione e perfezionamento','courses.nextTitle':'Prossime formazioni','courses.allBtn':'Tutte le formazioni →',
     'courses.provider':'Offerente','courses.mineBadge':'Corso proprio','courses.memberHint':'Come membro potete pubblicare e gestire qui i vostri corsi. Appariranno nella panoramica pubblica e sulla pagina iniziale.',
-    'courses.title':'Formazioni','courses.regOpen':'Iscrizioni aperte','courses.past':'passata',
+    'courses.title':'Formazioni','courses.regOpen':'Iscrizioni aperte','courses.past':'passata','courses.day':'giorno','courses.days':'giorni',
     'courses.details':'Dettagli / Iscrizione ↗','courses.none':'Al momento non sono previste formazioni.',
     'courses.lead':'Corsi e date sulla sicurezza dei parchi giochi e le ispezioni secondo SN EN 1176.',
     'courses.dateOpen':'Data da definire',
@@ -601,7 +616,7 @@ const I18N = {
     'news.pdf':'Guardar il PDF','news.report':'Tar l’artitgel ↗',
     'courses.eyebrow':'Furmaziun & perfecziunament','courses.nextTitle':'Proximas furmaziuns','courses.allBtn':'Tut las furmaziuns →',
     'courses.provider':'Purschider','courses.mineBadge':'Agen curs','courses.memberHint':'Sco commember pudais Vus publitgar e administrar qua Voss agens curs. Els cumparan en la survista publica e sin la pagina da partenza.',
-    'courses.title':'Furmaziuns','courses.regOpen':'Annunzia averta','courses.past':'passada',
+    'courses.title':'Furmaziuns','courses.regOpen':'Annunzia averta','courses.past':'passada','courses.day':'di','courses.days':'dis',
     'courses.details':'Detagls / Annunzia ↗','courses.none':'Actualmain n’èn anutgas furmaziuns publitgadas.',
     'courses.lead':'Curs e datas davart la segirezza da plazzas da gieu ed inspecziuns tenor SN EN 1176.',
     'courses.dateOpen':'Data anc averta',
@@ -690,7 +705,7 @@ const I18N = {
     'news.pdf':'View PDF','news.report':'To the report ↗',
     'courses.eyebrow':'Education & training','courses.nextTitle':'Upcoming courses','courses.allBtn':'All courses →',
     'courses.provider':'Provider','courses.mineBadge':'Your course','courses.memberHint':'As a member you can publish and manage your own courses here. They appear in the public overview and on the homepage.',
-    'courses.title':'Courses','courses.regOpen':'Registration open','courses.past':'past',
+    'courses.title':'Courses','courses.regOpen':'Registration open','courses.past':'past','courses.day':'day','courses.days':'days',
     'courses.details':'Details / Registration ↗','courses.none':'No courses are currently scheduled.',
     'courses.lead':'Courses and dates on playground safety and inspections according to SN EN 1176.',
     'courses.dateOpen':'Date to be announced',
@@ -2236,27 +2251,49 @@ async function renderCourses(){
   const isBoard=!!(SESSION&&SESSION.is_board);
   const isMember=!!(SESSION&&SESSION.company_slug);
   const today=new Date().toISOString().slice(0,10);
-  const cards=list.map(c=>{
-    const past=((c.date_end||c.date_start||'9999')<today);
-    const mine=!!(SESSION&&SESSION.company_slug&&c.owner_slug&&c.owner_slug===SESSION.company_slug);
-    const canEdit=isBoard||mine;
-    const provName=c.owner_slug?((COMPANIES.find(x=>x.slug===c.owner_slug)||{}).name||''):'';
-    const delFn=isBoard?'delCourse':'delMyCourse';
-    return `<div class="panel" style="${past?'opacity:.55;':''}display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
-      <div style="flex:0 0 150px;max-width:150px">
-        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--gm);line-height:1.25">${esc(fmtCourseDate(c.date_start,c.date_end))}</div>
-        <div style="margin-top:6px">${past?`<span class="badge" style="background:var(--sand-d);color:var(--soft)">${t('courses.past')}</span>`:`<span class="badge active">${t('courses.regOpen')}</span>`}</div>
-      </div>
-      <div style="flex:1;min-width:240px">
-        <h3 style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:17px;margin:0 0 4px">${esc(tr(c.title))}</h3>
-        <div style="color:var(--muted);font-size:14px">${esc([c.location,c.canton].filter(Boolean).join(' · '))}${c.price?' · '+esc(c.price):''}</div>
-        ${provName?`<div style="color:var(--muted);font-size:13px;margin-top:2px">${t('courses.provider')}: ${esc(provName)}</div>`:''}
-        ${c.description?`<p style="font-size:14px;margin:8px 0 0">${esc(tr(c.description))}</p>`:''}
-        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+  // Nach Titel gruppieren → je Titel eine Kategorie-Kachel
+  const byTitle={}, groups=[];
+  list.forEach(c=>{
+    const k=c.title||'—';
+    if(!byTitle[k]){ byTitle[k]={title:k, items:[], duration:null, owner_slug:c.owner_slug, description:''}; groups.push(byTitle[k]); }
+    const g=byTitle[k];
+    g.items.push(c);
+    if(c.duration_days!=null && g.duration==null) g.duration=c.duration_days;
+    if(!g.description && c.description) g.description=c.description;
+  });
+  const firstUpcoming=g=>{ const up=g.items.filter(c=>((c.date_end||c.date_start||'9999')>=today)).map(c=>c.date_start||'9999').sort(); return up[0]||'zzzz'; };
+  groups.sort((a,b)=>firstUpcoming(a).localeCompare(firstUpcoming(b)));
+  const cards=groups.map(g=>{
+    const items=g.items.slice().sort((a,b)=>String(a.date_start||'').localeCompare(String(b.date_start||'')));
+    const allPast=items.every(c=>((c.date_end||c.date_start||'9999')<today));
+    const provName=g.owner_slug?((COMPANIES.find(x=>x.slug===g.owner_slug)||{}).name||''):'';
+    const rows=items.map(c=>{
+      const past=((c.date_end||c.date_start||'9999')<today);
+      const mine=!!(SESSION&&SESSION.company_slug&&c.owner_slug&&c.owner_slug===SESSION.company_slug);
+      const canEdit=isBoard||mine;
+      const delFn=isBoard?'delCourse':'delMyCourse';
+      return `<div class="crs-row${past?' past':''}">
+        <div class="crs-date">${esc(fmtCourseDate(c.date_start,c.date_end))}</div>
+        <div class="crs-meta">${esc([c.location,c.canton].filter(Boolean).join(' · '))}${c.price?' · '+esc(c.price):''}</div>
+        <div class="crs-actions">
+          ${past?`<span class="badge" style="background:var(--sand-d);color:var(--soft)">${t('courses.past')}</span>`:`<span class="badge active">${t('courses.regOpen')}</span>`}
           ${c.link?`<a href="${esc(/^https?:\/\//i.test(c.link)?c.link:'https://'+c.link)}" target="_blank" rel="noopener" class="btn btn-p btn-sm" style="text-decoration:none">${t('courses.details')}</a>`:''}
           ${canEdit?`<button class="btn-sm btn-o" onclick="editCourse('${esc(c.id)}')">Bearbeiten</button><button class="btn-sm btn-a" onclick="${delFn}('${esc(c.id)}')">Löschen</button>`:''}
         </div>
+      </div>`;
+    }).join('');
+    const d=g.duration;
+    const daysBadge = d!=null ? `<div class="course-days"><b>${d}</b><span>${d===1?t('courses.day'):t('courses.days')}</span></div>` : '';
+    return `<div class="panel course-cat${allPast?' past':''}">
+      <div class="course-cat-head">
+        <div>
+          <h3 class="course-cat-title">${esc(tr(g.title))}</h3>
+          ${provName?`<div class="course-cat-prov">${t('courses.provider')}: ${esc(provName)}</div>`:''}
+          ${g.description?`<p class="course-cat-desc">${esc(tr(g.description))}</p>`:''}
+        </div>
+        ${daysBadge}
       </div>
+      <div class="course-rows">${rows}</div>
     </div>`;
   }).join('') || `<p class="lead">${t('courses.none')}</p>`;
   const editC = COURSE_EDIT ? list.find(c=>c.id===COURSE_EDIT) : null;
@@ -2276,6 +2313,7 @@ function courseForm(c, isBoard){
       <div><label>Datum bis (optional, mehrtägig)</label><input id="cf-end" type="date" value="${esc(c.date_end||'')}"></div>
       <div><label>Ort</label><input id="cf-loc" value="${esc(c.location||'')}"></div>
       <div><label>Kanton</label><input id="cf-canton" value="${esc(c.canton||'')}"></div>
+      <div><label>Dauer (Tage)</label><input id="cf-duration" type="number" min="1" value="${esc(c.duration_days!=null?c.duration_days:'')}" placeholder="z.B. 3"></div>
       <div><label>Preis (optional)</label><input id="cf-price" value="${esc(c.price||'')}" placeholder="z.B. CHF 450"></div>
       <div><label>Link (Anmeldung/Details)</label><input id="cf-link" value="${esc(c.link||'')}" placeholder="https://…"></div>
       <div class="full"><label>Beschreibung (optional)</label><textarea id="cf-desc" rows="2">${esc(c.description||'')}</textarea></div>
@@ -2298,7 +2336,7 @@ async function delMyCourse(id){
 async function saveCourse(id){
   const patch={ title:$('cf-title').value.trim(), date_start:$('cf-start').value, date_end:$('cf-end').value,
     location:$('cf-loc').value.trim(), canton:$('cf-canton').value.trim(), price:$('cf-price').value.trim(),
-    link:$('cf-link').value.trim(), description:$('cf-desc').value.trim() };
+    link:$('cf-link').value.trim(), description:$('cf-desc').value.trim(), duration_days:$('cf-duration').value.trim() };
   if(!patch.title){ toast('Titel ist nötig','err'); return; }
   const fn=(SESSION&&SESSION.is_board)?'board_course_save':'member_course_save';
   try{ await rpc(fn,{p_token:token(),p_id:id||null,p_patch:patch}); COURSE_EDIT=null; toast('Gespeichert ✓'); renderCourses(); }
